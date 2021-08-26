@@ -1,0 +1,64 @@
+\section{Theory}
+\label{sec:theory}
+Several methods exist for simulating fluids consisting of hard spheres.
+While Monte Carlo methods are relatively simple to use with hard sphere potentials -- that is, spherical particles (molecules) wia non-continous interaction potential of the form
+\begin{equation}
+    u = 
+    \begin{cases}
+        \infty, & r < \sigma \\
+        0, & r > \sigma,
+    \end{cases}
+\end{equation}
+molecular dynamics methods allow calculating dynamical and out-of-equilibrium properties of a system \cite{ALLEN:MD_sim}.
+
+Furthermore, Jover et. al \cite{Jover:pseudo_hard} has shown that a pseudo hard Mie (or generalized Lennard-Jones) potential
+\begin{equation}
+    u_{\text{Mie}}(r) = 
+        \frac{\lambda_r}{\lambda_r - \lambda_a}
+        \left(\frac{\lambda_r}{\lambda_a}\right)
+        ^{\frac{\lambda_a}{\lambda_r - \lambda_a}}
+        \epsilon \left[
+            \left(\frac{\sigma}{r}\right)^{\lambda_r} -
+            \left(\frac{\sigma}{r}\right)^{\lambda_a}
+        \right],
+\end{equation}
+can approximate a hard-sphere interaction potential well, when the repulsive part of the Mie potential is isolated, by shifting it upwards by its minimal value (the well depth $\epsilon$), and cutting it off here, setting the potential to zero once it has reached its minimum.
+This gives a steep non-negative potential of the form
+\begin{equation}
+    u_{(\lambda_a, \lambda_b)}(r) = 
+    \begin{cases}
+        \frac{\lambda_r}{\lambda_r - \lambda_a}
+        \left(\frac{\lambda_r}{\lambda_a}\right)
+        ^{\frac{\lambda_a}{\lambda_r - \lambda_a}}
+        \epsilon \left[
+            \left(\frac{\sigma}{r}\right)^{\lambda_r} -
+            \left(\frac{\sigma}{r}\right)^{\lambda_a}
+        \right]
+        + \epsilon,
+            & r < \sigma \left(
+                \frac{\lambda_r}{\lambda_a}
+            \right)^\frac{1}{\lambda_r - \lambda_a} \\
+        0,  & r > \sigma \left(
+                \frac{\lambda_r}{\lambda_a}
+            \right)^\frac{1}{\lambda_r - \lambda_a},
+    \end{cases}
+\end{equation}
+closely resembling that of an infinitely steep hard wall potential.
+Jover et. al chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$ as a compromise between the faithfullness of the pseudo hard representation and comptational speed:
+Higher exponents will give steeper potentials, but at the expense of making simulations more time-consuming, because shorter time steps are needed.
+For clarity, the Mie (50, 49) potential has the form
+\begin{equation}
+    u_{(50, 49)}(r) = 
+    \begin{cases}
+        50
+        \left(\frac{50}{49}\right)
+        ^{49}
+        \epsilon \left[
+            \left(\frac{\sigma}{r}\right)^{50} -
+            \left(\frac{\sigma}{r}\right)^{49}
+        \right]
+        + \epsilon,
+            & r < \frac{50}{49} \sigma\\
+        0,  & r > \frac{50}{49} \sigma.
+    \end{cases}
+\end{equation}

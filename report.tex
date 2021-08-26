@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+% Bibliography
+\usepackage[
+    backend=biber,
+    % Use bibliography style authoryear, 
+    % to make it easier to manage citations.
+    % This should be changed to "numeric" later:
+    style=authoryear-icomp, 
+    maxcitenames=1,
+]{biblatex}
+% To get brackets around authoryear, but without changing cite syntax:
+\renewcommand{\cite}{\parencite} % Remove later.
+\addbibresource{references.bib}
+
+\title{Project thesis}
+\author{Jonas Bueie}
+\date{2021}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\input{theory.tex}
+
+\pagebreak
+\printbibliography[heading=bibintoc]
+\end{document}
