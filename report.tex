@@ -1,11 +1,16 @@
 \documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[left=4cm, right=4cm]{geometry}
 \usepackage{amsmath}
+\usepackage{csquotes} % Biblatex requires this
+\usepackage[hidelinks]{hyperref}
 
 % Bibliography
 \usepackage[
     backend=biber,
     % Use bibliography style authoryear, 
-    % to make it easier to manage citations.
+    % to make it easier to read citations.
     % This should be changed to "numeric" later:
     style=authoryear-icomp, 
     maxcitenames=1,
@@ -14,13 +19,17 @@
 \renewcommand{\cite}{\parencite} % Remove later.
 \addbibresource{references.bib}
 
-\title{Project thesis}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+
+\title{Specialization project}
 \author{Jonas Bueie}
 \date{2021}
 
 \begin{document}
 \maketitle
 \tableofcontents
+\pagebreak
 
 \input{theory.tex}
 

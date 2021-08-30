@@ -7,3 +7,5 @@
 *.xml
 *.gz
 *.toc
+*.log
+*.out
