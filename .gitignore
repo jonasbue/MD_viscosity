@@ -9,3 +9,5 @@
 *.toc
 *.log
 *.out
+simulation/out/*
+log.lammps

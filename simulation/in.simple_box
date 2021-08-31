@@ -1,0 +1,17 @@
+dimension 2
+atom_style atomic
+region myReg block -10.0 10.0 -10.0 10.0 -10.0 10.0
+create_box 1 myReg
+create_atoms 1 random 10 1 myReg # 313 is the seed
+#create_atoms 1 single 0 0 0 
+mass 1 1.0
+velocity all create 300.0 313 rot no dist gaussian
+run 0
+velocity all scale 300.0
+#velocity all set 10.0 0.0 0.0
+fix 1 all nve
+
+#timestep 1.0
+dump myDump all image 10 out/simple_box.*.jpg type type 
+dump_modify myDump pad 4
+run 1000
