@@ -1,13 +1,50 @@
 \section{Theory}
 \label{sec:theory}
-\subsection{Theoretical description of hard-sphere fluids}
-Theroretical models of hard-sphere fluids are important descriptions of fluids.
-% Write a proper introduction.
-Of particular interest for this project is the Enskog equation for the viscosity of fluids, and its generalization to hard-sphere fluid mixtures.
+\subsection{Theoretical description of the viscosity of hard-sphere fluids}
+% TODO: Write a proper introduction.
+%
+Enskog theory describes transport properties of hard sphere fluids, as an approximation to real gas behaviour.
+Of particular interest for this work is the Enskog equation for the viscosity of such fluids,
+consisting of \emph{one} type of particle, of mass $m$ and diameter $\sigma$.
+\begin{align}
+    \begin{split}
+        \eta(n,T) 
+            &= \frac{\eta^0}{\chi} (1+\frac{1}{2} \alpha \chi n)^2 + \frac{3}{5} \bar{\omega}, \quad \text{where}\\
+        \alpha 
+            &= \frac{8}{15} \pi \sigma^3, \quad \text{and} \\
+        \bar{\omega} 
+            &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
+    \end{split}
+\end{align}
+Here, $\eta^0 = \eta(0, T)$ is the viscosity in the zero-density limit, 
+and $\chi$ is a radial distribution function at contact, 
+describing the statistical distribution of particles around a pair of colliding particles.
+This determines how the collision frequency depends on the density of the fluid.
 
-\subsection{Simulation hard-sphere fluids}
+The Enskog equation was generalized by Thorne to describe two-component 
+fluid mixtures\cite{ref:chapman:non_uniform_gases}, and a further 
+generalization to mixtures of arbitrary component numbers has been 
+performed by Tham and Gubbins\cite{ref:tham:fluid_mixtures}.
+The results are outlined below, as presented in \cite{ref:pippo:composition_dependence}.
+
+The viscosity of a binary mixture of hard-sphere fluids is given by
+\begin{equation}
+    \eta_{\text{mix}} 
+        = \left(
+            \frac{y_1^2}{H_{11}} + \frac{y_2^2}{H_{22}} - \frac{2 y_1 y_2 H_{12}}{H_{11} H_{22}}
+        \right)
+        \left(
+            1 - \frac{H_{12}^2}{H_{11} H_{22}}
+        \right)^{-1}
+        + \frac{3}{5} \bar{\omega}_{\text{mix}}
+\end{equation}
+
+
+
+\subsection{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of hard spheres.
-While Monte Carlo methods are relatively simple to use with hard sphere potentials -- that is, spherical particles (molecules) wia non-continous interaction potential of the form
+While Monte Carlo methods are relatively simple to use with hard sphere potentials, 
+that is spherical particles (molecules) via non-continuous interaction potential of the form
 \begin{equation}
     u = 
     \begin{cases}
@@ -15,9 +52,9 @@ While Monte Carlo methods are relatively simple to use with hard sphere potentia
         0, & r > \sigma,
     \end{cases}
 \end{equation}
-molecular dynamics methods allow calculating dynamical and out-of-equilibrium properties of a system \cite{allen:MD_sim}.
+molecular dynamics methods allow calculating dynamical and out-of-equilibrium properties of a system \cite{ref:allen:MD_sim}.
 
-Furthermore, Jover et. al \cite{jover:pseudo_hard} has shown that a pseudo hard Mie (or generalized Lennard-Jones) potential
+Furthermore, Jover et al. \cite{ref:jover:pseudo_hard} has shown that a pseudo hard Mie (or generalized Lennard-Jones) potential
 \begin{equation}
     u_{\text{Mie}}(r) = 
         \frac{\lambda_r}{\lambda_r - \lambda_a}
@@ -50,7 +87,7 @@ This gives a steep non-negative potential of the form
     \end{cases}
 \end{equation}
 closely resembling that of an infinitely steep hard wall potential.
-Jover et. al chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$ as a compromise between the faithfullness of the pseudo hard representation and comptational speed:
+Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$ as a compromise between the faithfulness of the pseudo hard representation and computational speed:
 Higher exponents will give steeper potentials, but at the expense of making simulations more time-consuming, because shorter time steps are needed.
 For clarity, the Mie (50, 49) potential has the form
 \begin{equation}
@@ -69,4 +106,4 @@ For clarity, the Mie (50, 49) potential has the form
     \end{cases}
 \end{equation}
 
-Pousaneh and de Wijn \cite{pousaneh:shear_viscosity} have shown that such a pseudo-hard wall potential can be used to model viscosity for a one-component, and that the obtained viscosity is in agreement with Enskog theory.
+Pousaneh and de Wijn \cite{ref:pousaneh:shear_viscosity} have shown that such a pseudo-hard wall potential can be used to model viscosity for a one-component, and that the obtained viscosity is in agreement with Enskog theory.
