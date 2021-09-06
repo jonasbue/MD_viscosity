@@ -9,5 +9,8 @@
 *.toc
 *.log
 *.out
-simulation/out/*
+*.glo
+*.ist
+
 log.lammps
+dump.lammps

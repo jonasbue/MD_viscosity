@@ -1,0 +1,48 @@
+### Define variables ###
+# Numbers
+variable L          equal 10.0  # Length of box
+variable N          equal 15    # Number of atoms
+variable ATOM_TYPES equal 2     # Number of atom types 
+variable SEED       equal 313   # Seed for random functions
+variable MASS       equal 1.0   # Particle mass
+variable TEMP       equal 1.5   # Temperature
+variable DT         equal 0.001 # Time step
+variable DUMP_STEPS equal 100   # Timesteps between every dump
+variable CUTOFF     equal 1.6   # Radius at which interaction potential is zero
+
+# Strings
+variable DUMP_FILE  string "dump.lammps"    # Dump filename
+variable POTENTIAL  string "lj/cut"         # Lennard-Jones potential
+
+
+### Define system ###
+atom_style  atomic 
+timestep    ${DT}
+
+# Create a box with sides 2L and center in the origin
+region      REGION block -$L $L -$L $L -$L $L
+create_box  ${ATOM_TYPES} REGION
+#create_atoms 1 random $N ${SEED} REGION # Fill the box with atoms
+#minimize 1.0e-4 1.0e-6 100 10000        # Minimize system energy
+                                        # to remove atom overlaps
+
+#velocity    all create ${TEMP} ${SEED}  # Give the atoms random velocities,
+                                        # distributed around one temperature.
+
+create_atoms 1 single -2.0 0.0 0.0
+mass        1 ${MASS}                   # Give the atoms mass.
+mass        2 ${MASS}                   # Give the atoms mass.
+velocity all set 1.0 0.0 0.0
+create_atoms 2 single 2.0 0.0 0.0 
+#velocity 2 set -1.0 0.0 0.0
+
+pair_style  ${POTENTIAL} ${CUTOFF}      # Define pair interactions
+pair_coeff  * * 1 1                     # Define interaction coefficients
+
+fix 1 all nve   # Fix the system in the 
+                # microcanonical ensemble
+
+### Run simulation ###
+# Make a dump of system
+dump DUMP all custom ${DUMP_STEPS} ${DUMP_FILE} id x y z vx vy vz
+run 10000
