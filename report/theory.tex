@@ -27,7 +27,7 @@ generalization to mixtures of arbitrary component numbers has been
 performed by Tham and Gubbins\cite{ref:tham:fluid_mixtures}.
 The results are outlined below, as presented in \cite{ref:pippo:composition_dependence}.
 
-The viscosity of a binary mixture of hard-sphere fluids is given by
+The viscosity of a dense binary mixture of hard-sphere fluids is given by
 \begin{equation}
     \eta_{\text{mix}} 
         = \left(
@@ -36,16 +36,38 @@ The viscosity of a binary mixture of hard-sphere fluids is given by
         \left(
             1 - \frac{H_{12}^2}{H_{11} H_{22}}
         \right)^{-1}
-        + \frac{3}{5} \bar{\omega}_{\text{mix}}
+        + \frac{3}{5} \bar{\omega}_{\text{mix}},
 \end{equation}
-
+where
+\begin{equation}
+    y_1 
+        = x_1 \left(
+            1 + \frac{1}{2} x_1 \alpha_{11} \chi_{11} n + \frac{m_2}{m_1 + m_2} x_2 \alpha_{12} \chi_{12} n
+        \right), 
+\end{equation}
+and
+\begin{equation}
+    \begin{split}
+        H_{12} &= H_{21}
+                =   -\frac{2 x_1 x_2 \chi_{12}}{\eta^0_{12}}
+                    \cdot \frac{m_1 m_2}{(m_1 + m_2)^2}
+                    \left( \frac{5}{3A^*_{12}} - 1 \right), \\
+        H_{11}
+                &=  -\frac{x_1^2 \chi_{11}}{\eta^0_1}
+                    +\frac{2 x_1 x_2 \chi_{12}}{\eta^0_{12}}
+                    \cdot \frac{m_1 m_2}{(m_1 + m_2)^2}
+                    \left( \frac{5}{3A^*_{12}} + \frac{m_2}{m_1} \right), \\
+    \end{split}
+\end{equation}
+and where $y_2$ and $H_{22}$ follows from exchanging the subscripts in $y_1$ and $H_{11}$ respectively.
+$\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules of type $i$ colliding with molecules of type $j$.
 
 
 \subsection{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of hard spheres.
 While Monte Carlo methods are relatively simple to use with hard sphere potentials, 
-
-that is spherical particles (molecules) via non-continuous interaction potential of the form
+% Something is missing here!
+that is, spherical particles (molecules) via non-continuous interaction potential of the form
 \begin{equation}
     u = 
     \begin{cases}
