@@ -1,16 +1,29 @@
 \section{Theory}
 \label{sec:theory}
 \subsection{Theoretical description of hard-sphere fluids}
-% TODO: Write a proper introduction.
-%
-Enskog theory describes transport properties of hard sphere fluids, as an approximation to real gas behaviour.
-Importantly, Enskog theory assumes that there is no correlation between different collisions, 
+Hard-sphere fluids, meaning fluids constisting of spherical particles (molecules) interacting via the non-continuous potential 
+\begin{equation}
+    \label{eq:hard_sphere_potential}
+    u = 
+    \begin{cases}
+        \infty, & r < \sigma \\
+        0, & r > \sigma,
+    \end{cases}
+\end{equation}
+can model real gas behaviour, and has been an important way to describe fluid and gas states in statistical mechanics.
+Enskog theory is one framework which describes transport properties of such fluids.
+In Enskog theory, a central assumption is that there is no correlation between different collisions,
 meaning that the mean free time between collisions is much larger than the collision duration.
-While this assumption gives useful results, it also means that Enskog theory breaks down at high fluid densities.
+While this assumption gives useful results, it also means that Enskog theory breaks down at high fluid densities,
+when collisions are too frequent to be uncorrelated.
 % TODO: Write more and add a source.
 
-Of particular interest for this work is the Enskog equation for the viscosity of such fluids,
-consisting of one single type of particle (one fluid component), of mass $m$ and diameter $\sigma$.
+\subsection{The viscosity of hard-sphere fluids}
+Of particular interest for this work is the Enskog equation 
+for the viscosity of one-component hard-sphere fluids:
+Fluids consisting only of particles with the same mass $m$ and radius $\sigma$, 
+interacting via the potential described in equation \ref{eq:hard_sphere_potential}.
+The viscosity of such fluids is \cite{ref:pippo:composition_dependence}
 \begin{equation}
     \begin{split}
         \eta(n,T) 
@@ -21,10 +34,12 @@ consisting of one single type of particle (one fluid component), of mass $m$ and
             &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
     \end{split}
 \end{equation}
-Here, $\eta^0 = \eta(0, T)$ is the viscosity in the zero-density limit, 
+Here, $\eta^0 = \eta(0, T)$ is the viscosity of the fluid in the zero-density limit, 
 and $\chi$ is a radial distribution function at contact, 
 describing the statistical distribution of particles around a pair of colliding particles.
 This determines how the collision frequency depends on the density of the fluid.
+$\chi$ can be found for example using the system's equation of state, 
+as done in \cite{ref:pippo:composition_dependence}, a method referred to as Modified Enskog Theory.
 
 The Enskog equation was generalized by Thorne to describe two-component 
 fluid mixtures\cite{ref:chapman:non_uniform_gases}, and a further 
@@ -69,7 +84,7 @@ and where $y_2$ and $H_{22}$ follows from exchanging the subscripts in $y_1$ and
 $A^*_{12}$ is a dimensionless ratio of collision integrals (of type ${ij}$).
 % TODO: See if more ellaboration on this exists.
 For hard spheres, $A^*_{12}$ is exactly unity, and for other forms of interaction, it is close to unity.
-$\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules of type $i$ colliding with molecules of type $j$.
+$\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules of type $i$ colliding with molecules of type $j$, similar to the one-component function $\chi$ above.
 Finally, $\bar{\omega}_{\text{mix}}$ can be written
 \begin{equation}
     \begin{split}
@@ -80,21 +95,12 @@ Finally, $\bar{\omega}_{\text{mix}}$ can be written
     \end{split}
 \end{equation}
 
-%Equation \ref{eq:viscosity_binary} has also been generalized to any number of components by \cite{ref:tham:fluid_mixtures}.
-% TODO: Should I include this as well?
-%       Or maybe just include one and multiple components?
+% TODO: Should I include the multi-component equation as well?
+%       Or maybe just include one and many components, and skip two-compnent?
 
 \subsection{Simulation of hard-sphere fluids}
-Several methods exist for simulating fluids consisting of hard spheres.
-While Monte Carlo methods are relatively simple to use with hard sphere potentials, 
-that is, spherical particles (molecules) interacting via the non-continuous potential 
-\begin{equation}
-    u = 
-    \begin{cases}
-        \infty, & r < \sigma \\
-        0, & r > \sigma,
-    \end{cases}
-\end{equation}
+Several methods exist for simulating fluids consisting of rigid spheres.
+While Monte Carlo methods are relatively simple to use with hard-sphere potentials, 
 molecular dynamics methods allow calculating dynamical and out-of-equilibrium properties of a system \cite{ref:allen:MD_sim}.
 
 Furthermore, Jover et al. \cite{ref:jover:pseudo_hard} has shown that a pseudo hard Mie (or generalized Lennard-Jones) potential
@@ -108,7 +114,9 @@ Furthermore, Jover et al. \cite{ref:jover:pseudo_hard} has shown that a pseudo h
             \left(\frac{\sigma}{r}\right)^{\lambda_a}
         \right],
 \end{equation}
-can approximate a hard-sphere interaction potential well, when the repulsive part of the Mie potential is isolated, by shifting it upwards by its minimal value (the well depth $\epsilon$), and cutting it off here, setting the potential to zero once it has reached its minimum.
+can approximate a hard-sphere interaction potential well, when the repulsive part of the Mie potential 
+is isolated by shifting it upwards by its minimal value (the well depth $\epsilon$), and cutting it off there, 
+setting the potential to zero once it has reached its minimum.
 This gives a steep non-negative potential of the form
 \begin{equation}
     u_{(\lambda_a, \lambda_b)}(r) = 
@@ -129,10 +137,13 @@ This gives a steep non-negative potential of the form
             \right)^\frac{1}{\lambda_r - \lambda_a},
     \end{cases}
 \end{equation}
-closely resembling that of an infinitely steep hard wall potential.
-Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$ as a compromise between the faithfulness of the pseudo hard representation and computational speed:
-Higher exponents will give steeper potentials, but at the expense of making simulations more time-consuming, because shorter time steps are needed.
-For clarity, the Mie (50, 49) potential has the form
+closely resembling that of an infinitely steep hard wall potential (equation \ref{eq:hard_sphere_potential}).
+Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$ as a compromise between 
+faithfulness of the pseudo hard representation towards the perfectly hard wall, and computational speed:
+Higher exponents will give steeper potentials, but at the expense of making simulations more time-consuming, 
+because shorter time steps are needed.
+
+Writing it out for clarity, the Mie (50, 49) potential has the form
 \begin{equation}
     u_{(50, 49)}(r) = 
     \begin{cases}
@@ -149,4 +160,9 @@ For clarity, the Mie (50, 49) potential has the form
     \end{cases}
 \end{equation}
 
-Pousaneh and de Wijn \cite{ref:pousaneh:shear_viscosity} have shown that such a pseudo-hard wall potential can be used to model viscosity for a one-component, and that the obtained viscosity is in agreement with Enskog theory.
+Pousaneh and de Wijn \cite{ref:pousaneh:shear_viscosity} 
+have shown that such a pseudo-hard wall potential 
+can be used to model viscosity for a one-component hard-sphere fluid, 
+and that the obtained viscosity is in agreement with Enskog theory.
+However, to the best of our knowledge, such a confirmation has not 
+been published for fluids of more than one component. 
