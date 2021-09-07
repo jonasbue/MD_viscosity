@@ -1,13 +1,13 @@
 ### Define variables ###
 ## Numbers
-variable L          equal 10.0  # Length of box
-variable N          equal 50    # Number of atoms
+variable L          equal 5.0  # Length of box
+variable N          equal 1000    # Number of atoms
 variable ATOM_TYPES equal 1     # Number of atom types 
 variable TEMP       equal 1.5   # Temperature
 variable SEED       equal 313   # Seed for random functions
 
 variable MASS       equal 1.0   # Particle mass
-variable CUTOFF     equal 1.0   # Radius at which interaction potential is zero
+variable CUTOFF     equal 2.5   # Radius at which interaction potential is zero
 
 variable DT         equal 0.001 # Time step
 variable DUMP_STEPS equal 100   # Timesteps between every dump
@@ -26,20 +26,20 @@ create_box  ${ATOM_TYPES} REGION
 create_atoms 1 random $N ${SEED} REGION # Fill the box with atoms
 mass        1 ${MASS}                   # Give the atoms mass.
 
-minimize 1.0e-4 1.0e-6 100 10000        # Minimize system energy
-                                        # to remove atom overlaps
-                                        # Numbers are taken from example in docs.
-
 velocity    all create ${TEMP} ${SEED}  # Give the atoms random velocities,
                                         # distributed around one temperature.
 
 pair_style  ${POTENTIAL} ${CUTOFF}      # Define pair interactions
 pair_coeff  * * 1.0 1.0                 # Define interaction coefficients
+# pair_modify yes
 
 fix 1 all nve                           # Fix the system in the 
                                         # microcanonical ensemble
 
 ### Run simulation ###
+minimize 1.0e-4 0 10000 10000           # Minimize system energy
+                                        # to remove atom overlaps
+                                        # Numbers are taken from example in docs.
 timestep    ${DT}
 
 # Make a dump of system

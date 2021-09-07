@@ -1,22 +1,32 @@
 ### Define variables ###
 ## Numbers
-variable L          equal 10.0  # Length of box
-variable N          equal 120   # Number of atoms
-                                # NOTE: With too many (or too large) 
-                                # atoms, some atoms disappear,
-                                # raising an error.
-
-variable ATOM_TYPES equal 1     # Number of atom types 
+variable L          equal 5.0   # Length of box
+variable N          equal 1000  # Number of atoms
 variable TEMP       equal 1.5   # Temperature
 variable SEED       equal 313   # Seed for random functions
 
+variable ATOM_TYPES equal 1     # Number of atom types 
 variable MASS       equal 1.0   # Particle mass
-variable CUTOFF     equal 1.0   # Radius at which interaction potential is zero
 
-variable DT         equal 0.001 # Time step
-variable DUMP_STEPS equal 100   # Timesteps between every dump
+variable EPSILON    equal 1.0   # Depth of the Mie potential  
+variable SIGMA      equal 1.0   # Particle diameter
+variable MIE_REP    equal 50    # Repulsive exponent
+variable MIE_ATT    equal 49    # Attractive exponent
 
-# Strings
+# Radius at which interaction potential is zero:
+variable CUTOFF     equal ${MIE_REP}/${MIE_ATT} * ${SIGMA}
+
+variable ETOL       equal 1e-4      # Energy toleranze when minimizing system energy.
+variable FTOL       equal 0.0       # Force tolerance when minimizing system energy.
+variable MAXITER    equal 10000     # Max number of iterations when minimizing system energy.
+variable MAXEVAL    equal 10000     # Max number of force/energy evaluations 
+                                    # when minimizing system energy.
+
+variable DT             equal 0.001 # Time step
+variable DUMP_STEPS     equal 100   # Timesteps between every dump
+variable THERMO_OUTPUT  equal 100   # Timesteps between output of thermodynamic quantities.
+
+## Strings
 variable DUMP_FILE  string "dump.lammps"    # Dump filename
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
 
@@ -24,33 +34,39 @@ variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
 ### Define system ###
 atom_style  atomic
 
-# Create a box with sides 2L and center in the origin
-region          REGION block -$L $L -$L $L -$L $L
+# Create a box with sides 2L and center in the origin:
+region          REGION block -$L $L -$L $L -$L $L units box
 create_box      ${ATOM_TYPES} REGION
 create_atoms    1 random $N ${SEED} REGION  # Fill the box with atoms
 mass            1 ${MASS}                   # Give the atoms mass.
 
-minimize        1.0e-4 1.0e-6 100 10000     # Minimize system energy
-                                            # to remove atom overlaps
-                                            # Numbers are taken from example in docs.
 
 velocity        all create ${TEMP} ${SEED}  # Give the atoms random velocities,
                                             # distributed around one temperature.
 
-pair_style      ${POTENTIAL} ${CUTOFF}      # Define pair interactions
-pair_coeff      * * 1.0 0.50 50 49          # Define interaction coefficients
-                                            # QUESTION: In animation, atoms collide when their
-                                            # centers hit each other, not the boundaries.
-                                            # Is that wrong?
-
+# Define pair interactions:
+pair_style  ${POTENTIAL} ${CUTOFF}
+# Define interaction coefficients:
+pair_coeff  * * ${EPSILON} ${SIGMA} ${MIE_REP} ${MIE_ATT}
+# Shifts the Mie potensial so that its cutoff is at zero:
+pair_modify shift yes   
 
 fix 1 all nve   # Fix the system in the 
                 # microcanonical ensemble
 
+# CHECK THIS: In the animation, atoms collide when their
+# centers hit each other, not the boundaries.
 
 ### Run simulation ###
 timestep    ${DT}
 
-# Make a dump of system
+# Write out thermodynamic quantities:
+thermo_style custom step etotal pe ke temp press vol
+thermo ${THERMO_OUTPUT}
+
+# Make a dump of system:
 dump DUMP all custom ${DUMP_STEPS} ${DUMP_FILE} id x y z vx vy vz
-run 10000
+
+# Minimize system energy to remove atom overlaps:
+minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL}   
+run 100000
