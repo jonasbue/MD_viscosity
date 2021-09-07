@@ -1,12 +1,17 @@
 \section{Theory}
 \label{sec:theory}
-\subsection{Theoretical description of the viscosity of hard-sphere fluids}
+\subsection{Theoretical description of hard-sphere fluids}
 % TODO: Write a proper introduction.
 %
 Enskog theory describes transport properties of hard sphere fluids, as an approximation to real gas behaviour.
+Importantly, Enskog theory assumes that there is no correlation between different collisions, 
+meaning that the mean free time between collisions is much larger than the collision duration.
+While this assumption gives useful results, it also means that Enskog theory breaks down at high fluid densities.
+% TODO: Write more and add a source.
+
 Of particular interest for this work is the Enskog equation for the viscosity of such fluids,
-consisting of \emph{one} type of particle, of mass $m$ and diameter $\sigma$.
-\begin{align}
+consisting of one single type of particle (one fluid component), of mass $m$ and diameter $\sigma$.
+\begin{equation}
     \begin{split}
         \eta(n,T) 
             &= \frac{\eta^0}{\chi} (1+\frac{1}{2} \alpha \chi n)^2 + \frac{3}{5} \bar{\omega}, \quad \text{where}\\
@@ -15,7 +20,7 @@ consisting of \emph{one} type of particle, of mass $m$ and diameter $\sigma$.
         \bar{\omega} 
             &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
     \end{split}
-\end{align}
+\end{equation}
 Here, $\eta^0 = \eta(0, T)$ is the viscosity in the zero-density limit, 
 and $\chi$ is a radial distribution function at contact, 
 describing the statistical distribution of particles around a pair of colliding particles.
@@ -40,6 +45,7 @@ The viscosity of a dense binary mixture of hard-sphere fluids is given by
 \end{equation}
 where
 \begin{equation}
+    \label{eq:viscosity_binary}
     y_1 
         = x_1 \left(
             1 + \frac{1}{2} x_1 \alpha_{11} \chi_{11} n + \frac{m_2}{m_1 + m_2} x_2 \alpha_{12} \chi_{12} n
@@ -60,8 +66,23 @@ and
     \end{split}
 \end{equation}
 and where $y_2$ and $H_{22}$ follows from exchanging the subscripts in $y_1$ and $H_{11}$ respectively.
+$A^*_{12}$ is a dimensionless ratio of collision integrals (of type ${ij}$).
+% TODO: See if more ellaboration on this exists.
+For hard spheres, $A^*_{12}$ is exactly unity, and for other forms of interaction, it is close to unity.
 $\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules of type $i$ colliding with molecules of type $j$.
+Finally, $\bar{\omega}_{\text{mix}}$ can be written
+\begin{equation}
+    \begin{split}
+        \bar{\omega}_{\text{mix}} 
+            &= x_1^2 \bar{\omega}_{11} + x_1 x_2 \bar{\omega}_{12} + x_2^2 \bar{\omega}_{22}, \text{where}\\
+        \bar{\omega}_{ij} 
+            &= \frac{4}{9} n^2 \sigma_{ij}^4 \chi_{ij} \sqrt{\frac{2\pi m_1 m_2 \kB T}{m_1 + m_2}} \text{for} i,j = 1,2.
+    \end{split}
+\end{equation}
 
+%Equation \ref{eq:viscosity_binary} has also been generalized to any number of components by \cite{ref:tham:fluid_mixtures}.
+% TODO: Should I include this as well?
+%       Or maybe just include one and multiple components?
 
 \subsection{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of hard spheres.
