@@ -1,6 +1,8 @@
-### Define variables ###
+### ======================================================================== ###
+###                               Define variables                           ###
+### ======================================================================== ###
 ## Numbers
-variable PACKING    equal 0.4   # Packing fraction of the system
+variable PACKING    equal 0.01   # Packing fraction of the system
 variable N          equal 1000  # Number of atoms
 variable SEED       equal 313   # Seed for random functions
 variable TEMP       equal 1.5   # Temperature
@@ -37,10 +39,13 @@ variable DUMP_FILE  string "dump.lammps"    # Dump filename
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
 variable THERMOSTAT string "temp/berendsen" # Berendsen thermostat
 
-### =================================================== ###
-### =================================================== ###
 
-### Define system ###
+
+
+### ======================================================================== ###
+###                               Define system                              ###
+### ======================================================================== ###
+
 atom_style  atomic
 
 # Create a box shaped region with sides 2L and center in the origin:
@@ -76,11 +81,19 @@ dump DUMP all custom ${DUMP_STEPS} ${DUMP_FILE} id x y z vx vy vz
 compute T all temp          # Compute temperature
 compute P all pressure T    # Compute pressure
 
-# Write average pressure values to a file:
-#fix PRESSURE all ave/time 100 5 1000 c_P c_T v_L file data/${PACKING}.csv
+# Write out time-avrages of the global quantities  
+# pressure, temperature and box length, and
+# save to file with name {eta}.csv.
+fix PRESSURE all ave/time 100 5 1000 & 
+    c_P c_T v_L file data/$(v_PACKING:%.0e).csv  
 
 
-### Run simulation ###
+
+
+### ======================================================================== ###
+###                             Run simulation                               ###
+### ======================================================================== ###
+
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
 run         ${RUN_STEPS}
