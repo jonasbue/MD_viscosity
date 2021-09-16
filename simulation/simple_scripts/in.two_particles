@@ -8,11 +8,16 @@ variable MASS       equal 1.0   # Particle mass
 variable TEMP       equal 1.5   # Temperature
 variable DT         equal 0.001 # Time step
 variable DUMP_STEPS equal 150   # Timesteps between every dump
-variable CUTOFF     equal 1.6   # Radius at which interaction potential is zero
+
+variable EPSILON    equal 1.0   # Depth of the Mie potential  
+variable SIGMA      equal 1.0   # Particle diameter
+variable MIE_REP    equal 50    # Repulsive exponent
+variable MIE_ATT    equal 49    # Attractive exponent
+variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
 
 # Strings
 variable DUMP_FILE  string "dump.lammps"    # Dump filename
-variable POTENTIAL  string "lj/cut"         # Lennard-Jones potential
+variable POTENTIAL  string "mie/cut"         # Lennard-Jones potential
 
 
 ### Define system ###
@@ -22,22 +27,19 @@ timestep    ${DT}
 # Create a box with sides 2L and center in the origin
 region      REGION block -$L $L -$L $L -$L $L
 create_box  ${ATOM_TYPES} REGION
-#create_atoms 1 random $N ${SEED} REGION # Fill the box with atoms
-#minimize 1.0e-4 1.0e-6 100 10000        # Minimize system energy
-                                        # to remove atom overlaps
 
-#velocity    all create ${TEMP} ${SEED}  # Give the atoms random velocities,
-                                        # distributed around one temperature.
-
+# Create two atoms.
+# One moving towards the other.
 create_atoms 1 single -2.0 0.0 0.0
-mass        1 ${MASS}                   # Give the atoms mass.
-mass        2 ${MASS}                   # Give the atoms mass.
+mass        1 ${MASS}
+mass        2 ${MASS}
 velocity all set 1.0 0.0 0.0
 create_atoms 2 single 2.0 0.0 0.0 
-#velocity 2 set -1.0 0.0 0.0
 
-pair_style  ${POTENTIAL} ${CUTOFF}      # Define pair interactions
-pair_coeff  * * 1 1                     # Define interaction coefficients
+# Define pair interactions
+pair_style  ${POTENTIAL} ${CUTOFF}
+pair_coeff  * * ${EPSILON} ${SIGMA} ${MIE_REP} ${MIE_ATT}
+pair_modify shift yes   
 
 fix 1 all nve   # Fix the system in the 
                 # microcanonical ensemble
