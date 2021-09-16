@@ -17,7 +17,7 @@ variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
 
 # Strings
 variable DUMP_FILE  string "dump.lammps"    # Dump filename
-variable POTENTIAL  string "mie/cut"         # Lennard-Jones potential
+variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
 
 
 ### Define system ###
@@ -28,23 +28,21 @@ timestep    ${DT}
 region      REGION block -$L $L -$L $L -$L $L
 create_box  ${ATOM_TYPES} REGION
 
-# Create two atoms.
-# One moving towards the other.
-create_atoms 1 single -2.0 0.0 0.0
-mass        1 ${MASS}
-mass        2 ${MASS}
-velocity all set 1.0 0.0 0.0
-create_atoms 2 single 2.0 0.0 0.0 
+# Create two atoms, one moving towards the other.
+create_atoms    1 single -2.0 0.8 0.0
+mass            1 ${MASS}
+mass            2 ${MASS}
+velocity        all set 1.0 0.0 0.0
+create_atoms    2 single 2.0 0.0 0.0 
 
 # Define pair interactions
 pair_style  ${POTENTIAL} ${CUTOFF}
 pair_coeff  * * ${EPSILON} ${SIGMA} ${MIE_REP} ${MIE_ATT}
 pair_modify shift yes   
-
-fix 1 all nve   # Fix the system in the 
-                # microcanonical ensemble
+fix         1 all nve   # Fix the system in the 
+                        # microcanonical ensemble
 
 ### Run simulation ###
 # Make a dump of system
-dump DUMP all custom ${DUMP_STEPS} ${DUMP_FILE} id x y z vx vy vz
-run 5000
+dump    DUMP all custom ${DUMP_STEPS} ${DUMP_FILE} id x y z vx vy vz
+run     5000
