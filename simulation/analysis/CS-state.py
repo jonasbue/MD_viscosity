@@ -1,5 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+font = {
+    "family": "normal",
+    "size"  : "22",
+}
+plt.rc("font", **font)
 
 def Z(p, V, N, T, k=1):
     return p*V/(N*k*T)
@@ -51,7 +56,8 @@ plt.plot(
     eta_range, 
     Z_theoretical(eta_range), 
     "-", 
-    label="Carnahan-Starling EoS"
+    label="Carnahan-Starling EoS",
+    linewidth=3
 )
 plt.xlabel("Packing fraction")
 plt.ylabel("Compressibility factor")
