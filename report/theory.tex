@@ -5,21 +5,8 @@
 
 \label{sec:theory}
 \subsection{Theoretical description of hard-sphere fluids}
-%Hva du hadde:
-%Hard-sphere fluids, meaning fluids constisting of spherical particles (molecules) %interacting via the non-continuous potential 
-%\begin{equation}
-%    \label{eq:hard_sphere_potential}
-%    u = 
-%    \begin{cases}
-%        \infty, & r < \sigma \\
-%        0, & r > \sigma,
-%    \end{cases}
-%\end{equation}
-%can model real gas behaviour, and has been an important way to describe fluid and gas states in statistical mechanics.
-%Enskog theory is one framework which describes transport properties of such fluids.
-
-%Hva du burde ha
-Hard-sphere (HS) fluids are fluids consisting of spherical particles interacting via the non-continuous potential in equation \ref{eq:hard_sphere_potential}:
+Hard-sphere (HS) fluids are fluids consisting of spherical particles interacting via the non-continuous potential 
+% in equation \ref{eq:hard_sphere_potential}
 \begin{equation}
     \label{eq:hard_sphere_potential}
     u = 
@@ -28,31 +15,39 @@ Hard-sphere (HS) fluids are fluids consisting of spherical particles interacting
         0, & r > \sigma.
     \end{cases}
 \end{equation}
-% Alltid forklar nye variabler og symboler i en formel.
-$u$ is the interaction potential between two particles, $r$ is the distance between them and $\sigma$ is the diameter of the particles. This potential makes it possible to analytically describe certain fluid properties using statistical mechanics. The HS potential is especially useful when modeling transport properties such as viscosity.
+$u$ is the interaction potential between two particles, $r$ is the distance between them, and $\sigma$ is the diameter of the particles. 
+This potential makes it possible to analytically describe certain fluid properties using statistical mechanics. 
+The HS potential is especially useful when modeling transport properties such as viscosity.
 
-% TODO: Write more and add a source.
 
 \subsection{Transport properties}
+% TODO:
 % Fyll inn tekst her
+% Nevn noe av Enskog-informasjonen fra neste seksjon her.
 
 
 
 \subsection{The viscosity of hard-sphere fluids}
-The central equation modeling the viscosity of HS fluids is the Enskog equation. This equation applies to one-component HS fluids consisting only of particles with the same mass $m$ and radius $\sigma$.
-% Interaksjonspotensialet trenger ikke å gjentas.
+The central equation modeling the viscosity of HS fluids is the Enskog equation. 
+This equation applies to one-component HS fluids consisting only of particles with the same mass $m$ and radius $\sigma$.
 The viscosity of such fluids is \cite{ref:pippo:composition_dependence}
-% Bruk heller den enklere formen slik den er gitt f.eks. i Faezeh sitt paper.
 \begin{equation}
-    \begin{split}
-        \eta(n,T) 
-            &= \frac{\eta^0}{\chi} (1+\frac{1}{2} \alpha \chi n)^2 + \frac{3}{5} \bar{\omega}, \quad \text{where}\\
-        \alpha 
-            &= \frac{8}{15} \pi \sigma^3, \quad \text{and} \\
-        \bar{\omega} 
-            &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
-    \end{split}
+    \eta(n,T) 
+        = \eta_0 \left[g^{-1}(\sigma) 
+        + 0.8   \, V_{\text{excl}}      \,\rho 
+        + 0.776 \, V_{\text{excl}}^2    \,\rho^2 g(\sigma) 
+        \right].
 \end{equation}
+%\begin{equation}
+%    \begin{split}
+%        \eta(n,T)
+%            &= \frac{\eta^0}{\chi} (1+\frac{1}{2} \alpha \chi n)^2 + \frac{3}{5} \bar{\omega}, \quad \text{where}\\
+%        \alpha
+%            &= \frac{8}{15} \pi \sigma^3, \quad \text{and} \\
+%        \bar{\omega}
+%            &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
+%    \end{split}
+%\end{equation}
 Here, $\eta^0 = \eta(0, T)$ is the viscosity of the fluid in the zero-density limit, 
 and $\chi$ is a radial distribution function at contact, 
 describing the statistical distribution of particles around a pair of colliding particles.
@@ -60,7 +55,10 @@ This determines how the collision frequency depends on the density of the fluid.
 $\chi$ can be found for example using the system's equation of state, 
 as done in \cite{ref:pippo:composition_dependence}, a method referred to as Modified Enskog Theory.
 
-%Flytt biten om Enskog til: The viscosity of hard sphere fluids. Deler av dette kan også nevnes i seksjonen om transportegenskaper. Det er et generelt problem det du beskriver om MFT.
+% TODO:
+% Flytt biten om Enskog til: The viscosity of hard sphere fluids. 
+% Deler av dette kan også nevnes i seksjonen om transportegenskaper. 
+% Det er et generelt problem det du beskriver om MFT.
 
 In Enskog theory, a central assumption is that there is no correlation between different collisions. 
 This means that the mean free time between collisions is much larger than the collision duration. 
@@ -68,16 +66,16 @@ The lack of correlated interactions does not work for real fluids with long rang
 However, the assumption is more acceptable for low density HS-fluids. 
 Enskog theory breaks down at high fluid densities, when collisions are too frequent to be uncorrelated, even for HS fluids.
 
-%En anen begrensende faktor er det ekskluderte volumet i fluidet. Ved lav tetthet er det en rimelig antagelse at ekskludert volum bare er partikkel-volum, men ved høy tetthet kan geometriske betraktninger føre til et noe høyere eksludert volum.
-% Dette kan jeg trenge en forklaring på.
+% TODO:
+%En anen begrensende faktor er det ekskluderte volumet i fluidet. 
+% Ved lav tetthet er det en rimelig antagelse at ekskludert volum bare er partikkel-volum, men ved høy tetthet kan geometriske betraktninger føre til et noe høyere eksludert volum.
+% Svar: Dette kan jeg trenge en forklaring på.
 
 \subsection{Viscosity of mixtures}
-
-The Enskog equation was generalized by Thorne to describe two-component 
-fluid mixtures\cite{ref:chapman:non_uniform_gases}, and a further 
-generalization to mixtures of arbitrary component numbers has been 
-performed by Tham and Gubbins\cite{ref:tham:fluid_mixtures}.
-% Fjern komma og lag heller en ny setning. Typ: ... fluid mixtures. A further gen...
+The Enskog equation was generalized by Thorne to describe 
+two-component fluid mixtures\cite{ref:chapman:non_uniform_gases}.
+A further generalization to mixtures of arbitrary component numbers 
+has been performed by Tham and Gubbins\cite{ref:tham:fluid_mixtures}.
 The results are outlined below, as presented in \cite{ref:pippo:composition_dependence}.
 
 The viscosity of a dense binary mixture of hard-sphere fluids is given by
@@ -130,16 +128,19 @@ Finally, $\bar{\omega}_{\text{mix}}$ can be written
 
 % TODO: Should I include the multi-component equation as well?
 %       Or maybe just include one and many components, and skip two-compnent?
+%       ANSWER: Start with multi-compnent, then reduce to two.
 
 \subsection{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of rigid spheres.
 While Monte Carlo methods are relatively simple to use with hard-sphere potentials, 
 molecular dynamics methods allow calculating dynamical and out-of-equilibrium properties of a system \cite{ref:allen:MD_sim}.
 
-%Forklar hvorfor vanlig MD er problematisk for HS, at det er mulig å gjøre slik beskrevet i den artikelen du fikk, men at det ikke er praktisk dersom andre interaksjonspotensial er tilstede i tillegg.
+% TODO:
+% Forklar hvorfor vanlig MD er problematisk for HS, 
+% at det er mulig å gjøre slik beskrevet i den artikelen du fikk, 
+% men at det ikke er praktisk dersom andre interaksjonspotensial er tilstede i tillegg.
 
-Jover et al. \cite{ref:jover:pseudo_hard} has shown that a pseudo hard Mie (or generalized Lennard-Jones) potential
-% Alt for mye komma. Vurder en omstrukturering av avsnittet.
+Jover et al. \cite{ref:jover:pseudo_hard} has shown that a Mie (or generalized Lennard-Jones) potential
 \begin{equation}
     u_{\text{Mie}}(r) = 
         \frac{\lambda_r}{\lambda_r - \lambda_a}
@@ -150,10 +151,20 @@ Jover et al. \cite{ref:jover:pseudo_hard} has shown that a pseudo hard Mie (or g
             \left(\frac{\sigma}{r}\right)^{\lambda_a}
         \right],
 \end{equation}
-% Det er ikke et Pseudo hard Mie potensial. Det er et mie potensial som kalles Pseudo Hard Sphere.
-can approximate a hard-sphere interaction potential well, when the repulsive part of the Mie potential is isolated by shifting it upwards by its minimal value 
-(the well depth $\epsilon$), % Fortjener en egen setning. Ikke i parantes
-and cutting it off there, setting the potential to zero once it has reached its minimum.
+can approximate a hard-sphere interaction potential.
+$\epsilon$ is the depth of the potential 
+%
+at it's minimal value, % Is it necessary to point out this?
+%
+% What's a better word than "strength"??
+and $\lambda_r$ and $\lambda_a$ define the strength of the 
+repulsive and attractive parts of the potential.
+As in \ref{eq:hard_sphere_potential}, 
+$\sigma$ and $r$ are the diameter and relative distance of the interacting particles.
+
+The repulsive part of the Mie potential can be isolated by shifting it 
+upwards by its minimal value $\epsilon$ and cutting it off there. 
+Thus, the potential is excactly zero once it has reached its minimum.
 This gives a steep non-negative potential of the form
 \begin{equation}
     u_{(\lambda_a, \lambda_b)}(r) = 
@@ -175,13 +186,15 @@ This gives a steep non-negative potential of the form
     \end{cases}
 \end{equation}
 closely resembling that of an infinitely steep hard wall potential (equation \ref{eq:hard_sphere_potential}).
-Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$ as a compromise between 
-faithfulness of the pseudo hard representation towards the perfectly hard wall, and computational speed:
-% Unngå bruken av kolon midt i en setning. Da skriver du heller om.
-Higher exponents will give steeper potentials, but at the expense of making simulations more time-consuming, 
-% Komma skal bort. Kan for eksempel skrive Higher exponent values will produce a steeper repulsion. This however, comes at a cost. Steeper repulsions are computationally more expensive. 
-% FORKLAR OGSÅ HVORFOR. Brattere kurve krever kortere tidssteg.
-because shorter time steps are needed.
+This potential is referred to as a pseudo hard-sphere potential.
+Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$, 
+as a compromise between faithfulness of the pseudo hard representation 
+towards the perfectly hard wall, and computational speed.
+Higher exponents will produce a steeper repulsion. 
+This however, comes at a cost. 
+The steeper the potential, the shorter time steps are needed to ensure that the computations are precice.
+% Definer presist(?)
+Therefore, steeper repulsions are computationally more expensive to simulate.
 
 Writing it out for clarity, the Mie (50, 49) potential has the form
 \begin{equation}
@@ -204,6 +217,6 @@ Pousaneh and de Wijn \cite{ref:pousaneh:shear_viscosity}
 have shown that such a pseudo-hard sphere potential 
 can be used to model viscosity for a one-component hard-sphere fluid, 
 and that the obtained viscosity is in agreement with Enskog theory.
-% Detter er ikke sjekket, men er jo delvis det du skal gjøre.
-However, to the best of our knowledge, such a confirmation has not 
-been published for fluids of more than one component. 
+% However, to the best of our knowledge, such a confirmation has not 
+% been published for fluids of more than one component. 
+% C: Detter er ikke sjekket, men er jo delvis det du skal gjøre.
