@@ -3,7 +3,7 @@
 ### ======================================================================== ###
 ## Numbers
 # System-wide parameters
-variable PACKING    equal 0.4   # Packing fraction of the system
+variable PACKING    equal 0.01   # Packing fraction of the system
 variable N          equal 1000  # Number of atoms
 variable RAND_SEED  equal 313   # Seed for random functions
 variable TEMP       equal 1.5   # Temperature
@@ -11,7 +11,7 @@ variable TDAMP      equal 100.0 # Damping constant for thermostat
                                 # determining how quickly the system 
                                 # relaxes to desired temperature.
 
-# Atom defining parameters
+# Parameters defining atoms and interactions
 variable ATOM_TYPES equal 1     # Number of atom types 
 variable MASS       equal 1.0   # Particle mass
 variable EPSILON    equal 1.0   # Depth of the Mie potential  
@@ -39,10 +39,16 @@ variable THERMO_OUTPUT  equal 100   # Timesteps between thermo output to
 variable RUN_STEPS      equal 1e4   # Length of simulation.
 
 ## Strings
-variable DUMP_FILE  string "dump.lammps"    # Dump filename
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
 variable THERMOSTAT string "temp/berendsen" # Berendsen thermostat
 
+# Filename definisions.
+# Files will have the structure 
+#   log.eta_0.05.lammps
+# For safety, consider swapping the period decimal with a dash.
+variable FILENAME   string eta_${PACKING} # Skeleton excluding file extensions
+variable DUMP_FILE  string dump.${FILENAME}.lammps  # Dump filename
+variable LOG_FILE   string log.${FILENAME}.lammps   # Log filename.
 
 
 
@@ -54,11 +60,12 @@ atom_style  atomic
 
 # Create a box shaped region with sides 2L and center in the origin:
 region          REGION block -$L $L -$L $L -$L $L units box
-create_box      ${ATOM_TYPES} REGION        # Create a box in REGION.
-create_atoms    1 random $N ${RAND_SEED} REGION  # Fill the box with atoms.
-mass            1 ${MASS}                   # Give the atoms mass.
-velocity        all create ${TEMP} ${RAND_SEED}  # Give the atoms random velocities,
-                                            # distributed around one temperature.
+create_box      ${ATOM_TYPES} REGION                # Create a box in REGION.
+create_atoms    1 random $N ${RAND_SEED} REGION     # Fill the box with atoms.
+mass            1 ${MASS}                           # Give the atoms mass.
+velocity        all create ${TEMP} ${RAND_SEED}     # Give the atoms random 
+                                                    # velocities, distributed 
+                                                    # around one temperature.
 
 # Define pair interactions:
 pair_style  ${POTENTIAL} ${CUTOFF}
@@ -77,14 +84,12 @@ timestep ${DT}
 ### Write out data ###
 # Write out thermodynamic quantities:
 thermo_style    custom step etotal pe ke temp press vol
-thermo          ${THERMO_OUTPUT}
+thermo          ${THERMO_OUTPUT}        # Write thermo during simulation run.
 
 # Make a dump of system:
-dump DUMP all custom ${DUMP_STEPS} ${DUMP_FILE} id x y z vx vy vz
-
-compute T all temp          # Compute temperature
-compute P all pressure T    # Compute pressure
-
+dump    DUMP all custom ${DUMP_STEPS} & 
+        ${DUMP_FILE} id x y z vx vy vz
+log     ${LOG_FILE}
 
 
 ### ======================================================================== ###
@@ -93,4 +98,4 @@ compute P all pressure T    # Compute pressure
 
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
-run         ${RUN_STEPS}
+run         ${RUN_STEPS}    # Run simulation

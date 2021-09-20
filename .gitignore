@@ -12,7 +12,8 @@
 *.glo
 *.ist
 
-log.lammps
-dump.lammps
+log.*.lammps
+dump.*.lammps
+*.csv
 
-__pycache__/*
+analysis/__pycache__/*

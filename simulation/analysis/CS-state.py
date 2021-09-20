@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import convert_LAMMPS_output as convert
 
@@ -40,18 +41,19 @@ def load_system(filename):
         thermodynamical variables from it,
         as a numpy array.
         Inputs:
-            filename:    name of logfile, string.
+            filename:   name of logfile, string.
+        Returns:
+            log:        Array of logged values from LAMMPS.
+                        First index selects the variable,
+                        second index selects the timestep.
     """
-    # Assumes filename on the form
-    #   eta.csv
-    # with eta being a decimal number.
-    #filename = "data/{:.0e}.csv".format(eta)
     convert.convert_log_to_csv(filename)
-    log = np.loadtxt(
+    log = pd.read_csv(
         filename + ".csv", 
         skiprows=2, 
         delimiter=","
     )
+    log = np.array(log)
     return log.transpose()
 
 def plot_Z(p, V, T, eta):
@@ -83,22 +85,23 @@ def unpack_global_varables(log_table):
     return p, V, T
 
 N = 1000
-eta = 0.3
+eta_list = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5])
 
 # Calculate values of Z from measured p, V and T.
-log_table = load_system("log.lammps")
-p, V, T = unpack_global_varables(log_table)
-plot_Z(p, V, T, eta)
+for eta in eta_list:
+    log_table = load_system(f"log.eta_{eta}.lammps")
+    p, V, T = unpack_global_varables(log_table)
+    plot_Z(p, V, T, eta)
 
 # Plot theoretical values, from CS-EoS
 eta_range = np.linspace(0, 0.5)
-plt.plot(
-    eta_range, 
-    Z_Carnahan_Starling(eta_range), 
-    "-", 
-    label="Carnahan-Starling EoS",
-    linewidth=3
-)
+#plt.plot(
+#    eta_range, 
+#    Z_Carnahan_Starling(eta_range), 
+#    "-", 
+#    label="Carnahan-Starling EoS",
+#    linewidth=3
+#)
 
 # Show figure
 plt.xlabel("Packing fraction")
