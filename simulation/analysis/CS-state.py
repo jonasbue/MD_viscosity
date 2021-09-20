@@ -1,64 +1,106 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import convert_LAMMPS_output as convert
+
+# Increase font size in plots
 font = {
-    "family": "normal",
     "size"  : "22",
 }
 plt.rc("font", **font)
 
 def Z(p, V, N, T, k=1):
+    """ Computes compressibility factor of a system.
+        Inputs:
+            p:      pressure, float.
+            V:      volume, float.
+            N:      number of particles, float.
+            T:      temperature, float.
+            k:      boltzmann constant, float.
+                    Default value is 1, which is the
+                    value in lj reduced units.
+        Returns:
+            Z:      Compressibility factor.
+            
+    """
     return p*V/(N*k*T)
 
-def Z_theoretical(n):
-    # n is the packing fraction of the system.
-    # Using n instead of eta, for readability.
+def Z_Carnahan_Starling(n):
+    """ Returns expected compressibility factor
+        based on the Carnahan-Starling EoS,
+        for a given packing fraction n.
+        Inputs:
+            n:  packing franction of system, float.
+        Returns:
+            Z:  compressibility factor, float.
+    """
     return (1 + n + n**2 - n**3) / (1 - n)**3
 
-def load_pressure(eta):
+def load_system(filename):
+    """ Loads a LAMMPS logfile, and returns
+        thermodynamical variables from it,
+        as a numpy array.
+        Inputs:
+            filename:    name of logfile, string.
+    """
     # Assumes filename on the form
     #   eta.csv
     # with eta being a decimal number.
-    filename = "data/{:.0e}.csv".format(eta)
-    pressures = np.loadtxt(filename)
-    return pressures
+    #filename = "data/{:.0e}.csv".format(eta)
+    convert.convert_log_to_csv(filename)
+    log = np.loadtxt(
+        filename + ".csv", 
+        skiprows=2, 
+        delimiter=","
+    )
+    return log.transpose()
 
-def plot_Z(P, eta):
+def plot_Z(p, V, T, eta):
+    """ Plots compressibility factor of the system,
+        from measurred values of p, V and T,
+        for a given packing fraction.
+        Inputs:
+            p:      pressure, one-dimensional array.
+            V:      volume, one-dimensional array.
+            T:      temperature, one-dimensional array.
+            eta:    packing fraction, float. 
+    """
     plt.plot(
-        np.full(len(P[:,1]), eta), 
-        Z(P[:,1], (2*P[:,3])**3, N, P[:,2]),
+        np.full_like(p, eta),
+        Z(p, V, N, T),
         "o", label=f"$\eta$ = {eta}"
     )                          
 
+def unpack_global_varables(log_table):
+    """ Unpacks temperature, pressure and volume 
+        from log table generated woth load_system.
+        NOTE: Super unsafe. 
+        Note also the order of the variables.
+    """
+    # TODO: Use header to make this safer.
+    p = log_table[6]
+    V = log_table[7]
+    T = log_table[5]
+    return p, V, T
+
 N = 1000
-eta_0 = 0.01
-eta_1 = 0.1
-eta_2 = 0.2
-eta_3 = 0.3
-eta_4 = 0.4
-eta_5 = 0.5
+eta = 0.3
+
+# Calculate values of Z from measured p, V and T.
+log_table = load_system("log.lammps")
+p, V, T = unpack_global_varables(log_table)
+plot_Z(p, V, T, eta)
+
+# Plot theoretical values, from CS-EoS
 eta_range = np.linspace(0, 0.5)
-
-p0 = load_pressure(eta_0)
-p1 = load_pressure(eta_1)
-p2 = load_pressure(eta_2)
-p3 = load_pressure(eta_3)
-p4 = load_pressure(eta_4)
-p5 = load_pressure(eta_5)
-
-plot_Z(p0, eta_0)
-plot_Z(p1, eta_1)
-plot_Z(p2, eta_2)
-plot_Z(p3, eta_3)
-plot_Z(p4, eta_4)
-plot_Z(p5, eta_5)
-
 plt.plot(
     eta_range, 
-    Z_theoretical(eta_range), 
+    Z_Carnahan_Starling(eta_range), 
     "-", 
     label="Carnahan-Starling EoS",
     linewidth=3
 )
+
+# Show figure
 plt.xlabel("Packing fraction")
 plt.ylabel("Compressibility factor")
 plt.legend()
