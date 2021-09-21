@@ -13,6 +13,7 @@
 *.ist
 
 log.*.lammps
+log.lammps
 dump.*.lammps
 *.csv
 
