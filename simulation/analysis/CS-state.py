@@ -36,7 +36,35 @@ def Z_Carnahan_Starling(n):
     """
     return (1 + n + n**2 - n**3) / (1 - n)**3
 
-def load_system(filename):
+def get_variable_indices(header, variables):
+    """ Searches the header of a log file for 
+        indices of different variables.
+        Inputs:
+            header:     headline of thermo output table, np.array.
+            variables:  list of variable names as strings/chars.
+                        Can include the following:
+                            pressure:       "p"
+                            volume:         "V"
+                            temperature:    "T"
+        Returns:
+            indices:    np array containing indices of the
+                        variables in the same order as they
+                        were given in the input argument.
+    """
+    var_dict = {
+        "Press"     : "p",
+        "Volume"    : "V",
+        "Temp"      : "T",
+    }
+    indices = np.zeros_like(variables, dtype=int)
+    for (i, var) in enumerate(header):
+        if var in var_dict.keys():
+            n = variables.index(var_dict[var])
+            indices[n] = i
+    return indices
+
+
+def load_system(filename, variables):
     """ Loads a LAMMPS logfile, and returns
         thermodynamical variables from it,
         as a numpy array.
@@ -46,6 +74,7 @@ def load_system(filename):
             log:        Array of logged values from LAMMPS.
                         First index selects the variable,
                         second index selects the timestep.
+            indices:    
     """
     convert.convert_log_to_csv(filename)
     log = pd.read_csv(
@@ -72,36 +101,42 @@ def plot_Z(p, V, T, eta):
         "o", label=f"$\eta$ = {eta}"
     )                          
 
-def unpack_global_varables(log_table):
-    """ Unpacks temperature, pressure and volume 
-        from log table generated woth load_system.
-        NOTE: Super unsafe. 
-        Note also the order of the variables.
+def unpack_varables(log_table, filename, variables):
+    """ Unpacks specified variables from log table 
+        with a header from a LAMMPS log file.
     """
-    # TODO: Use header to make this safer.
-    p = log_table[6]
-    V = log_table[7]
-    T = log_table[5]
-    return p, V, T
+    headers = np.array(
+        pd.read_csv(filename+".csv", nrows=0).columns
+    )
+    indices = get_variable_indices(headers, variables)
+    return log_table[indices]
+
 
 N = 1000
 eta_list = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5])
+variable_list = ["p", "V", "T"]
 
 # Calculate values of Z from measured p, V and T.
 for eta in eta_list:
-    log_table = load_system(f"log.eta_{eta}.lammps")
-    p, V, T = unpack_global_varables(log_table)
-    plot_Z(p, V, T, eta)
+    filename = f"log.eta_{eta}.lammps"
+    log_table = load_system( filename, variable_list)
+    pvt = unpack_varables( log_table, filename, variable_list)
+    plot_Z(
+        np.mean(pvt[variable_list.index("p")]), 
+        np.mean(pvt[variable_list.index("V")]), 
+        np.mean(pvt[variable_list.index("T")]), 
+        eta
+    )
 
 # Plot theoretical values, from CS-EoS
 eta_range = np.linspace(0, 0.5)
-#plt.plot(
-#    eta_range, 
-#    Z_Carnahan_Starling(eta_range), 
-#    "-", 
-#    label="Carnahan-Starling EoS",
-#    linewidth=3
-#)
+plt.plot(
+    eta_range, 
+    Z_Carnahan_Starling(eta_range), 
+    "-", 
+    label="Carnahan-Starling EoS",
+    linewidth=3
+)
 
 # Show figure
 plt.xlabel("Packing fraction")
