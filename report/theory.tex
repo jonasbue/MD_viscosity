@@ -1,12 +1,13 @@
 \section{Theory}
+\label{sec:theory}
 % Generell kommentar: Du har for lange setninger. Slutt med delsetninger etc. Dette er vanlig på norsk, men gir lange kronglete setninger på engelsk. Om du må trekke pusten for å komme gjennom er det for langt.
 
 % Jeg viser hva jeg mener i første avsnitt så kan du gjøre endringer i resten
 
-\label{sec:theory}
 \subsection{Theoretical description of hard-sphere fluids}
-Hard-sphere (HS) fluids are fluids consisting of spherical particles interacting via the non-continuous potential 
-% in equation \ref{eq:hard_sphere_potential}
+Hard-sphere (HS) fluids are fluids consisting of spherical particles 
+interacting via the non-continuous potential 
+% in equation \eqref{eq:hard_sphere_potential}
 \begin{equation}
     \label{eq:hard_sphere_potential}
     u = 
@@ -15,23 +16,28 @@ Hard-sphere (HS) fluids are fluids consisting of spherical particles interacting
         0, & r > \sigma.
     \end{cases}
 \end{equation}
-$u$ is the interaction potential between two particles, $r$ is the distance between them, and $\sigma$ is the diameter of the particles. 
-This potential makes it possible to analytically describe certain fluid properties using statistical mechanics. 
-The HS potential is especially useful when modeling transport properties such as viscosity.
+$u$ is the interaction potential between two particles, 
+$r$ is the distance between them, 
+and $\sigma$ is the diameter of the particles.
+This potential makes it possible to analytically describe 
+certain fluid properties using statistical mechanics. 
+The HS potential is especially useful when modeling 
+transport properties such as viscosity.
 
 
 \subsection{Transport properties}
-% TODO:
-% Fyll inn tekst her
+% TODO: Fyll inn tekst her.
 % Nevn noe av Enskog-informasjonen fra neste seksjon her.
 
 
 
 \subsection{The viscosity of hard-sphere fluids}
 The central equation modeling the viscosity of HS fluids is the Enskog equation. 
-This equation applies to one-component HS fluids consisting only of particles with the same mass $m$ and radius $\sigma$.
+This equation applies to one-component HS fluids consisting only of particles 
+with the same mass $m$ and radius $\sigma$.
 The viscosity of such fluids is \cite{ref:pippo:composition_dependence}
 \begin{equation}
+    \label{eq:one_component_viscosity}
     \eta(n,T) 
         = \eta_0 \left[g^{-1}(\sigma) 
         + 0.8   \, V_{\text{excl}}      \,\rho 
@@ -48,41 +54,54 @@ The viscosity of such fluids is \cite{ref:pippo:composition_dependence}
 %            &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
 %    \end{split}
 %\end{equation}
-Here, $\eta^0 = \eta(0, T)$ is the viscosity of the fluid in the zero-density limit, 
-and $\chi$ is a radial distribution function at contact, 
-describing the statistical distribution of particles around a pair of colliding particles.
+Here, 
+$\eta^0 = \eta(0, T)$ is the viscosity of the fluid in the zero-density limit.
+$V_{\text{excl}}$, the excluded volume, 
+is the part of the fluid which one cannot occupy,
+because it is occuied by other particles.
+$V_{\text{excl}}$ is commonly assumed to be 
+the volume of all particles in the fluid.
+This however, is only correct in the zero-density limit. 
+When the fluid density is higher, 
+the space in between particles may also be unavailable.
+% TODO: Make a figure.
+
+Lastly, in equation \eqref{eq:one_component_viscosity}, 
+$g(\sigma)$ is a radial distribution function at contact.
+$g(\sigma)$ is the probability distribution of particles around one particle in the fluid.
 This determines how the collision frequency depends on the density of the fluid.
-$\chi$ can be found for example using the system's equation of state, 
-as done in \cite{ref:pippo:composition_dependence}, a method referred to as Modified Enskog Theory.
+$g(\sigma)$ can be found for example using the system's equation of state, 
+as done in \cite{ref:pippo:composition_dependence}.
+This method is referred to as Modified Enskog Theory.
 
 % TODO:
 % Flytt biten om Enskog til: The viscosity of hard sphere fluids. 
 % Deler av dette kan også nevnes i seksjonen om transportegenskaper. 
-% Det er et generelt problem det du beskriver om MFT.
+% Det er et generelt problem det du beskriver om MFT (mean free time).
 
 In Enskog theory, a central assumption is that there is no correlation between different collisions. 
+This is known as molecular chaos.
 This means that the mean free time between collisions is much larger than the collision duration. 
-The lack of correlated interactions does not work for real fluids with long range continuous interaction potentials. 
+The assumption of molecular chaos breaks down at high fluid densities, when collisions are too frequent to be uncorrelated.
+Furthermore, it does not work for real fluids with long range continuous interaction potentials.
 However, the assumption is more acceptable for low density HS-fluids. 
-Enskog theory breaks down at high fluid densities, when collisions are too frequent to be uncorrelated, even for HS fluids.
 
-% TODO:
-%En anen begrensende faktor er det ekskluderte volumet i fluidet. 
-% Ved lav tetthet er det en rimelig antagelse at ekskludert volum bare er partikkel-volum, men ved høy tetthet kan geometriske betraktninger føre til et noe høyere eksludert volum.
-% Svar: Dette kan jeg trenge en forklaring på.
 
 \subsection{Viscosity of mixtures}
 The Enskog equation was generalized by Thorne to describe 
 two-component fluid mixtures\cite{ref:chapman:non_uniform_gases}.
 A further generalization to mixtures of arbitrary component numbers 
 has been performed by Tham and Gubbins\cite{ref:tham:fluid_mixtures}.
-The results are outlined below, as presented in \cite{ref:pippo:composition_dependence}.
+The results are outlined below, 
+as presented in \cite{ref:pippo:composition_dependence}.
 
 The viscosity of a dense binary mixture of hard-sphere fluids is given by
 \begin{equation}
     \eta_{\text{mix}} 
         = \left(
-            \frac{y_1^2}{H_{11}} + \frac{y_2^2}{H_{22}} - \frac{2 y_1 y_2 H_{12}}{H_{11} H_{22}}
+            \frac{y_1^2}{H_{11}} 
+            + \frac{y_2^2}{H_{22}} 
+            - \frac{2 y_1 y_2 H_{12}}{H_{11} H_{22}}
         \right)
         \left(
             1 - \frac{H_{12}^2}{H_{11} H_{22}}
@@ -94,7 +113,8 @@ where
     \label{eq:viscosity_binary}
     y_1 
         = x_1 \left(
-            1 + \frac{1}{2} x_1 \alpha_{11} \chi_{11} n + \frac{m_2}{m_1 + m_2} x_2 \alpha_{12} \chi_{12} n
+            1   + \frac{1}{2} x_1 \alpha_{11} \chi_{11} n 
+                + \frac{m_2}{m_1 + m_2} x_2 \alpha_{12} \chi_{12} n
         \right), 
 \end{equation}
 and
@@ -111,18 +131,26 @@ and
                     \left( \frac{5}{3A^*_{12}} + \frac{m_2}{m_1} \right), \\
     \end{split}
 \end{equation}
-and where $y_2$ and $H_{22}$ follows from exchanging the subscripts in $y_1$ and $H_{11}$ respectively.
+and where $y_2$ and $H_{22}$ follows from exchanging the subscripts in 
+$y_1$ and $H_{11}$ respectively.
 $A^*_{12}$ is a dimensionless ratio of collision integrals (of type ${ij}$).
 % TODO: See if more ellaboration on this exists.
-For hard spheres, $A^*_{12}$ is exactly unity, and for other forms of interaction, it is close to unity.
-$\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules of type $i$ colliding with molecules of type $j$, similar to the one-component function $\chi$ above.
+For hard spheres, $A^*_{12}$ is exactly unity, 
+and for other forms of interaction, it is close to unity.
+$\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules 
+of type $i$ colliding with molecules of type $j$, 
+similar to the one-component function $\chi$ above.
 Finally, $\bar{\omega}_{\text{mix}}$ can be written
 \begin{equation}
     \begin{split}
         \bar{\omega}_{\text{mix}} 
-            &= x_1^2 \bar{\omega}_{11} + x_1 x_2 \bar{\omega}_{12} + x_2^2 \bar{\omega}_{22}, \text{where}\\
+            &= x_1^2 \bar{\omega}_{11} 
+            + x_1 x_2 \bar{\omega}_{12} 
+            + x_2^2 \bar{\omega}_{22}, \text{where}\\
         \bar{\omega}_{ij} 
-            &= \frac{4}{9} n^2 \sigma_{ij}^4 \chi_{ij} \sqrt{\frac{2\pi m_1 m_2 \kB T}{m_1 + m_2}} \text{for} i,j = 1,2.
+            &= \frac{4}{9} n^2 \sigma_{ij}^4 \chi_{ij} 
+            \sqrt{\frac{2\pi m_1 m_2 \kB T}{m_1 + m_2}} 
+            \text{for} i,j = 1,2.
     \end{split}
 \end{equation}
 
@@ -132,15 +160,60 @@ Finally, $\bar{\omega}_{\text{mix}}$ can be written
 
 \subsection{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of rigid spheres.
-While Monte Carlo methods are relatively simple to use with hard-sphere potentials, 
-molecular dynamics methods allow calculating dynamical and out-of-equilibrium properties of a system \cite{ref:allen:MD_sim}.
+While Monte Carlo (MC) methods are relatively simple to use with hard-sphere potentials, 
+molecular dynamics (MD) methods allow calculating dynamical and out-of-equilibrium 
+properties of a system \cite{ref:allen:MD_sim}.
+This section gives an introduction to both Monte Carlo and molecular dynamics,
+focusing especially on molecular dynamics for hard and pseudo-hard spheres.
 
-% TODO:
-% Forklar hvorfor vanlig MD er problematisk for HS, 
-% at det er mulig å gjøre slik beskrevet i den artikelen du fikk, 
-% men at det ikke er praktisk dersom andre interaksjonspotensial er tilstede i tillegg.
+\subsubsection{Monte Carlo methods}
+% Mer om MC
+% Mer generelt om MD (inkl hendelsesdrevent)
+\subsubsection{Event-driven MD simulation}
+A simple method for hard sphere simulations in molecular dynamics is an
+event-driven HS simulation.
+Key elements of this simultion is outlined below.
 
-Jover et al. \cite{ref:jover:pseudo_hard} has shown that a Mie (or generalized Lennard-Jones) potential
+Compute the time until a collision occurs, for all particles in the system.
+All collisions are stored in a list containing at least information about
+the time of the collision, and the identity of the two involved particles.
+Then, the time until the earliest collision is identified by searching through the list.
+Using Newton's equations of motion, all atoms are propagated freely until
+the collision happens.
+Through conservation laws, the colliding particles' velocities are then updated.
+Their next collisions are then added to the list of upcoming collisions.
+This process is repeated, and all atom positions are updated with the time 
+until the next collision in the list.
+
+It should be noted that after a collision happens, other collisions involving
+either of the two particles will be invalid.
+These should be discarded from the list.
+
+\subsubsection{Continuous potential MD simulation methods}
+There are several powerful and efficient molecular dynamics programmes available,
+including LAMMPS, GROMACS, DL\_POLY and NAND. % TODO add references.
+These do, however, not handle discontinous potentials.
+Thus, the event-driven method is not supported by any of these programmes \cite{ref:allen:MD_sim}.
+In order to utilize the efficiency of the available MD software, it is more convenient to use a different method.
+The hard sphere potential can be approximated with a steep but continuous interaction potential instead.
+Then, the particle positions are updated using numerical integration methods with short, finite time steps.
+
+Additionally, once there are long-range interaction forces between particles,
+the event driven simulation does not work, and integration methods are required.
+Therefore, continuous potential modelling is much more useful for realistic fluid models.
+
+Several potentials are possible to use as hard-sphere approximations.
+The Lennard-Jones potential is a well-known example of historical importance.
+% TODO: Equation.
+In order to model hard sphere potentials, it should be modified so that it's
+repulsive component is isolated.
+% This is explained below. 
+% TODO: Move the explanation here, so that everything is chronological.
+The resulting non-attractive potential is known as a WCA-potential.
+
+Increased computer efficiency makes steeper potentials more appropriate.
+In particular, Jover et al. \cite{ref:jover:pseudo_hard} 
+has shown that a Mie (or generalized Lennard-Jones) potential
 \begin{equation}
     u_{\text{Mie}}(r) = 
         \frac{\lambda_r}{\lambda_r - \lambda_a}
@@ -151,15 +224,12 @@ Jover et al. \cite{ref:jover:pseudo_hard} has shown that a Mie (or generalized L
             \left(\frac{\sigma}{r}\right)^{\lambda_a}
         \right],
 \end{equation}
-can approximate a hard-sphere interaction potential.
-$\epsilon$ is the depth of the potential 
-%
-at it's minimal value, % Is it necessary to point out this?
-%
+can approximate the hard-sphere interaction potential.
+$\epsilon$ is the depth of the potential at it's minimal value, 
 % What's a better word than "strength"??
 and $\lambda_r$ and $\lambda_a$ define the strength of the 
 repulsive and attractive parts of the potential.
-As in \ref{eq:hard_sphere_potential}, 
+As in \eqref{eq:hard_sphere_potential}, 
 $\sigma$ and $r$ are the diameter and relative distance of the interacting particles.
 
 The repulsive part of the Mie potential can be isolated by shifting it 
@@ -185,7 +255,7 @@ This gives a steep non-negative potential of the form
             \right)^\frac{1}{\lambda_r - \lambda_a},
     \end{cases}
 \end{equation}
-closely resembling that of an infinitely steep hard wall potential (equation \ref{eq:hard_sphere_potential}).
+closely resembling that of an infinitely steep hard wall potential (equation \eqref{eq:hard_sphere_potential}).
 This potential is referred to as a pseudo hard-sphere potential.
 Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$, 
 as a compromise between faithfulness of the pseudo hard representation 
@@ -220,3 +290,9 @@ and that the obtained viscosity is in agreement with Enskog theory.
 % However, to the best of our knowledge, such a confirmation has not 
 % been published for fluids of more than one component. 
 % C: Detter er ikke sjekket, men er jo delvis det du skal gjøre.
+
+\subsection{Measuring the viscosity of a fluid in NEMD}
+Müller-Plathe \cite{ref:muller-plathe:reversing_the_perturbation} 
+has proposed a method of computing the viscosity of a fluid in 
+nonequilibrium molecular dynamics (NEMD) simulations.
+% TODO: Describe method, including figures.
