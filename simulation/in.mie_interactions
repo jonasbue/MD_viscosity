@@ -3,7 +3,7 @@
 ### ======================================================================== ###
 ## Numbers
 # System-wide parameters
-variable PACKING    equal 0.5  # Packing fraction of the system
+variable PACKING    equal 0.2  # Packing fraction of the system
 variable N          equal 1000  # Number of atoms
 variable RAND_SEED  equal 313   # Seed for random functions
 variable TEMP       equal 1.5   # Temperature
@@ -31,7 +31,7 @@ variable MAXITER    equal 1e4   # Max number of iterations.
 variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations 
 
 # Simulation and output parameters
-variable RUN_TIME       equal 10       # Simulation duration (time units).
+variable RUN_TIME       equal 1000       # Simulation duration (time units).
 variable DT             equal 0.001     # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT} # Number of time steps.
 variable DUMP_STEPS     equal 100       # Timesteps between every dump
@@ -74,11 +74,8 @@ pair_coeff  * * ${EPSILON} ${SIGMA} ${MIE_REP} ${MIE_ATT}
 # Shifts the Mie potensial so that its cutoff is at zero:
 pair_modify shift yes   
 
-# Fix the system in the microcanonical ensemble
-fix NVE_FIX all nve
-# Fix the temperature with a Berendsen thermostat
-fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
-timestep ${DT}
+timestep    ${DT}
+
 
 ### Write out data ###
 # Write out thermodynamic quantities:
@@ -97,5 +94,14 @@ log     ${LOG_FILE}
 
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
+
+# Fix the system in the microcanonical ensemble
+fix NVE_FIX all nve
+# Fix the temperature with a Berendsen thermostat
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
+
+# Viscosity measurement setup. I don't know how to use this.
+#fix 1 all viscosity 50 x z 20 swap 2 vtarget 1.0
+
 
 run         ${RUN_STEPS}    # Run simulation
