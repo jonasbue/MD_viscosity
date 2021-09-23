@@ -1,0 +1,109 @@
+### ======================================================================== ###
+###                               Define variables                           ###
+### ======================================================================== ###
+## Numbers
+# System-wide parameters
+variable PACKING    equal 0.2  # Packing fraction of the system
+variable N          equal 1000  # Number of atoms
+variable RAND_SEED  equal 313   # Seed for random functions
+variable TEMP       equal 1.5   # Temperature
+variable TDAMP      equal 100.0 # Damping constant for thermostat 
+                                # determining how quickly the system 
+                                # relaxes to desired temperature.
+
+# Parameters defining atoms and interactions
+variable ATOM_TYPES equal 1     # Number of atom types 
+variable MASS       equal 1.0   # Particle mass
+variable EPSILON    equal 1.0   # Depth of the Mie potential  
+variable SIGMA      equal 1.0   # Particle diameter
+variable MIE_REP    equal 50    # Repulsive exponent
+variable MIE_ATT    equal 49    # Attractive exponent
+# Radius at which interaction potential is zero:
+variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
+
+# Length of box
+variable L          equal ((PI*$N*${SIGMA}^3/(6*${PACKING}))^(1/3))/2
+
+# When minimizing system energy to avoid overlapping particles...
+variable ETOL       equal 1e-4  # Max energy toleranze.
+variable FTOL       equal 0.0   # Max force tolerance.
+variable MAXITER    equal 1e4   # Max number of iterations.
+variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations 
+
+# Simulation and output parameters
+variable RUN_TIME       equal 100       # Simulation duration (time units).
+variable DT             equal 0.001     # Time step
+variable RUN_STEPS      equal ${RUN_TIME}/${DT} # Number of time steps.
+variable DUMP_STEPS     equal 100       # Timesteps between every dump
+variable THERMO_OUTPUT  equal 100       # Timesteps between thermo output to 
+
+
+## Strings
+variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
+variable THERMOSTAT string "temp/berendsen" # Berendsen thermostat
+
+# Filename definisions.
+# Files will have the structure 
+#   log.eta_0.05.lammps
+# For safety, consider swapping the period decimal with a dash.
+variable FILENAME   string eta_${PACKING} # Skeleton excluding file extensions
+variable DUMP_FILE  string data/dump.${FILENAME}.lammps  # Dump filename
+variable LOG_FILE   string data/log.${FILENAME}.lammps   # Log filename.
+
+
+
+### ======================================================================== ###
+###                               Define system                              ###
+### ======================================================================== ###
+
+atom_style  atomic
+
+# Create a box shaped region with sides 2L and center in the origin:
+region          REGION block -$L $L -$L $L -$L $L units box
+create_box      ${ATOM_TYPES} REGION                # Create a box in REGION.
+create_atoms    1 random $N ${RAND_SEED} REGION     # Fill the box with atoms.
+mass            1 ${MASS}                           # Give the atoms mass.
+velocity        all create ${TEMP} ${RAND_SEED}     # Give the atoms random 
+                                                    # velocities, distributed 
+                                                    # around one temperature.
+
+# Define pair interactions:
+pair_style  ${POTENTIAL} ${CUTOFF}
+# Define interaction coefficients:
+pair_coeff  * * ${EPSILON} ${SIGMA} ${MIE_REP} ${MIE_ATT}
+# Shifts the Mie potensial so that its cutoff is at zero:
+pair_modify shift yes   
+
+timestep    ${DT}
+
+### Write out data ###
+# Make a dump of system:
+dump    DUMP all custom ${DUMP_STEPS} & 
+        ${DUMP_FILE} id x y z vx vy vz
+log     ${LOG_FILE}
+
+
+### ======================================================================== ###
+###                             Run simulation                               ###
+### ======================================================================== ###
+
+# Minimize system energy to remove atom overlaps:
+minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
+
+# Fix the system in the microcanonical ensemble
+fix NVE_FIX all nve
+# Fix the temperature with a Berendsen thermostat
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
+
+# Viscosity measurement setup. I don't know how to use this.
+fix MULLER_PLATHE all viscosity 50 x z 20 swap 2 vtarget 1.0
+compute LAYERS all chunk/atom bin/1d z lower 0.05 units reduced    # Compute chunk velocity
+fix VEL_PROFILE_FIX all ave/chunk 100 10 1000 LAYERS vx file MP_viscosity.profile
+# Average chunk velocity
+
+# Write out thermodynamic quantities:
+thermo_style    custom step etotal pe ke temp press vol f_MULLER_PLATHE
+thermo          ${THERMO_OUTPUT}        # Write thermo during simulation run.
+
+run         ${RUN_STEPS}    # Run simulation
+

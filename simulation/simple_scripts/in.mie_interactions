@@ -100,8 +100,4 @@ fix NVE_FIX all nve
 # Fix the temperature with a Berendsen thermostat
 fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 
-# Viscosity measurement setup. I don't know how to use this.
-#fix 1 all viscosity 50 x z 20 swap 2 vtarget 1.0
-
-
 run         ${RUN_STEPS}    # Run simulation

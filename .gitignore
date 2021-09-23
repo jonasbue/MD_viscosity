@@ -18,5 +18,8 @@ log.*.lammps
 log.lammps
 dump.*.lammps
 *.csv
+*.profile
 
 analysis/__pycache__/*
+
+*.png
