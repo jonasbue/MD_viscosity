@@ -292,7 +292,56 @@ and that the obtained viscosity is in agreement with Enskog theory.
 % C: Detter er ikke sjekket, men er jo delvis det du skal gjøre.
 
 \subsection{Measuring the viscosity of a fluid in NEMD}
-Müller-Plathe \cite{ref:muller-plathe:reversing_the_perturbation} 
+Müller-Plathe \cite{ref:mullerplathe:reversing_the_perturbation} 
 has proposed a method of computing the viscosity of a fluid in 
 nonequilibrium molecular dynamics (NEMD) simulations.
 % TODO: Describe method, including figures.
+
+Consider a cubical box of length $L$ with periodic 
+boundary conditions, containing a hard sphere fluid.
+We divide the system into two slabs, their border being 
+parallell to the $xy$-plane at height $z = L/2$.
+Now, we can define three parallell planes, at 
+$z = \{0, L/2, L\}$, which are the edges of the slabs.
+At these edges, we will control the velocity of the particles, 
+making sure that the particles flow in the directions
+\begin{equation}
+    \label{eq:velocity_directions}
+    \hat{u}_x(z) =
+    \begin{cases}
+        +\hat{x}, \,z = L,    \\
+        -\hat{x}, \,z = L/2,  \\
+        +\hat{x}, \,z = 0,    \\
+    \end{cases}
+\end{equation}
+as shown in figure (??). %TODO: Figure.
+Here, $u_x(z)$ denotes the average velocity component 
+in $x$-direction, of the particles at height $z$.
+The hat ``$\,\, \hat{ } \,\,$'' denotes 
+directional vectors of length unity.
+
+The particle flows are adjusted through an unphysical process known as a 
+\textbf{reverse perturbation}\cite{ref:mullerplathe:reversing_the_perturbation},
+as follows:
+
+Find the particle in the $z = 0$ slab edge with the lowest 
+(most negative) velocity component in the $+x$-direction.
+Correspondingly, find the particle in the $z = L/2$ border 
+with the largest velocity component in the $+x$-direction.
+Then, swap the momenta of these two particles.
+Repeat the process for the top slab, swapping the smallest momentum 
+in the $z = L$ edge with the largest momentum in the $z = L/2$ edge.
+This process is then repeated periodically.
+The repeated reverse perturbations cause a velocity profile in the fluid,
+as shown in figure (??). % TODO: Figure.
+At the edges of the slabs, the velocity directions 
+is given by equation \eqref{eq:velocity_directions}.
+
+The velocity profile will cause a momentum flux in $z$-direction,
+\begin{equation}
+    \label{eq:momentum_flux}
+    j_z = -\eta \frac{\partial u_x}{\partial z}.
+\end{equation}
+This flux is proportional to the viscosity of the fluid, and is measurable.
+Thus, the viscosity can be calculated from velocity data generated in the 
+MD simulation.
