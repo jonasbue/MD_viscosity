@@ -37,7 +37,7 @@ def viscosity(Ptot, L, t, z, dv):
 
 def get_velocity_profile(filename):
     # Figure out how to handle this if file already exists.
-    # convert.convert_fix_to_csv(filename)
+    convert.convert_fix_to_csv(filename)
 
     A = pd.read_csv(filename+".csv")
     A = np.array(A).transpose()
@@ -49,7 +49,17 @@ def get_velocity_profile(filename):
     return vx, z
 
 
-def plot_velocity_profile(fix_filename, packing):
+def velocity_profile_regression(vx, z):
+    n = int(len(vx)/2)
+    print(n)
+    lower_half = vx[:n]
+    upper_half = vx[n:]
+    plt.plot(lower_half, z[:n])
+    plt.plot(upper_half, z[n:])
+    plt.show()
+
+
+def plot_velocity_profile(vx, z, packing):
     vx, z = get_velocity_profile(fix_filename)
     fig_title = f"Velocity profile, $\\xi = {packing}$"
     plt.plot(
@@ -94,11 +104,15 @@ def plot_viscosity(packing, eta):
 
 
 packing_list = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5])
-dv_list = np.array([4, 4.8, 4.6, 4, 2, 0.8])
+#packing_list = np.array([0.5])
+#dv_list = np.array([4, 4.8, 4.6, 4, 2, 0.8])
+dv_list = np.array([2, 4.2, 4.4, 4.2, 3.2, 1.2])
 C = {}
-#for packing in packing_list:
-#    fix_name = f"data/MP_viscosity_eta_{packing}.profile"
-#    plot_velocity_profile(fix_name, packing)
+for packing in packing_list:
+    fix_name = f"data/MP_viscosity_eta_{packing}.profile"
+    vx, z = get_velocity_profile(fix_name)
+    velocity_profile_regression(vx, z)
+    plot_velocity_profile(vx, z, packing)
 
 for (i, packing) in enumerate(packing_list):
     log_name = f"data/log.eta_{packing}.lammps"
@@ -108,6 +122,6 @@ for (i, packing) in enumerate(packing_list):
 
 m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]
 pf = np.linspace(0,0.5)
-#plt.plot(pf, enskog(pf, sigma, T, m, k=1.0))
+plt.plot(pf, enskog(pf, sigma, T, m, k=1.0))
 #plt.plot(pf, radial_distribution(pf))
 plt.show()

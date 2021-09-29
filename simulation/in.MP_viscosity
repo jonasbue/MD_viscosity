@@ -100,9 +100,9 @@ fix NVE_FIX all nve
 fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 
 # Viscosity measurement setup. I don't know how to use this.
-fix MULLER_PLATHE all viscosity 50 x z 20 swap 2 vtarget 1.0
+fix MULLER_PLATHE all viscosity 50 x z 20 swap 2 
 compute LAYERS all chunk/atom bin/1d z lower 0.05 units reduced    # Compute chunk velocity
-fix VEL_PROFILE_FIX all ave/chunk 100 10 1000 LAYERS vx file ${FIX_FILE}
+fix VEL_PROFILE_FIX all ave/chunk 1 50000 ${RUN_STEPS} LAYERS vx file ${FIX_FILE}
 # Average chunk velocity
 
 # Write out thermodynamic quantities:

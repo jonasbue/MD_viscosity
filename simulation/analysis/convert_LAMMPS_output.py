@@ -53,7 +53,7 @@ def convert_fix_to_csv(fix_path):
     INPUT:
         fix_path: string
     """
-    with open(fix_path) as fix_file, open(f"{fix_path}.csv", 'x') as csv_file:
+    with open(fix_path) as fix_file, open(f"{fix_path}.csv", 'w') as csv_file:
         header = ''
 
         for row in fix_file:
