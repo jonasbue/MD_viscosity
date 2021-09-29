@@ -71,8 +71,7 @@ variable_list = ["p", "V", "T"]
 # Calculate values of Z from measured p, V and T.
 for eta in eta_list:
     filename = f"log.eta_{eta}.lammps"
-    constants = convert.extract_constants_from_log(filename)
-    print(constants)
+    # constants = convert.extract_constants_from_log(filename)
     log_table = logfiles.load_system(filename)
     pvt = logfiles.unpack_varables(log_table, filename, variable_list)
     plot_Z(

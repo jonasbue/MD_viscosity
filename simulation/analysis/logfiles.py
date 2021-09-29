@@ -50,19 +50,24 @@ def get_variable_indices(header, variables):
                         were given in the input argument.
     """
     var_dict = {
+        "Step"  : "t",
         "Press"     : "p",
         "Volume"    : "V",
         "Temp"      : "T",
+        "Coord1"    : "z",
+        "vx"        : "vx",
+        "f_MULLER_PLATHE": "Px",
     }
     indices = np.zeros_like(variables, dtype=int)
     for (i, var) in enumerate(header):
         if var in var_dict.keys():
-            n = variables.index(var_dict[var])
-            indices[n] = i
+            if var_dict[var] in variables:
+                n = variables.index(var_dict[var])
+                indices[n] = i
     return indices
 
 
-def unpack_varables(log_table, filename, variables):
+def unpack_variables(log_table, filename, variables):
     """ Unpacks specified variables from log table 
         with a header from a LAMMPS log file.
 

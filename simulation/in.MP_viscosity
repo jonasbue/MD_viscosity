@@ -1,9 +1,24 @@
+# Filename definisions.
+# Files will have the structure 
+#   log.eta_0.05.lammps
+# For safety, consider swapping the period decimal with a dash.
+# The packing fraction should be given when running
+# the input script from the command line, i.e.,
+# lmp -in in.script -var PACKING 0.5
+variable FILENAME   string eta_${PACKING} # Skeleton excluding file extensions
+variable DUMP_FILE  string data/dump.${FILENAME}.lammps  # Dump filename
+variable LOG_FILE   string data/log.${FILENAME}.lammps   # Log filename.
+variable FIX_FILE   string data/MP_viscosity_${FILENAME}.profile
+
+### Write out data ###
+log     ${LOG_FILE}
+
 ### ======================================================================== ###
 ###                               Define variables                           ###
 ### ======================================================================== ###
 ## Numbers
 # System-wide parameters
-variable PACKING    equal 0.2  # Packing fraction of the system
+variable PF         equal ${PACKING}   # Packing fraction of the system
 variable N          equal 1000  # Number of atoms
 variable RAND_SEED  equal 313   # Seed for random functions
 variable TEMP       equal 1.5   # Temperature
@@ -42,15 +57,9 @@ variable THERMO_OUTPUT  equal 100       # Timesteps between thermo output to
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
 variable THERMOSTAT string "temp/berendsen" # Berendsen thermostat
 
-# Filename definisions.
-# Files will have the structure 
-#   log.eta_0.05.lammps
-# For safety, consider swapping the period decimal with a dash.
-variable FILENAME   string eta_${PACKING} # Skeleton excluding file extensions
-variable DUMP_FILE  string data/dump.${FILENAME}.lammps  # Dump filename
-variable LOG_FILE   string data/log.${FILENAME}.lammps   # Log filename.
-
-
+# Make a dump of system:
+dump    DUMP all custom ${DUMP_STEPS} & 
+        ${DUMP_FILE} id x y z vx vy vz
 
 ### ======================================================================== ###
 ###                               Define system                              ###
@@ -76,11 +85,6 @@ pair_modify shift yes
 
 timestep    ${DT}
 
-### Write out data ###
-# Make a dump of system:
-dump    DUMP all custom ${DUMP_STEPS} & 
-        ${DUMP_FILE} id x y z vx vy vz
-log     ${LOG_FILE}
 
 
 ### ======================================================================== ###
@@ -98,7 +102,7 @@ fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 # Viscosity measurement setup. I don't know how to use this.
 fix MULLER_PLATHE all viscosity 50 x z 20 swap 2 vtarget 1.0
 compute LAYERS all chunk/atom bin/1d z lower 0.05 units reduced    # Compute chunk velocity
-fix VEL_PROFILE_FIX all ave/chunk 100 10 1000 LAYERS vx file MP_viscosity.profile
+fix VEL_PROFILE_FIX all ave/chunk 100 10 1000 LAYERS vx file ${FIX_FILE}
 # Average chunk velocity
 
 # Write out thermodynamic quantities:
