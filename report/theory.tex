@@ -1,13 +1,16 @@
 \section{Theory}
 \label{sec:theory}
-% Generell kommentar: Du har for lange setninger. Slutt med delsetninger etc. Dette er vanlig på norsk, men gir lange kronglete setninger på engelsk. Om du må trekke pusten for å komme gjennom er det for langt.
 
-% Jeg viser hva jeg mener i første avsnitt så kan du gjøre endringer i resten
+\subsection{Kinetic theory}
+% TODO: Skriv en litt generell intro.
+% Boltzmannlikningen
+% Antakelser
+% Enskogteori
+% Likevekt
 
-\subsection{Theoretical description of hard-sphere fluids}
+\subsection{Hard-sphere fluids}
 Hard-sphere (HS) fluids are fluids consisting of spherical particles 
 interacting via the non-continuous potential 
-% in equation \eqref{eq:hard_sphere_potential}
 \begin{equation}
     \label{eq:hard_sphere_potential}
     u = 
@@ -28,7 +31,9 @@ transport properties such as viscosity.
 \subsection{Transport properties}
 % TODO: Fyll inn tekst her.
 % Nevn noe av Enskog-informasjonen fra neste seksjon her.
-
+% Generelt om transportegenskaper, enskogteori som en metode for å finne dem
+% Kanskje nevne andre metoder for å regne ut transportegenskaper?
+% Viskositet som transportegenskap
 
 
 \subsection{The viscosity of hard-sphere fluids}
@@ -38,7 +43,7 @@ with the same mass $m$ and radius $\sigma$.
 The viscosity of such fluids is \cite{ref:pippo:composition_dependence}
 \begin{equation}
     \label{eq:one_component_viscosity}
-    \eta(n,T) 
+    \eta(\rho,T) 
         = \eta_0 \left[g^{-1}(\sigma) 
         + 0.8   \, V_{\text{excl}}      \,\rho 
         + 0.776 \, V_{\text{excl}}^2    \,\rho^2 g(\sigma) 
@@ -55,7 +60,11 @@ The viscosity of such fluids is \cite{ref:pippo:composition_dependence}
 %    \end{split}
 %\end{equation}
 Here, 
-$\eta^0 = \eta(0, T)$ is the viscosity of the fluid in the zero-density limit.
+\begin{equation}
+    \eta_0 = \eta(0, T) = 
+    \frac{5}{16\sigma^2} \sqrt{\frac{m \kB T}{\pi}}
+\end{equation}
+is the viscosity of the fluid in the zero-density limit.
 $V_{\text{excl}}$, the excluded volume, 
 is the part of the fluid which one cannot occupy,
 because it is occuied by other particles.
@@ -87,7 +96,7 @@ Furthermore, it does not work for real fluids with long range continuous interac
 However, the assumption is more acceptable for low density HS-fluids. 
 
 
-\subsection{Viscosity of mixtures}
+\subsection{Viscosity of hard-sphere fluid mixtures}
 The Enskog equation was generalized by Thorne to describe 
 two-component fluid mixtures\cite{ref:chapman:non_uniform_gases}.
 A further generalization to mixtures of arbitrary component numbers 
@@ -95,7 +104,7 @@ has been performed by Tham and Gubbins\cite{ref:tham:fluid_mixtures}.
 The results are outlined below, 
 as presented in \cite{ref:pippo:composition_dependence}.
 
-The viscosity of a dense binary mixture of hard-sphere fluids is given by
+The viscosity of a dense binary mixture of two hard-sphere fluids is given by
 \begin{equation}
     \eta_{\text{mix}} 
         = \left(
@@ -128,15 +137,15 @@ and
                 &=  -\frac{x_1^2 \chi_{11}}{\eta^0_1}
                     +\frac{2 x_1 x_2 \chi_{12}}{\eta^0_{12}}
                     \cdot \frac{m_1 m_2}{(m_1 + m_2)^2}
-                    \left( \frac{5}{3A^*_{12}} + \frac{m_2}{m_1} \right), \\
+                    \left( \frac{5}{3A^*_{12}} + \frac{m_2}{m_1} \right). \\
     \end{split}
 \end{equation}
-and where $y_2$ and $H_{22}$ follows from exchanging the subscripts in 
-$y_1$ and $H_{11}$ respectively.
+$y_2$ and $H_{22}$ follow from exchanging the subscripts in $y_1$ and $H_{11}$ 
+respectively.
 $A^*_{12}$ is a dimensionless ratio of collision integrals (of type ${ij}$).
-% TODO: See if more ellaboration on this exists.
 For hard spheres, $A^*_{12}$ is exactly unity, 
 and for other forms of interaction, it is close to unity.
+
 $\chi_{ij} = \chi_{ji}$ are radial distrubution functions for molecules 
 of type $i$ colliding with molecules of type $j$, 
 similar to the one-component function $\chi$ above.
@@ -154,22 +163,37 @@ Finally, $\bar{\omega}_{\text{mix}}$ can be written
     \end{split}
 \end{equation}
 
+% TODO: Ellaborate on this, after discussing with Roberto.
+%       In particular, say something about the physical meaning of every
+%       "russian doll" in the equation.
+
 % TODO: Should I include the multi-component equation as well?
 %       Or maybe just include one and many components, and skip two-compnent?
 %       ANSWER: Start with multi-compnent, then reduce to two.
+%       COMMENT TO ANSWER: Since the two-component version is more important
+%       to this project, and since it was derived first, I think it's more
+%       natural to present the two-component equation first, like Pippo does.
 
 \subsection{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of rigid spheres.
-While Monte Carlo (MC) methods are relatively simple to use with hard-sphere potentials, 
-molecular dynamics (MD) methods allow calculating dynamical and out-of-equilibrium 
-properties of a system \cite{ref:allen:MD_sim}.
+They can be divided into two categories, namely Monte Carlo (MC) models,
+and molecular dynamics (MD) models.
+MC methods sample statistical ensembles using random walk,  % TODO: Find a better term than random walk.
+while MD methods use Newton's equations of motion to compute the deterministic
+path of a large collection of particles \cite{ref:allen:MD_sim}.
+
+Monte Carlo methods are typically easier to use with hard-sphere potentials,
+but can not be used to compute transport coefficients. 
+% Can't or can with difficulty? 
+% That's an important distinction.
+Molecular dynamics methods on the other hand, allow calculating dynamical 
+and out-of-equilibrium properties of a system \cite{ref:allen:MD_sim}.
+To compute the viscosity of a system, MD methods should therefore be used.
 This section gives an introduction to both Monte Carlo and molecular dynamics,
 focusing especially on molecular dynamics for hard and pseudo-hard spheres.
 
-\subsubsection{Monte Carlo methods}
-% Mer om MC
 % Mer generelt om MD (inkl hendelsesdrevent)
-\subsubsection{Event-driven MD simulation}
+\subsubsection{Event-driven molecular dynamics simulation}
 A simple method for hard sphere simulations in molecular dynamics is an
 event-driven HS simulation.
 Key elements of this simultion is outlined below.
@@ -190,30 +214,68 @@ either of the two particles will be invalid.
 These should be discarded from the list.
 
 \subsubsection{Continuous potential MD simulation methods}
-There are several powerful and efficient molecular dynamics programmes available,
-including LAMMPS, GROMACS, DL\_POLY and NAND. % TODO add references.
+Several powerful and efficient molecular dynamics programmes are easily 
+available, including LAMMPS, GROMACS, DL\_POLY and NAND. % TODO add references.
 These do, however, not handle discontinous potentials.
 Thus, the event-driven method is not supported by any of these programmes \cite{ref:allen:MD_sim}.
 In order to utilize the efficiency of the available MD software, it is more convenient to use a different method.
 The hard sphere potential can be approximated with a steep but continuous interaction potential instead.
 Then, the particle positions are updated using numerical integration methods with short, finite time steps.
 
-Additionally, once there are long-range interaction forces between particles,
-the event driven simulation does not work, and integration methods are required.
-Therefore, continuous potential modelling is much more useful for realistic fluid models.
+Additionally, once there are long-range interaction forces 
+between particles, then interactions occur at all times.
+In this case, the event driven simulation does not 
+work, and integration methods are required.
+Therefore, continuous potential modelling 
+is much more useful for realistic fluid models.
 
 Several potentials are possible to use as hard-sphere approximations.
-The Lennard-Jones potential is a well-known example of historical importance.
-% TODO: Equation.
-In order to model hard sphere potentials, it should be modified so that it's
-repulsive component is isolated.
+The Lennard-Jones potential 
+\begin{equation}
+    \label{eq:lennard_jones_potential}
+    u_{\text{LJ}}(r) = 
+        4 \epsilon \left[
+            \left(\frac{\sigma}{r}\right)^{12} -
+            \left(\frac{\sigma}{r}\right)^{6}
+        \right]
+\end{equation}
+is a well-known example of historical importance.
+Here, $\epsilon$ is the well depth -- the minimal value of the potential.
+As in \eqref{eq:hard_sphere_potential}, 
+$\sigma$ and $r$ are the diameter and relative distance of the interacting particles.
+
+If the attractive part, 
+$\left[- \left(\frac{\sigma}{r}\right)^{6}\right]$
+in equation \eqref{eq:lennard_jones_potential} is removed from the potential, 
+then $u_{\text{LJ}}(r)$ 
+can represent purely repulsive interactions.
+This is done by shifting the potential
+%The repulsive part of the Mie potential can be isolated by shifting it 
+upwards by its minimal value $\epsilon$ and cutting it off there. 
+Thus, the potential is excactly zero once it has reached its minimum.
+The resulting potential
+\begin{equation}
+    \label{eq:WCA_potential}
+    u_{WCA}(r) = 
+    \begin{cases}
+        4 \epsilon \left[
+            \left(\frac{\sigma}{r}\right)^{12} -
+            \left(\frac{\sigma}{r}\right)^{6}
+        \right]
+        + \epsilon,
+            & r < 2^\frac{1}{6} \sigma\\
+        0,  & r > 2^\frac{1}{6}\sigma.
+    \end{cases}
+\end{equation}
+is known as a WCA-potential.
+This serves as an approximation to a hard sphere potential.
 % This is explained below. 
 % TODO: Move the explanation here, so that everything is chronological.
-The resulting non-attractive potential is known as a WCA-potential.
 
-Increased computer efficiency makes steeper potentials more appropriate.
+Increased computer efficiency makes it more appropriate to use 
+steeper potentials than the WCA-potential.
 In particular, Jover et al. \cite{ref:jover:pseudo_hard} 
-has shown that a Mie (or generalized Lennard-Jones) potential
+has proposed the Mie (or generalized Lennard-Jones) potential
 \begin{equation}
     u_{\text{Mie}}(r) = 
         \frac{\lambda_r}{\lambda_r - \lambda_a}
@@ -224,18 +286,15 @@ has shown that a Mie (or generalized Lennard-Jones) potential
             \left(\frac{\sigma}{r}\right)^{\lambda_a}
         \right],
 \end{equation}
-can approximate the hard-sphere interaction potential.
-$\epsilon$ is the depth of the potential at it's minimal value, 
+as an approximation to the hard-sphere interaction potential.
+%$\epsilon$ is the depth of the potential at it's minimal value, 
 % What's a better word than "strength"??
-and $\lambda_r$ and $\lambda_a$ define the strength of the 
+The exponents $\lambda_r$ and $\lambda_a$ define the strength of the 
 repulsive and attractive parts of the potential.
-As in \eqref{eq:hard_sphere_potential}, 
-$\sigma$ and $r$ are the diameter and relative distance of the interacting particles.
 
-The repulsive part of the Mie potential can be isolated by shifting it 
-upwards by its minimal value $\epsilon$ and cutting it off there. 
-Thus, the potential is excactly zero once it has reached its minimum.
-This gives a steep non-negative potential of the form
+Cutting and shifting the $u_{\text{Mie}}$ potential as done in equations
+\eqref{eq:lennard_jones_potential} and \eqref{eq:WCA_potential},
+gives a steep non-negative potential of the form
 \begin{equation}
     u_{(\lambda_a, \lambda_b)}(r) = 
     \begin{cases}
@@ -256,17 +315,19 @@ This gives a steep non-negative potential of the form
     \end{cases}
 \end{equation}
 closely resembling that of an infinitely steep hard wall potential (equation \eqref{eq:hard_sphere_potential}).
-This potential is referred to as a pseudo hard-sphere potential.
+This potential is referred to as a pseudo hard-sphere (PHS) potential.
+
 Jover et al. chose the exponents $(\lambda_r, \lambda_a) = (50, 49)$, 
 as a compromise between faithfulness of the pseudo hard representation 
 towards the perfectly hard wall, and computational speed.
 Higher exponents will produce a steeper repulsion. 
 This however, comes at a cost. 
-The steeper the potential, the shorter time steps are needed to ensure that the computations are precice.
-% Definer presist(?)
+The steeper the potential, the shorter time steps are 
+needed to ensure that the computations are precice.
+% Definer hva presist betyr.
 Therefore, steeper repulsions are computationally more expensive to simulate.
 
-Writing it out for clarity, the Mie (50, 49) potential has the form
+Writing it out for clarity, the Mie (50, 49)-potential has the form
 \begin{equation}
     u_{(50, 49)}(r) = 
     \begin{cases}
@@ -297,20 +358,21 @@ has proposed a method of computing the viscosity of a fluid in
 nonequilibrium molecular dynamics (NEMD) simulations.
 % TODO: Describe method, including figures.
 
-Consider a cubical box of length $L$ with periodic 
-boundary conditions, containing a hard sphere fluid.
-We divide the system into two slabs, their border being 
-parallell to the $xy$-plane at height $z = L/2$.
+Consider a rectangular box with sides of length $(L_x, L_y, L_z)$ 
+with periodic boundary conditions.
+The box contains a hard sphere fluid at equillibrium.
+We divide the system into two equal slabs, their border 
+being parallell to the $xy$-plane at height $z = L_z/2$.
 Now, we can define three parallell planes, at 
-$z = \{0, L/2, L\}$, which are the edges of the slabs.
+$z = \{0, L_z/2, L_z\}$, which are the edges of the two slabs.
 At these edges, we will control the velocity of the particles, 
 making sure that the particles flow in the directions
 \begin{equation}
     \label{eq:velocity_directions}
     \hat{u}_x(z) =
     \begin{cases}
-        +\hat{x}, \,z = L,    \\
-        -\hat{x}, \,z = L/2,  \\
+        +\hat{x}, \,z = L_z,    \\
+        -\hat{x}, \,z = L_z/2,  \\
         +\hat{x}, \,z = 0,    \\
     \end{cases}
 \end{equation}
