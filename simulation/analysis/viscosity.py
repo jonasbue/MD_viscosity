@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy import stats
 import matplotlib.pyplot as plt
 import convert_LAMMPS_output as convert
 import logfiles
@@ -11,10 +12,16 @@ font = {
 plt.rc("font", **font)
 
 def radial_distribution(pf):
+    """ Returns the thoretical radial distribution 
+        function, as given in Faezeh and de Wijn's paper.
+    """
     xi = pf
     return (1-xi/2)/(1-xi)**3
 
 def enskog(pf, sigma, T, m, k=1.0):
+    """ Returns the theoretical value of the 
+        viscosity for a given packing fraction.
+    """
     eta_0 =  5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
     V_excl = 2*np.pi*(sigma**3)/3
     rho = 6*pf/np.pi
@@ -27,40 +34,59 @@ def enskog(pf, sigma, T, m, k=1.0):
     return eta
 
 
-def viscosity(Ptot, L, t, z, dv):
+def viscosity(Ptot, L, t, z, dv_dz):
+    """ Computes the measured value of the viscosity,
+        from the Müller-Plathe experiment.
+    """
     A = (2*L)**2
     j = Ptot/(2*A*t)
-    dv_dz = dv
     eta = -j/dv_dz
     return eta
 
 
 def get_velocity_profile(filename):
-    # Figure out how to handle this if file already exists.
-    convert.convert_fix_to_csv(filename)
-
-    A = pd.read_csv(filename+".csv")
-    A = np.array(A).transpose()
+    log_table = logfiles.load_system(filename)
     zvx = logfiles.unpack_variables(
-        A, filename, ["z", "vx"]
+        log_table, filename, ["z", "vx"]
     )
-    vx = zvx[1]
     z = zvx[0]
+    vx = zvx[1]
     return vx, z
 
 
 def velocity_profile_regression(vx, z):
     n = int(len(vx)/2)
-    print(n)
     lower_half = vx[:n]
     upper_half = vx[n:]
-    plt.plot(lower_half, z[:n])
-    plt.plot(upper_half, z[n:])
-    plt.show()
+    z_lower = z[:n]
+    z_upper = z[n:]
+    lower_reg = stats.linregress(
+        z_lower, 
+        lower_half, 
+        alternative="greater"
+    )
+    upper_reg = stats.linregress(
+        z_upper, 
+        upper_half, 
+        alternative="less"
+    )
+    return lower_reg, upper_reg
+
+def plot_velocity_regression(lower_reg, upper_reg, z_lower, z_upper):
+    plt.plot(
+        lower_reg.slope*z_lower + 1*lower_reg.intercept, 
+        z_lower
+    )
+    plt.plot(
+        upper_reg.slope*z_upper + 1*upper_reg.intercept, 
+        z_upper
+    )
+
+def get_slope(lower_reg, upper_reg):
+    return (lower_reg.slope + np.abs(upper_reg.slope))/2
 
 
 def plot_velocity_profile(vx, z, packing):
-    vx, z = get_velocity_profile(fix_filename)
     fig_title = f"Velocity profile, $\\xi = {packing}$"
     plt.plot(
         vx, 
@@ -71,21 +97,24 @@ def plot_velocity_profile(vx, z, packing):
     plt.xlabel("$v_x$")
     plt.ylabel("$z$")
     plt.legend(loc="upper right")
-    plt.show()
 
 
-def find_viscosity(log_filename, fix_filename, packing, dv):
+def find_viscosity(log_filename, fix_filename):
     vx, z = get_velocity_profile(fix_filename)
 
     variable_list = ["t", "Px"]
     log_table = logfiles.load_system(log_filename)
     log_vals = logfiles.unpack_variables(log_table, log_filename, variable_list)
-    constants = convert.extract_constants_from_log(log_filename)
 
-    t = log_vals[variable_list.index("t")]*0.001
-    Ptot = log_vals[variable_list.index("Px")]
-    packing = constants["PF"]
+    constants = convert.extract_constants_from_log(log_filename)
     L = constants["L"]
+
+    t = log_vals[variable_list.index("t")]*constants["DT"]
+    Ptot = log_vals[variable_list.index("Px")]
+    
+    lower_reg, upper_reg = velocity_profile_regression(vx, z)
+    dv = get_slope(lower_reg, upper_reg)
+    print("dv = ", dv)
 
     eta = viscosity(Ptot, L, t, z, dv)
     return eta, constants
@@ -102,26 +131,3 @@ def plot_viscosity(packing, eta):
     plt.xlabel("Packing fraction")
     plt.ylabel("Viscosity")
 
-
-packing_list = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5])
-#packing_list = np.array([0.5])
-#dv_list = np.array([4, 4.8, 4.6, 4, 2, 0.8])
-dv_list = np.array([2, 4.2, 4.4, 4.2, 3.2, 1.2])
-C = {}
-for packing in packing_list:
-    fix_name = f"data/MP_viscosity_eta_{packing}.profile"
-    vx, z = get_velocity_profile(fix_name)
-    velocity_profile_regression(vx, z)
-    plot_velocity_profile(vx, z, packing)
-
-for (i, packing) in enumerate(packing_list):
-    log_name = f"data/log.eta_{packing}.lammps"
-    fix_name = f"data/MP_viscosity_eta_{packing}.profile"
-    eta, C = find_viscosity(log_name, fix_name, packing, dv_list[i])
-    plot_viscosity(packing, eta)
-
-m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]
-pf = np.linspace(0,0.5)
-plt.plot(pf, enskog(pf, sigma, T, m, k=1.0))
-#plt.plot(pf, radial_distribution(pf))
-plt.show()

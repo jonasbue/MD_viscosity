@@ -11,6 +11,31 @@
 import numpy as np
 import pandas as pd
 import convert_LAMMPS_output as convert
+from os import listdir
+
+
+def file_to_csv(filename, filetype):
+    """ Converts a file to a csv, depending on its type.
+    """
+    # TODO: Change MP_viscosity to fix.MP_... in LAMMPS
+    if filetype == "MP_":
+        print("Converting", filename, "of type", filetype)
+        convert.convert_fix_to_csv(filename)
+    elif filetype == "log":
+        print("Converting", filename, "of type", filetype)
+        convert.convert_log_to_csv(filename)
+
+
+def all_files_to_csv(directory):
+    """ Converts all files in a directory to csv,
+        provided that there is a method for the
+        correct filetype defined in file_to_csv().
+    """
+    files = [f for f in listdir(directory)]
+    for filename in files:
+        filetype = filename[:3]
+        if filename[-4:] != ".csv":
+            file_to_csv(f"{directory}/{filename}", filetype)
 
 
 def load_system(filename):
@@ -24,7 +49,6 @@ def load_system(filename):
                         First index selects the variable,
                         second index selects the timestep.
     """
-    convert.convert_log_to_csv(filename)
     log_table = pd.read_csv(
         filename + ".csv", 
         skiprows=2, 
@@ -67,6 +91,13 @@ def get_variable_indices(header, variables):
     return indices
 
 
+def get_header(filename):
+    header = np.array(
+        pd.read_csv(filename+".csv", nrows=0).columns
+    )
+    return header
+
+
 def unpack_variables(log_table, filename, variables):
     """ Unpacks specified variables from log table 
         with a header from a LAMMPS log file.
@@ -88,8 +119,6 @@ def unpack_variables(log_table, filename, variables):
                             temperature:    "T"
             
     """
-    headers = np.array(
-        pd.read_csv(filename+".csv", nrows=0).columns
-    )
-    indices = get_variable_indices(headers, variables)
+    header = get_header(filename)
+    indices = get_variable_indices(header, variables)
     return log_table[indices]
