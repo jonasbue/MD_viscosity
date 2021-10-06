@@ -59,10 +59,6 @@ def velocity_profile_regression(vx, z):
     upper_half = vx[n:]
     z_lower = z[:n]
     z_upper = z[n:]
-    #plt.plot(lower_half, z_lower, "o")
-    #plt.show()
-    #plt.plot(upper_half, z_upper, "x")
-    #plt.show()
     lower_reg = stats.linregress(
         z_lower, 
         lower_half, 
@@ -73,12 +69,9 @@ def velocity_profile_regression(vx, z):
         upper_half, 
         alternative="less"
     )
-    #print(lower_reg.slope)
-    #print(upper_reg.slope)
     return lower_reg, upper_reg, z_lower, z_upper
 
 def plot_velocity_regression(lower_reg, upper_reg, z_lower, z_upper):
-    print("PLOT:\t", upper_reg.slope)
     plt.plot(
         lower_reg.slope*z_lower + 1*lower_reg.intercept,
         z_lower
@@ -95,8 +88,6 @@ def get_avg(lower, upper):
     return (lower + np.abs(upper))/2
 
 def find_uncertainty(reg):
-    #std_err_lower, std_int_err_lower = find_uncertainty(lower_reg)
-    #std_err_upper, std_int_err_upper = find_uncertainty(upper_reg)
     max_slope = reg.slope + reg.stderr
     min_slope = reg.slope - reg.stderr
     return max_slope, min_slope
@@ -131,8 +122,6 @@ def find_viscosity(log_filename, fix_filename):
     
     lower_reg, upper_reg, zl, zu  = velocity_profile_regression(vx, z)
     dv = get_slope(lower_reg, upper_reg)
-    print("FIND:\t", upper_reg.slope)
-
 
     dev_low_max, dev_low_min = find_uncertainty(lower_reg)
     dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
@@ -146,22 +135,12 @@ def find_viscosity(log_filename, fix_filename):
 
 
 def plot_viscosity(packing, eta, std_err=None):
-    plt.plot(
+    plt.errorbar(
         packing,
-        np.mean(eta[500:]),
-        "o",
-        color="k",
-        label=f"{packing}"
+        eta,
+        yerr = std_err,
+        fmt="o",
     )
-    if std_err.any() != 0:
-        #yerr = np.mean(std_err[:,500:],axis=1).T
-        yerr = np.mean(std_err[500:])
-        print(yerr)
-        plt.errorbar(
-            packing,
-            np.mean(eta[500:]),
-            yerr = yerr
-        )
     plt.xlabel("Packing fraction")
     plt.ylabel("Viscosity")
 

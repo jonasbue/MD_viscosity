@@ -17,7 +17,6 @@ from os import listdir
 def file_to_csv(filename, filetype):
     """ Converts a file to a csv, depending on its type.
     """
-    # TODO: Change MP_viscosity to fix.MP_... in LAMMPS
     if filetype == "fix":
         print("Converting", filename, "of type", filetype)
         convert.convert_fix_to_csv(filename)
@@ -25,6 +24,13 @@ def file_to_csv(filename, filetype):
         print("Converting", filename, "of type", filetype)
         convert.convert_log_to_csv(filename)
 
+def get_filetype(filename):
+    filetype = filename[:3]
+    return filetype
+
+def get_file_extension(filename):
+    extension = filename[-4:]
+    return extension
 
 def all_files_to_csv(directory):
     """ Converts all files in a directory to csv,
@@ -33,9 +39,30 @@ def all_files_to_csv(directory):
     """
     files = [f for f in listdir(directory)]
     for filename in files:
-        filetype = filename[:3]
-        if filename[-4:] != ".csv":
+        filetype = get_filetype(filename)
+        if get_file_extension(filename) != ".csv":
             file_to_csv(f"{directory}/{filename}", filetype)
+
+
+def find_all_packing_fractions(directory):
+    """ Searches a directory for .csv files,
+        and returns a list of all packing fractions
+        associated with the data in the file.
+        This does not guarantee that the files
+        correspond to the same types of experiments.
+    """
+    packing_list = np.array([])
+    files = [f for f in listdir(directory)]
+    for filename in files:
+        filetype = get_filetype(filename)
+        if get_file_extension(filename) == ".csv":
+            eta_str = "eta_"
+            i = filename.find(eta_str) + len(eta_str)
+            j = filename.find(".lammps")
+            eta_val = float(filename[i:j])
+            packing_list = np.append(packing_list, eta_val)
+    packing_list = np.unique(packing_list)
+    return np.sort(packing_list)
 
 
 def load_system(filename):
