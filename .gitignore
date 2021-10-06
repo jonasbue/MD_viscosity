@@ -20,7 +20,7 @@ dump.*.lammps
 *.csv
 *.profile
 
-analysis/__pycache__/*
-data/*
+simulation/analysis/__pycache__/*
+simulation/data/*
 
 *.png
