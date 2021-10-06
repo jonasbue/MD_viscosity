@@ -18,7 +18,7 @@ def file_to_csv(filename, filetype):
     """ Converts a file to a csv, depending on its type.
     """
     # TODO: Change MP_viscosity to fix.MP_... in LAMMPS
-    if filetype == "MP_":
+    if filetype == "fix":
         print("Converting", filename, "of type", filetype)
         convert.convert_fix_to_csv(filename)
     elif filetype == "log":

@@ -21,5 +21,6 @@ dump.*.lammps
 *.profile
 
 analysis/__pycache__/*
+data/*
 
 *.png
