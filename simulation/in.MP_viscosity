@@ -80,6 +80,20 @@ variable RUN_STEPS      equal ${RUN_TIME}/${DT} # Number of time steps.
 variable DUMP_STEPS     equal 100               # Timesteps between every dump
 variable THERMO_OUTPUT  equal 100               # Timesteps between thermo output
 
+# Müller-Plathe experiment parameters
+variable SWAP_FREQUENCY equal 50    # Number of steps between particle swaps.
+variable CHUNK_NUMBER   equal 100   # Number of chunks in MP experiment.
+variable SWAP_NUMBER    equal 2     # Number of particles to swap every time.
+variable V_TARGET       equal 1.0   # Target velocity of slab boundaries.
+variable CHUNK_THICKNESS equal ${LZ}/${CHUNK_NUMBER}
+
+# fix/ave sampling definitions
+variable AVERAGE_FREQUENCY  equal ${THERMO_OUTPUT}  # How often an average 
+                                                    # value is computed.
+variable VALUES_IN_AVERAGE  equal 10                # Number of values included 
+                                                    # in the averaging.
+variable STEPS_IN_AVERAGE   equal 2                 # Steps between entries in 
+                                                    # the average computation.
 
 ## Strings
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
@@ -137,12 +151,13 @@ fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 run         ${RUN_STEPS}    
 
 
+
 # Viscosity measurement setup, as described by Müller-Plathe:
-fix MULLER_PLATHE all viscosity 50 x z 100 swap 2 vtarget 1.0
+fix MULLER_PLATHE all viscosity ${SWAP_FREQUENCY} x z ${CHUNK_NUMBER} swap ${SWAP_NUMBER} vtarget ${V_TARGET}
 # Compute chunk velocity.
-compute LAYERS all chunk/atom bin/1d z lower 0.01 units reduced    
+compute LAYERS all chunk/atom bin/1d z lower ${CHUNK_THICKNESS} units reduced    
 # Calculate average chunk velocity, for later analysis in Python.
-fix VEL_PROFILE_FIX all ave/chunk 2 10 ${THERMO_OUTPUT} LAYERS vx file ${FIX_FILE}
+fix VEL_PROFILE_FIX all ave/chunk ${NEVERY} ${NREPEAT} ${THERMO_OUTPUT} LAYERS vx file ${FIX_FILE}
 
 # Write out thermodynamic quantities to console:
 thermo_style    custom step etotal pe ke temp press vol f_MULLER_PLATHE
