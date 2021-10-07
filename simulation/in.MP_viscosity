@@ -23,10 +23,11 @@
 # The log-name can be accessed from python, through function 
 # convert_LAMMPS_output.extract_constants_from_log().
 
-#variable PACKING               equal 0.5   # Name -> PF
+#variable PACKING                equal 0.5   # Name -> PF
 variable PARTICLE_NUMBER        equal 1000  # Name -> N
 variable PARTICLE_DIAMETER      equal 1.0   # Name -> SIGMA
-variable SIMULATION_DURATION    equal 1000  # Name -> RUN_TIME
+#variable PARTICLE_MASS          equal 1.0   # Name -> MASS
+variable SIMULATION_DURATION    equal 4000  # Name -> RUN_TIME
 
 
 ### ======================================================================== ###
@@ -93,14 +94,17 @@ variable RUN_TIME       equal ${SIMULATION_DURATION}    # Length of simulation.
 variable DT             equal 0.001                     # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}         # Number of time steps.
 variable DUMP_STEPS     equal 100                       # Timesteps between every dump
-variable THERMO_OUTPUT  equal 100                       # Timesteps between thermo output
+variable THERMO_OUTPUT  equal 200                       # Timesteps between thermo output
 
 # Müller-Plathe experiment parameters
-variable SWAP_FREQUENCY equal 50    # Number of steps between particle swaps.
+
 variable CHUNK_NUMBER   equal 100   # Number of chunks in MP experiment.
 variable SWAP_NUMBER    equal 2     # Number of particles to swap every time.
 variable V_TARGET       equal 1.0   # Target velocity of slab boundaries.
+# Number of steps between particle swaps:
+variable MOMENTUM_EXCHANGE_RATE equal 500
 variable CHUNK_THICKNESS equal ${LZ}/${CHUNK_NUMBER}
+
 
 # fix/ave sampling definitions
 variable AVERAGE_FREQUENCY  equal ${THERMO_OUTPUT}  # How often an average 
@@ -168,11 +172,12 @@ run         ${RUN_STEPS}
 
 
 # Viscosity measurement setup, as described by Müller-Plathe:
-fix MULLER_PLATHE all viscosity ${SWAP_FREQUENCY} x z ${CHUNK_NUMBER} swap ${SWAP_NUMBER} vtarget ${V_TARGET}
+fix MULLER_PLATHE all viscosity ${MOMENTUM_EXCHANGE_RATE} x z ${CHUNK_NUMBER} swap ${SWAP_NUMBER} vtarget ${V_TARGET}
 # Compute chunk velocity.
 compute LAYERS all chunk/atom bin/1d z lower ${CHUNK_THICKNESS} units reduced    
 # Calculate average chunk velocity, for later analysis in Python.
-fix VEL_PROFILE_FIX all ave/chunk ${NEVERY} ${NREPEAT} ${THERMO_OUTPUT} LAYERS vx file ${FIX_FILE}
+fix VEL_PROFILE_FIX all ave/chunk ${STEPS_IN_AVERAGE} ${VALUES_IN_AVERAGE} ${AVERAGE_FREQUENCY} LAYERS vx file ${FIX_FILE}
+
 
 # Write out thermodynamic quantities to console:
 thermo_style    custom step etotal pe ke temp press vol f_MULLER_PLATHE

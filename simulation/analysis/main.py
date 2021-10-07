@@ -6,7 +6,7 @@ import plotting
 import eos
 
 # Convert all files in data to csv format.
-#files.all_files_to_csv("data")
+files.all_files_to_csv("data")
 packing_list = files.find_all_packing_fractions("data")
 
 def main_viscosity():
