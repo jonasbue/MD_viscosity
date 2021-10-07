@@ -1,17 +1,32 @@
 #############################################################################
 # This input script runs the Müller-Plathe viscosity experiment.            #
 # Structure is as follows:                                                  #
-#   * First, filenames are defined for log, dump, and fix files.            #
+#   * First, some changeworthy parameters are defined.                      #
+#       These are meant to be changed between simulation runs.              #
+#   * Second, filenames are defined for log, dump, and fix files.           #
 #       These are defined first so that everything                          #
 #       after is included in the log files                                  #
-#   * Second, variables are defined.                                        #
-#   * Third, the system is set up, without any shear.                       #
+#   * Third, variables are defined.                                         #
+#   * Fourth, the system is set up, without any shear.                      #
 #       This means a free pseudo-hard sphere gas.                           #
-#   * Fourth, the experiment is defined and run.                            #
+#   * Lastly, the experiment is defined and run.                            #
 #       This step includes equilibration of the gas,                        #
 #       and then the actual Müller-Plathe experiment.                       #
 #############################################################################
 
+# When running different simulations, change the 
+# following values, instead of editing the script below.
+# The values are copied after filename definitions, and are 
+# thus included in the log file under a different name.
+# The variable name used in the script (and log file) 
+# is commented for every value in the list.
+# The log-name can be accessed from python, through function 
+# convert_LAMMPS_output.extract_constants_from_log().
+
+#variable PACKING               equal 0.5   # Name -> PF
+variable PARTICLE_NUMBER        equal 1000  # Name -> N
+variable PARTICLE_DIAMETER      equal 1.0   # Name -> SIGMA
+variable SIMULATION_DURATION    equal 1000  # Name -> RUN_TIME
 
 
 ### ======================================================================== ###
@@ -53,9 +68,9 @@ variable TDAMP      equal 100.0         # Damping constant for thermostat
 variable ATOM_TYPES equal 1     # Number of atom types 
 variable MASS       equal 1.0   # Particle mass
 variable EPSILON    equal 1.0   # Depth of the Mie potential  
-variable SIGMA      equal 1.0   # Particle diameter
 variable MIE_REP    equal 50    # Repulsive exponent
 variable MIE_ATT    equal 49    # Attractive exponent
+variable SIGMA      equal ${PARTICLE_DIAMETER} 
 
 # Radius at which interaction potential is zero:
 variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
@@ -74,11 +89,11 @@ variable MAXITER    equal 1e4   # Max number of iterations.
 variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations 
 
 # Simulation and output parameters
-variable RUN_TIME       equal 1000              # Simulation duration.
-variable DT             equal 0.001             # Time step
-variable RUN_STEPS      equal ${RUN_TIME}/${DT} # Number of time steps.
-variable DUMP_STEPS     equal 100               # Timesteps between every dump
-variable THERMO_OUTPUT  equal 100               # Timesteps between thermo output
+variable RUN_TIME       equal ${SIMULATION_DURATION}    # Length of simulation.
+variable DT             equal 0.001                     # Time step
+variable RUN_STEPS      equal ${RUN_TIME}/${DT}         # Number of time steps.
+variable DUMP_STEPS     equal 100                       # Timesteps between every dump
+variable THERMO_OUTPUT  equal 100                       # Timesteps between thermo output
 
 # Müller-Plathe experiment parameters
 variable SWAP_FREQUENCY equal 50    # Number of steps between particle swaps.

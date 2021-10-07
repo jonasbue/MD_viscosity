@@ -16,6 +16,8 @@ from os import listdir
 
 def file_to_csv(filename, filetype):
     """ Converts a file to a csv, depending on its type.
+        This is simply a wrapper of the functions in 
+        convert_LAMMPS_output.
     """
     if filetype == "fix":
         print("Converting", filename, "of type", filetype)
@@ -25,10 +27,28 @@ def file_to_csv(filename, filetype):
         convert.convert_log_to_csv(filename)
 
 def get_filetype(filename):
+    """ Returns the filetype of a file.
+        Filetype should be "fix" or "log".
+        For more types, this function requires an extension.
+        Input:
+            filename:   string. Name of file.
+        Output:
+            filetype:   string.
+    """
     filetype = filename[:3]
     return filetype
 
 def get_file_extension(filename):
+    """ Returns the file extension of a file.
+        Only works for three-letter extensions,
+        so more robust code might be required here.
+        This function is expected to be used only with
+        ".csv" format.
+        Input:
+            filename:   string. Name of file.
+        Output:
+            extension:   string. For example ".csv".
+    """
     extension = filename[-4:]
     return extension
 
@@ -119,13 +139,20 @@ def get_variable_indices(header, variables):
 
 
 def get_header(filename):
+    """ Returns the header of a csv file.
+        Input:
+            filename:   string. Name of file, without extension.
+        Output:
+            header:     np.array. Every element is a string 
+                        from the first line of the file.
+    """
     header = np.array(
         pd.read_csv(filename+".csv", nrows=0).columns
     )
     return header
 
 
-def unpack_variables(log_table, filename, variables):
+def unpack_variables(log_table, log_filename, variables):
     """ Unpacks specified variables from log table 
         with a header from a LAMMPS log file.
 
@@ -146,6 +173,6 @@ def unpack_variables(log_table, filename, variables):
                             temperature:    "T"
             
     """
-    header = get_header(filename)
+    header = get_header(log_filename)
     indices = get_variable_indices(header, variables)
     return log_table[indices]
