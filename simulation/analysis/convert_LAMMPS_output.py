@@ -158,6 +158,12 @@ def extract_constants_from_log(log_path):
     for variable, value in variables.items():
         if "^" in value:
             value = value.replace("^", "**")
-        variables[variable] = eval(value, {"PI": np.pi})
+        variables[variable] = eval(
+            value, 
+            {
+                "PI":   np.pi,
+                "INF":  np.inf,
+            }
+        )
 
     return variables

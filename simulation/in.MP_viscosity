@@ -23,11 +23,12 @@
 # The log-name can be accessed from python, through function 
 # convert_LAMMPS_output.extract_constants_from_log().
 
-#variable PACKING                equal 0.5   # Name -> PF
-variable PARTICLE_NUMBER        equal 1000  # Name -> N
-variable PARTICLE_DIAMETER      equal 1.0   # Name -> SIGMA
-#variable PARTICLE_MASS          equal 1.0   # Name -> MASS
-variable SIMULATION_DURATION    equal 4000  # Name -> RUN_TIME
+#variable PACKING                   equal 0.5   # Name -> PF
+variable PARTICLE_NUMBER            equal 1000  # Name -> N
+variable PARTICLE_DIAMETER          equal 1.0   # Name -> SIGMA
+#variable PARTICLE_MASS             equal 1.0   # Name -> MASS
+variable SIMULATION_DURATION        equal 4000  # Name -> RUN_TIME
+variable EQUILLIBRATION_DURATION    equal 1000  # Name -> RUN_TIME
 
 
 ### ======================================================================== ###
@@ -46,7 +47,7 @@ variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.viscosity_${FILENAME}.lammps  # Fix file
 
-### Write out data to logfile ###
+    ### Write out data to logfile ###
 log     ${LOG_FILE}
 
 
@@ -77,11 +78,11 @@ variable SIGMA      equal ${PARTICLE_DIAMETER}
 variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
 
 # Length of box
-variable A          equal 2.0   # Ratio LZ/LX, giving the height of the box.
-variable B          equal 1.0   # Ratio LY/LX, giving the depth of the box.
-variable LX         equal ((PI*$N*${SIGMA}^3/(6*$A*$B*${PACKING}))^(1/3))/2
-variable LZ         equal ($A*${LX})
-variable LY         equal ($B*${LX})
+variable Z_SCALE    equal 2.0   # Ratio LZ/LX, giving the height of the box.
+variable Y_SCALE    equal 1.0   # Ratio LY/LX, giving the depth of the box.
+variable LX         equal ((PI*$N*${SIGMA}^3/(6*${Z_SCALE}*${Y_SCALE}*${PACKING}))^(1/3))/2
+variable LY         equal (${Y_SCALE}*${LX})
+variable LZ         equal (${Z_SCALE}*${LX})
 
 # When minimizing system energy to avoid overlapping particles...
 variable ETOL       equal 1e-4  # Max energy toleranze.
@@ -90,26 +91,35 @@ variable MAXITER    equal 1e4   # Max number of iterations.
 variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations 
 
 # Simulation and output parameters
-variable RUN_TIME       equal ${SIMULATION_DURATION}    # Length of simulation.
-variable DT             equal 0.001                     # Time step
-variable RUN_STEPS      equal ${RUN_TIME}/${DT}         # Number of time steps.
-variable DUMP_STEPS     equal 100                       # Timesteps between every dump
-variable THERMO_OUTPUT  equal 200                       # Timesteps between thermo output
+# Length of simulation.
+variable RUN_TIME       equal ${SIMULATION_DURATION}    
+# Time to equillibrate system.
+variable EQUILL_TIME    equal ${EQUILLIBRATION_DURATION}
+
+variable DT             equal 0.001                 # Time step
+variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
+variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
+variable DUMP_STEPS     equal 100                   # Timesteps between every dump
+variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo output
 
 # Müller-Plathe experiment parameters
 
-variable CHUNK_NUMBER   equal 100   # Number of chunks in MP experiment.
-variable SWAP_NUMBER    equal 2     # Number of particles to swap every time.
-variable V_TARGET       equal 1.0   # Target velocity of slab boundaries.
+variable CHUNK_NUMBER       equal 100   # Number of chunks in MP experiment.
+variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
+#variable V_TARGET          equal INF   # Target velocity of slab boundaries.
+variable CHUNK_WIDTH        equal 2*${LX}
+variable CHUNK_THICKNESS    equal 2*${LZ}/${CHUNK_NUMBER}
+
 # Number of steps between particle swaps:
-variable MOMENTUM_EXCHANGE_RATE equal 500
-variable CHUNK_THICKNESS equal ${LZ}/${CHUNK_NUMBER}
+variable MOMENTUM_EXCHANGE_RATE equal 500   # NOTE: Momentum exchange 
+                                            # rate must be smaller than 
+                                            # (or equal to) THERMO_OUTPUT.
 
 
 # fix/ave sampling definitions
-variable AVERAGE_FREQUENCY  equal ${THERMO_OUTPUT}  # How often an average 
+variable AVERAGE_FREQUENCY  equal 100 #${THERMO_OUTPUT}  # How often an average 
                                                     # value is computed.
-variable VALUES_IN_AVERAGE  equal 10                # Number of values included 
+variable VALUES_IN_AVERAGE  equal 50                # Number of values included 
                                                     # in the averaging.
 variable STEPS_IN_AVERAGE   equal 2                 # Steps between entries in 
                                                     # the average computation.
@@ -167,16 +177,33 @@ fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 
 # Run simulation to equillibrate the system.
 # This can be swapped with a save-file of a system in equillibrium.
-run         ${RUN_STEPS}    
+run ${EQUILL_STEPS}
 
 
 
 # Viscosity measurement setup, as described by Müller-Plathe:
-fix MULLER_PLATHE all viscosity ${MOMENTUM_EXCHANGE_RATE} x z ${CHUNK_NUMBER} swap ${SWAP_NUMBER} vtarget ${V_TARGET}
+fix MULLER_PLATHE all viscosity &
+    ${MOMENTUM_EXCHANGE_RATE}   &
+    x z                         &
+    ${CHUNK_NUMBER}             &
+    swap ${SWAP_NUMBER}         #vtarget ${V_TARGET}
+
 # Compute chunk velocity.
-compute LAYERS all chunk/atom bin/1d z lower ${CHUNK_THICKNESS} units reduced    
+compute LAYERS all chunk/atom   &
+    bin/3d                      &
+    z lower 0.01                &
+    x lower 1                   &
+    y lower 1                   &
+    units reduced
+
 # Calculate average chunk velocity, for later analysis in Python.
-fix VEL_PROFILE_FIX all ave/chunk ${STEPS_IN_AVERAGE} ${VALUES_IN_AVERAGE} ${AVERAGE_FREQUENCY} LAYERS vx file ${FIX_FILE}
+fix VEL_PROFILE_FIX all ave/chunk   & 
+    ${STEPS_IN_AVERAGE}             &
+    ${VALUES_IN_AVERAGE}            &
+    ${AVERAGE_FREQUENCY}            &
+    LAYERS                          &
+    vx                              &
+    file ${FIX_FILE}
 
 
 # Write out thermodynamic quantities to console:

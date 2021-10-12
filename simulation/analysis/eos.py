@@ -1,4 +1,5 @@
 #########################################################
+# Outdated description:                                 #
 # This script takes a log file from LAMMPS and plots    #
 # its compressibility factor vs. the Carnahan-Starling  #
 # equation of state.                                    #

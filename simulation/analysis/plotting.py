@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 
 # Increase font size in plots
@@ -5,17 +6,40 @@ font = {
     "size"  : "22",
 }
 plt.rc("font", **font)
+matplotlib.rcParams['agg.path.chunksize'] = 1000000
 
 
-def plot_velocity_regression(lower_reg, upper_reg, z_lower, z_upper):
+def plot_velocity_regression(reg, z, slab=""):
     plt.plot(
-        lower_reg.slope*z_lower + 1*lower_reg.intercept,
-        z_lower
+        reg.slope*z + reg.intercept,
+        z,
+        label=f"{slab} slab regression"
+    )
+
+
+def plot_velocity_regression_error(reg, z):
+    plt.plot(
+        (reg.slope+reg.stderr)*z 
+        + (reg.intercept+reg.intercept_stderr),
+        z,
+        label="Upper error bound",
+        linestyle="--"
     )
     plt.plot(
-        upper_reg.slope*z_upper + 1*upper_reg.intercept,
-        z_upper
+        (reg.slope-reg.stderr)*z 
+        + (reg.intercept-reg.intercept_stderr),
+        z,
+        label="Lower error bound",
+        linestyle=":"
     )
+    #plt.fill_between(
+    #    (lower_reg.slope+lower_reg.stderr)*z_lower 
+    #    + (lower_reg.intercept+lower_reg.intercept_stderr),
+    #    lower_reg.slope*z_lower + lower_reg.intercept,
+    #    #(lower_reg.slope-lower_reg.stderr)*z_lower 
+    #    #+ (lower_reg.intercept-lower_reg.intercept_stderr),
+    #    z_lower
+    #)
 
 
 def plot_velocity_profile(vx, z, packing=None):

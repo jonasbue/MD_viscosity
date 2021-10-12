@@ -121,13 +121,14 @@ def get_variable_indices(header, variables):
                         were given in the input argument.
     """
     var_dict = {
-        "Step"  : "t",
-        "Press"     : "p",
-        "Volume"    : "V",
-        "Temp"      : "T",
-        "Coord1"    : "z",
-        "vx"        : "vx",
-        "f_MULLER_PLATHE": "Px",
+        "Step"              : "t",
+        "Press"             : "p",
+        "Volume"            : "V",
+        "Temp"              : "T",
+        "Coord1"            : "z",
+        "vx"                : "vx",
+        "f_MULLER_PLATHE"   : "Px",
+        "Number_of_chunks"  : "Nchunks",
     }
     indices = np.zeros_like(variables, dtype=int)
     for (i, var) in enumerate(header):
