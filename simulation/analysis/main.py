@@ -14,7 +14,8 @@ if "convert" in sysargs:
     files.all_files_to_csv("data")
 packing_list = files.find_all_packing_fractions("data")
 #filenames = files.find_all_filenames("data")
-cut_fraction = 0.8
+cut_fraction = 0.9
+per_time=True
 
 def main_viscosity():
     C = {}
@@ -37,7 +38,7 @@ def main_viscosity():
 
         # Compute and plot viscosity for all packing fractions
         eta, C, eta_max, eta_min = viscosity.find_viscosity_from_files(
-            log_name, fix_name
+            log_name, fix_name, per_time
         )
         cut = int(cut_fraction*len(eta))
         print(f"Cutting the first {cut} values.")

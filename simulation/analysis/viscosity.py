@@ -84,27 +84,35 @@ def isolate_slabs(vx, z):
         and z coordinates separate for the lower 
         and upper slab in the Müller-Plathe experiment.
     """
-    #print(vx.shape)
-    #print(z.shape)
-    #z_max = np.nanmax(z)
-    #z_mid = z_max/2
+    # Check the dimension of vx. 
+    # If it is 2D, then it contains 
+    # only one velocity value per time.
+    if vx.ndim == 2:
+        # If all vx and z correspond to one single 
+        # time, we can use a simple solution.
+        n = len(z[0,:])//2
+        z_lower = z[:,:n]
+        z_upper = z[:,n:]
+        lower_half = vx[:,:n]
+        upper_half = vx[:,n:]
+    elif vx.ndim == 1:
+        # If vx and z contain values from multiple times,
+        # we need to read the arrays.
+        # This method does not work for 1D-arrays.
+        z_max = np.nanmax(z)
+        z_mid = z_max/2
 
-    #lower_half = np.where(z<=z_mid, vx, np.nan).reshape(vx.shape)
-    #upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
-    #z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
-    #z_upper = np.where(z>=z_mid, z, np.nan).reshape(z.shape)
-    #
-    #lower_half = remove_nans(lower_half)
-    #upper_half = remove_nans(upper_half)
-    #z_lower = remove_nans(z_lower)
-    #z_upper = remove_nans(z_upper)
-
-    n = len(z[0,:])//2
-    z_lower = z[:,:n]
-    z_upper = z[:,n:]
-    lower_half = vx[:,:n]
-    upper_half = vx[:,n:]
+        lower_half = np.where(z<=z_mid, vx, np.nan).reshape(vx.shape)
+        upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
+        z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
+        z_upper = np.where(z>=z_mid, z, np.nan).reshape(z.shape)
+        
+        lower_half = remove_nans(lower_half)
+        upper_half = remove_nans(upper_half)
+        z_lower = remove_nans(z_lower)
+        z_upper = remove_nans(z_upper)
     return lower_half, upper_half, z_lower, z_upper
+
 
 def velocity_profile_regression(vx, z):
     """ Performs a linear regression on vx and z.
@@ -128,6 +136,19 @@ def velocity_profile_regression(vx, z):
     return reg
 
 
+def regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper):
+    dv = np.zeros(3)
+    lower_reg = velocity_profile_regression(vx_lower, z_lower)
+    upper_reg = velocity_profile_regression(vx_upper, z_upper)
+    dv[0] = get_avg(lower_reg.slope, upper_reg.slope)
+
+    dev_low_max, dev_low_min = find_uncertainty(lower_reg)
+    dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
+    dv[1] = get_avg(dev_low_max, dev_upp_max)
+    dv[2] = get_avg(dev_low_min, dev_upp_min)
+    return dv
+
+
 def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
     dv = np.zeros((3, len(t)))
     for i in range(len(t)):
@@ -142,12 +163,6 @@ def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
         dv[2,i] = get_avg(dev_low_min, dev_upp_min)
 
         z_p = np.linspace(0,1)
-        #if i/len(t) > 0.8:
-        #    plt.plot(vx_lower[i], z_lower[i], "o")
-        #    plt.plot(dv[0,i]*z_p+lower_reg.intercept, z_p)
-        #    plt.plot((dv[0,i]+lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
-        #    plt.plot((dv[0,i]-lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
-        #    plt.show()
     print("")
     return dv
 
@@ -201,7 +216,7 @@ def make_time_dependent(arr, t, number_of_chunks):
     arr = np.reshape(arr, (len(t), number_of_chunks))
     return t, arr
 
-def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks):
+def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks, per_time):
     """ Computes the viscosity of a fluid, given arrays of 
         values extracted from a Müller-Plathe experiment.
         Input:
@@ -219,35 +234,20 @@ def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks):
             eta_min:    Estimated minimum value of eta:
                         eta-standard error.
     """
-
-    t, vx = make_time_dependent(vx, t, number_of_chunks)
-    t, z = make_time_dependent(z, t, number_of_chunks)
-
-    vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
-    dv = regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t)
-    # dv_reg = velocity_profile_regression(vx_lower, z_lower)
-
-    #plt.plot(np.linspace(0,t[-1], len(Ptot)), Ptot/t[-1], label="Ptot", linestyle="--")
-    #plt.plot(np.linspace(0,t[-1], 100), Ptot[-100:]/t[-100:], label="Ptot per time", linestyle="--")
-    #plt.plot(np.linspace(0,t[-1], len(t[2000:])), Ptot[-1]/t[2000:], label="Ptot final per time", linestyle="--")
-    # Only use final transferred momentum in calculation.
+    dv = np.zeros((3, len(t)))
+    if per_time:
+        t, vx = make_time_dependent(vx, t, number_of_chunks)
+        t, z = make_time_dependent(z, t, number_of_chunks)
+        vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+        dv = regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t)
+    else:
+        vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+        dv = regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper)
 
     Ptot = Ptot[-1]
     #Ptot = np.resize(Ptot, t.shape)
     #Ptot = np.sort(Ptot)
     #print(Ptot.shape, t.shape)
-
-    #print("Mean dv =", np.mean(dv[0,1000:]))
-    #print("Final Ptot per time = ", Ptot[-1]/t[-1])
-    #print("Area = ", A)
-    #print("eta =", (Ptot[-1]/t[-1])/(2*A*np.mean(dv[0,1000:])))
-
-    #plt.plot(
-    #        np.linspace(0,t[-1], len(Ptot[1500:])), Ptot[1500:]/t[1500:], label="Ptot resized"
-    #)
-
-    #plt.legend()
-    #plt.show()
 
     eta = viscosity(Ptot, A, t, dv[0])
     eta_max = viscosity(Ptot, A, t, dv[1])
@@ -255,7 +255,7 @@ def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks):
     return eta, eta_max, eta_min
 
 
-def find_viscosity_from_files(log_filename, fix_filename):
+def find_viscosity_from_files(log_filename, fix_filename, per_time=True):
     """ Given a log and fix file from a Müller-Plathe simulation, 
         compute the viscosity of the simulated fluid.
         Inputs:
@@ -308,7 +308,7 @@ def find_viscosity_from_files(log_filename, fix_filename):
 
     # Compute viscosity.
     # Should z be multiplied by 2*Lz to get the correct height?
-    eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks)
+    eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, per_time)
     return eta, constants, eta_max, eta_min
 
 
