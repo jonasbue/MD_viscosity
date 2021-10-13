@@ -122,6 +122,7 @@ def get_variable_indices(header, variables):
     """
     var_dict = {
         "Step"              : "t",
+        "Timestep"          : "t_fix",
         "Press"             : "p",
         "Volume"            : "V",
         "Temp"              : "T",

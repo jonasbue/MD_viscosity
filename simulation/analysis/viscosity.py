@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from scipy import stats
 import convert_LAMMPS_output as convert
 import files
+import plotting
 
 
 def radial_distribution(pf):
@@ -29,7 +31,7 @@ def enskog(pf, sigma, T, m, k=1.0):
     return eta
 
 
-def viscosity(Ptot, A, t, z, dv_dz):
+def viscosity(Ptot, A, t, dv_dz):
     """ Computes the measured value of the viscosity,
         from the Müller-Plathe experiment.
         Dangerous behaviour: 
@@ -44,13 +46,12 @@ def viscosity(Ptot, A, t, z, dv_dz):
             A:      float. Cross section of area through 
                     which the momentum flux passes.
             t:      np.array of time values.
-            z:      np.array of positions in z-direction.
             dv_dz:  float. Slope of velocity profile.
         Output:
             eta:        Computed viscosity.
             
     """
-    #j = np.divide(Ptot, (2*A*t)) 
+    #print("In visc:\t", Ptot.shape, t.shape, dv_dz.shape)
     j = Ptot/(2*A*t)
     eta = -j/dv_dz
     return eta
@@ -83,23 +84,26 @@ def isolate_slabs(vx, z):
         and z coordinates separate for the lower 
         and upper slab in the Müller-Plathe experiment.
     """
-    z_max = np.amax(z)
-    z_mid = z_max/2
-    lower_half = np.where(z<=z_mid, vx, np.nan)
-    upper_half = np.where(z>=z_mid, vx, np.nan)
-    z_lower = np.where(z<=z_mid, z, np.nan)
-    z_upper = np.where(z>=z_mid, z, np.nan)
+    #print(vx.shape)
+    #print(z.shape)
+    #z_max = np.nanmax(z)
+    #z_mid = z_max/2
 
-    z_lower = remove_nans(z_lower)
-    z_upper = remove_nans(z_upper)
-    lower_half = remove_nans(lower_half)
-    upper_half = remove_nans(upper_half)
-    #n = len(z)//2
-    #z_lower = z[:n]
-    #z_upper = z[n:]
-    #lower_half = vx[:n]
-    #upper_half = vx[n:]
+    #lower_half = np.where(z<=z_mid, vx, np.nan).reshape(vx.shape)
+    #upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
+    #z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
+    #z_upper = np.where(z>=z_mid, z, np.nan).reshape(z.shape)
+    #
+    #lower_half = remove_nans(lower_half)
+    #upper_half = remove_nans(upper_half)
+    #z_lower = remove_nans(z_lower)
+    #z_upper = remove_nans(z_upper)
 
+    n = len(z[0,:])//2
+    z_lower = z[:,:n]
+    z_upper = z[:,n:]
+    lower_half = vx[:,:n]
+    upper_half = vx[:,n:]
     return lower_half, upper_half, z_lower, z_upper
 
 def velocity_profile_regression(vx, z):
@@ -117,6 +121,9 @@ def velocity_profile_regression(vx, z):
             z_lower:    z-coordinates from the lower half of the slab.
             z_upper:    z-coordinates from the upper half of the slab.
     """
+    #print("In regress:")
+    #print(z.shape)
+    #print(vx.shape)
     reg = stats.linregress(
         z, 
         vx, 
@@ -180,23 +187,49 @@ def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks):
             eta_min:    Estimated minimum value of eta:
                         eta-standard error.
     """
-    ## TODO:    The viscosity is computed for every time step,
-    ##          but the slope is not. Change that to make
-    ##          dv.shape == t.shape
+    def make_time_dependent(arr, t, number_of_chunks):
+        t = np.unique(t)
+        arr = np.insert(arr, 0, np.nan)
+        arr = np.insert(arr, 0, np.nan)
+        arr = np.reshape(arr, (len(t), number_of_chunks))
+        return t, arr
+
+    t, vx = make_time_dependent(vx, t, number_of_chunks)
+    t, z = make_time_dependent(z, t, number_of_chunks)
 
     vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
-    lower_reg = velocity_profile_regression(vx_lower, z_lower)
-    upper_reg = velocity_profile_regression(vx_upper, z_upper)
-    dv = get_avg(lower_reg.slope, upper_reg.slope)
 
-    dev_low_max, dev_low_min = find_uncertainty(lower_reg)
-    dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
-    dev_slope_max = get_avg(dev_low_max, dev_upp_max)
-    dev_slope_min = get_avg(dev_low_min, dev_upp_min)
+    dv = np.zeros((3, len(t)))
+    for i in range(len(t)):
+        print(f"\r{100*i/len(t):.0f} %", end="")
+        lower_reg = velocity_profile_regression(vx_lower[i], z_lower[i])
+        upper_reg = velocity_profile_regression(vx_upper[i], z_upper[i])
+        dv[0,i] = get_avg(lower_reg.slope, upper_reg.slope)
 
-    eta = viscosity(Ptot, A, t, z, dv)
-    eta_max = viscosity(Ptot, A, t, z, dev_slope_max)
-    eta_min = viscosity(Ptot, A, t, z, dev_slope_min)
+        dev_low_max, dev_low_min = find_uncertainty(lower_reg)
+        dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
+        dv[1,i] = get_avg(dev_low_max, dev_upp_max)
+        dv[2,i] = get_avg(dev_low_min, dev_upp_min)
+
+        z_p = np.linspace(0,1)
+        #if i/len(t) > 0.8:
+        #    plt.plot(vx_lower[i], z_lower[i], "o")
+        #    plt.plot(dv[0,i]*z_p+lower_reg.intercept, z_p)
+        #    plt.plot((dv[0,i]+lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
+        #    plt.plot((dv[0,i]-lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
+        #    plt.show()
+        #if (100*i)%len(t) == 10:
+        #plotting.plot_velocity_regression(lower_reg, z_lower)
+        #plotting.plot_velocity_regression(upper_reg, z_upper)
+        #plotting.plot_velocity_regression_error(lower_reg, z_lower)
+        #plotting.plot_velocity_regression_error(upper_reg, z_upper)
+    print("")
+
+    # Only use final transferred momentum in calculation.
+    Ptot = Ptot[-1]
+    eta = viscosity(Ptot, A, t, dv[0])
+    eta_max = viscosity(Ptot, A, t, dv[1])
+    eta_min = viscosity(Ptot, A, t, dv[2])
     return eta, eta_max, eta_min
 
 
@@ -228,36 +261,46 @@ def find_viscosity_from_files(log_filename, fix_filename):
     # Extract total transferred momentum
     Ptot = log_vals[variable_list.index("Px")]
 
-    # Have t contain time values instead of time steps, 
-    # and make it start at t=0.
-    t = log_vals[variable_list.index("t")]*constants["DT"]
-    t = t - t[0] 
-
     # Get cross-section area.
     Lx = constants["LX"]
     Ly = constants["LY"]
+    Lz = constants["LZ"]
     A = get_area(Lx, Ly)
 
+    fix_variable_list = ["t_fix", "Nchunks"]
+    fix_table = files.load_system(fix_filename)
+    fix_vals = files.unpack_variables(
+        fix_table, 
+        fix_filename, 
+        fix_variable_list
+    )
+    N_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
+
+    # Have t contain time values instead of time steps, 
+    # and make it start at t=0.
+    t = fix_vals[fix_variable_list.index("t_fix")]*constants["DT"]
+    t = t - constants["EQUILL_TIME"]
+
     # Check that chunk number is correct.
-    assert_chunk_number(fix_filename, constants):
+    assert_chunk_number(N_chunks, constants)
 
     # Compute viscosity.
-    eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks)
+    # Should z be multiplied by 2*Lz to get the correct height?
+    eta, eta_max, eta_min = compute_viscosity(vx, z, t, A, Ptot, N_chunks)
     return eta, constants, eta_max, eta_min
 
 
-def assert_chunk_number(fix_filename, constants):
+def assert_chunk_number(N_chunks, constants):
     """ Checks that the number of chunks given in
         fix viscosity and fix ave/chunk are the same.
         If they are not the same, computation is assumed 
         to be prone to error, and the program is halted.
     """
-    fix_variable_list = ["Nchunks"]
-    fix_table = files.load_system(fix_filename)
-    N_chunks = files.unpack_variables(fix_table, fix_filename, fix_variable_list)
     N_chunks_given = constants["CHUNK_NUMBER"]
     chunk_thickness = constants["CHUNK_THICKNESS"]
-    N_chunks = int(N_chunks[0][0])
-
-    assert(2*constants["LZ"] == chunk_thickness*N_chunks)
-    assert(N_chunks_given == N_chunks)
+    assert np.abs(2*constants["LZ"] - chunk_thickness*N_chunks) < 1e-6, f"\
+        Height is not the same in terms of LZ and chunk thickness: \
+        {chunk_thickness*N_chunks} != {2*constants['LZ']}"
+    assert N_chunks_given == N_chunks, f"\
+        Number of chunks is not equal in fix viscosity and fix/ave: \
+        {N_chunks} is not {N_chunks_given}"

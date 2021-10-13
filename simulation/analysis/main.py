@@ -35,7 +35,7 @@ def main_viscosity():
 
 
         # Compute and plot viscosity for all packing fractions
-        cut = 1000
+        cut = 5000
         eta, C, eta_max, eta_min = viscosity.find_viscosity_from_files(
             log_name, fix_name
         )
