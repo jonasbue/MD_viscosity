@@ -233,28 +233,31 @@ def find_viscosity_from_files(log_filename, fix_filename):
     t = log_vals[variable_list.index("t")]*constants["DT"]
     t = t - t[0] 
 
+    # Get cross-section area.
     Lx = constants["LX"]
     Ly = constants["LY"]
-    Lz = constants["LZ"]
     A = get_area(Lx, Ly)
 
-    N_chunks_given = constants["CHUNK_NUMBER"]
-    chunk_thickness = constants["CHUNK_THICKNESS"]
+    # Check that chunk number is correct.
+    assert_chunk_number(fix_filename, constants):
 
-    fix_variable_list = ["Nchunks"]
-    fix_table = files.load_system(fix_filename)
-    #fix_header = files.get_header(fix_filename)
-    N_chunks = files.unpack_variables(fix_table, fix_filename, fix_variable_list)
-    N_chunks = int(N_chunks[0][0])
-
-    print("thickness =", chunk_thickness)
-    print("N_chunks =", N_chunks)
-    print("N_chunks from input script = ", N_chunks_given)
-    print("Slab height should be", chunk_thickness*N_chunks_given)
-    print("Slab height in computation is", chunk_thickness*N_chunks)
-    print("Slab height in simulation is", 2*Lz)
-    print("Slab width is", 2*Ly)
-    print("==================")
+    # Compute viscosity.
     eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks)
     return eta, constants, eta_max, eta_min
 
+
+def assert_chunk_number(fix_filename, constants):
+    """ Checks that the number of chunks given in
+        fix viscosity and fix ave/chunk are the same.
+        If they are not the same, computation is assumed 
+        to be prone to error, and the program is halted.
+    """
+    fix_variable_list = ["Nchunks"]
+    fix_table = files.load_system(fix_filename)
+    N_chunks = files.unpack_variables(fix_table, fix_filename, fix_variable_list)
+    N_chunks_given = constants["CHUNK_NUMBER"]
+    chunk_thickness = constants["CHUNK_THICKNESS"]
+    N_chunks = int(N_chunks[0][0])
+
+    assert(2*constants["LZ"] == chunk_thickness*N_chunks)
+    assert(N_chunks_given == N_chunks)

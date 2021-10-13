@@ -99,3 +99,19 @@ def plot_Z(p, V, T, eta):
         Z(p, V, N, T),
         "o", label=f"$\eta$ = {eta}"
     )                          
+
+def plot_velocity_profile_from_file(fix_name):
+    vx, z = viscosity.get_velocity_profile(fix_name)
+    vxl, vxu, zl, zu = viscosity.isolate_slabs(vx, z)
+    lreg = viscosity.velocity_profile_regression(vxl, zl)
+    ureg = viscosity.velocity_profile_regression(vxu, zu)
+
+    plotting.plot_velocity_profile(vxl[::6], zl[::6], packing)
+    plotting.plot_velocity_profile(vxu[::6], zu[::6], packing)
+    plotting.plot_velocity_regression(lreg, zl, slab="Lower")
+    plotting.plot_velocity_regression_error(lreg, zl)
+    plotting.plot_velocity_regression(ureg, zu, slab="Upper")
+    plotting.plot_velocity_regression_error(ureg, zu)
+    plt.legend(loc="left")
+    plt.show()
+
