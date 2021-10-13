@@ -121,15 +121,35 @@ def velocity_profile_regression(vx, z):
             z_lower:    z-coordinates from the lower half of the slab.
             z_upper:    z-coordinates from the upper half of the slab.
     """
-    #print("In regress:")
-    #print(z.shape)
-    #print(vx.shape)
     reg = stats.linregress(
         z, 
         vx, 
     )
     return reg
 
+
+def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
+    dv = np.zeros((3, len(t)))
+    for i in range(len(t)):
+        print(f"\r{100*i/len(t):.0f} %", end="")
+        lower_reg = velocity_profile_regression(vx_lower[i], z_lower[i])
+        upper_reg = velocity_profile_regression(vx_upper[i], z_upper[i])
+        dv[0,i] = get_avg(lower_reg.slope, upper_reg.slope)
+
+        dev_low_max, dev_low_min = find_uncertainty(lower_reg)
+        dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
+        dv[1,i] = get_avg(dev_low_max, dev_upp_max)
+        dv[2,i] = get_avg(dev_low_min, dev_upp_min)
+
+        z_p = np.linspace(0,1)
+        #if i/len(t) > 0.8:
+        #    plt.plot(vx_lower[i], z_lower[i], "o")
+        #    plt.plot(dv[0,i]*z_p+lower_reg.intercept, z_p)
+        #    plt.plot((dv[0,i]+lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
+        #    plt.plot((dv[0,i]-lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
+        #    plt.show()
+    print("")
+    return dv
 
 def get_avg(lower, upper):
     """ Returns an average (typically of slopes).
@@ -168,6 +188,18 @@ def get_area(Lx, Ly):
     """
     return 4*Lx*Ly
 
+def make_time_dependent(arr, t, number_of_chunks):
+    """ Takes an array with multiple values for each timestep,
+        and converts it to a 2D array in which first dimension
+        is the time and second dimension contains the values
+        at that time.
+    """
+    t = np.unique(t)
+    # Ad hoc: With current data, two values are missing from first timestep.
+    arr = np.insert(arr, 0, np.nan)
+    arr = np.insert(arr, 0, np.nan)
+    arr = np.reshape(arr, (len(t), number_of_chunks))
+    return t, arr
 
 def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks):
     """ Computes the viscosity of a fluid, given arrays of 
@@ -187,46 +219,36 @@ def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks):
             eta_min:    Estimated minimum value of eta:
                         eta-standard error.
     """
-    def make_time_dependent(arr, t, number_of_chunks):
-        t = np.unique(t)
-        arr = np.insert(arr, 0, np.nan)
-        arr = np.insert(arr, 0, np.nan)
-        arr = np.reshape(arr, (len(t), number_of_chunks))
-        return t, arr
 
     t, vx = make_time_dependent(vx, t, number_of_chunks)
     t, z = make_time_dependent(z, t, number_of_chunks)
 
     vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+    dv = regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t)
+    # dv_reg = velocity_profile_regression(vx_lower, z_lower)
 
-    dv = np.zeros((3, len(t)))
-    for i in range(len(t)):
-        print(f"\r{100*i/len(t):.0f} %", end="")
-        lower_reg = velocity_profile_regression(vx_lower[i], z_lower[i])
-        upper_reg = velocity_profile_regression(vx_upper[i], z_upper[i])
-        dv[0,i] = get_avg(lower_reg.slope, upper_reg.slope)
-
-        dev_low_max, dev_low_min = find_uncertainty(lower_reg)
-        dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
-        dv[1,i] = get_avg(dev_low_max, dev_upp_max)
-        dv[2,i] = get_avg(dev_low_min, dev_upp_min)
-
-        z_p = np.linspace(0,1)
-        #if i/len(t) > 0.8:
-        #    plt.plot(vx_lower[i], z_lower[i], "o")
-        #    plt.plot(dv[0,i]*z_p+lower_reg.intercept, z_p)
-        #    plt.plot((dv[0,i]+lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
-        #    plt.plot((dv[0,i]-lower_reg.stderr)*z_p+lower_reg.intercept, z_p)
-        #    plt.show()
-        #if (100*i)%len(t) == 10:
-        #plotting.plot_velocity_regression(lower_reg, z_lower)
-        #plotting.plot_velocity_regression(upper_reg, z_upper)
-        #plotting.plot_velocity_regression_error(lower_reg, z_lower)
-        #plotting.plot_velocity_regression_error(upper_reg, z_upper)
-    print("")
-
+    #plt.plot(np.linspace(0,t[-1], len(Ptot)), Ptot/t[-1], label="Ptot", linestyle="--")
+    #plt.plot(np.linspace(0,t[-1], 100), Ptot[-100:]/t[-100:], label="Ptot per time", linestyle="--")
+    #plt.plot(np.linspace(0,t[-1], len(t[2000:])), Ptot[-1]/t[2000:], label="Ptot final per time", linestyle="--")
     # Only use final transferred momentum in calculation.
+
     Ptot = Ptot[-1]
+    #Ptot = np.resize(Ptot, t.shape)
+    #Ptot = np.sort(Ptot)
+    #print(Ptot.shape, t.shape)
+
+    #print("Mean dv =", np.mean(dv[0,1000:]))
+    #print("Final Ptot per time = ", Ptot[-1]/t[-1])
+    #print("Area = ", A)
+    #print("eta =", (Ptot[-1]/t[-1])/(2*A*np.mean(dv[0,1000:])))
+
+    #plt.plot(
+    #        np.linspace(0,t[-1], len(Ptot[1500:])), Ptot[1500:]/t[1500:], label="Ptot resized"
+    #)
+
+    #plt.legend()
+    #plt.show()
+
     eta = viscosity(Ptot, A, t, dv[0])
     eta_max = viscosity(Ptot, A, t, dv[1])
     eta_min = viscosity(Ptot, A, t, dv[2])
@@ -276,8 +298,8 @@ def find_viscosity_from_files(log_filename, fix_filename):
     )
     N_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
 
-    # Have t contain time values instead of time steps, 
-    # and make it start at t=0.
+    # Have t contain time values instead of 
+    # time steps, and make it start at t=0.
     t = fix_vals[fix_variable_list.index("t_fix")]*constants["DT"]
     t = t - constants["EQUILL_TIME"]
 
@@ -286,7 +308,7 @@ def find_viscosity_from_files(log_filename, fix_filename):
 
     # Compute viscosity.
     # Should z be multiplied by 2*Lz to get the correct height?
-    eta, eta_max, eta_min = compute_viscosity(vx, z, t, A, Ptot, N_chunks)
+    eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks)
     return eta, constants, eta_max, eta_min
 
 

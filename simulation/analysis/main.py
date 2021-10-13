@@ -14,6 +14,7 @@ if "convert" in sysargs:
     files.all_files_to_csv("data")
 packing_list = files.find_all_packing_fractions("data")
 #filenames = files.find_all_filenames("data")
+cut_fraction = 0.8
 
 def main_viscosity():
     C = {}
@@ -35,10 +36,12 @@ def main_viscosity():
 
 
         # Compute and plot viscosity for all packing fractions
-        cut = 5000
         eta, C, eta_max, eta_min = viscosity.find_viscosity_from_files(
             log_name, fix_name
         )
+        cut = int(cut_fraction*len(eta))
+        print(f"Cutting the first {cut} values.")
+
         PF_list[i] = C["PF"]
         eta_list[i] = np.mean(eta[cut:])
         eta_error = np.array([eta_min, eta_max])
@@ -50,7 +53,7 @@ def main_viscosity():
             print(eta_list) 
 
     plotting.plot_viscosity(
-        packing_list,
+        6*packing_list/np.pi,
         eta_list,
         std_err_list,
     )
@@ -58,7 +61,8 @@ def main_viscosity():
     # Plot theoretical Enskog equation
     m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]
     pf = np.linspace(0,0.6)
-    plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0))
+    rho = 6*pf/np.pi
+    plt.plot(rho, viscosity.enskog(pf, sigma, T, m, k=1.0))
     plt.show()
 
 
