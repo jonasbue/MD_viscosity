@@ -27,8 +27,8 @@
 variable PARTICLE_NUMBER            equal 1000  # Name -> N
 variable PARTICLE_DIAMETER          equal 1.0   # Name -> SIGMA
 #variable PARTICLE_MASS             equal 1.0   # Name -> MASS
-variable SIMULATION_DURATION        equal 2000  # Name -> RUN_TIME
-variable EQUILLIBRATION_DURATION    equal 1000  # Name -> RUN_TIME
+variable SIMULATION_DURATION        equal 50  # Name -> RUN_TIME
+variable EQUILLIBRATION_DURATION    equal 50  # Name -> RUN_TIME
 
 
 ### ======================================================================== ###

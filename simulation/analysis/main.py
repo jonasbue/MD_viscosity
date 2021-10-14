@@ -15,7 +15,7 @@ if "convert" in sysargs:
 packing_list = files.find_all_packing_fractions("data")
 #filenames = files.find_all_filenames("data")
 cut_fraction = 0.9
-per_time=True
+per_time=False
 
 def main_viscosity():
     C = {}
@@ -51,13 +51,21 @@ def main_viscosity():
             plt.plot(np.linspace(0,100,num=len(eta)), eta)
             plt.show()
         if "verbose" in sysargs:
-            print(eta_list) 
+            print("Viscosities:", eta_list) 
+            print("Errors:\n", std_err_list) 
 
     plotting.plot_viscosity(
         6*packing_list/np.pi,
         eta_list,
         std_err_list,
     )
+
+    #plotting.plot_viscosity(
+    #    6*packing_list/np.pi,
+    #    eta_list/viscosity.enskog(packing_list, sigma, T, m),
+    #    std_err_list/viscosity.enskog(packing_list, sigma, T, m),
+    #)
+    #plt.plot(rho, np.ones_like(rho))
 
     # Plot theoretical Enskog equation
     m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]

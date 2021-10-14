@@ -141,11 +141,13 @@ def regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper):
     lower_reg = velocity_profile_regression(vx_lower, z_lower)
     upper_reg = velocity_profile_regression(vx_upper, z_upper)
     dv[0] = get_avg(lower_reg.slope, upper_reg.slope)
+    dv[1] = get_avg(lower_reg.stderr, upper_reg.stderr)
+    dv[2] = -get_avg(lower_reg.stderr, upper_reg.stderr)
 
-    dev_low_max, dev_low_min = find_uncertainty(lower_reg)
-    dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
-    dv[1] = get_avg(dev_low_max, dev_upp_max)
-    dv[2] = get_avg(dev_low_min, dev_upp_min)
+    #dev_low_max, dev_low_min = find_uncertainty(lower_reg)
+    #dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
+    #dv[1] = get_avg(dev_low_max, dev_upp_max)
+    #dv[2] = get_avg(dev_low_min, dev_upp_min)
     return dv
 
 
@@ -157,12 +159,12 @@ def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
         upper_reg = velocity_profile_regression(vx_upper[i], z_upper[i])
         dv[0,i] = get_avg(lower_reg.slope, upper_reg.slope)
 
-        dev_low_max, dev_low_min = find_uncertainty(lower_reg)
-        dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
-        dv[1,i] = get_avg(dev_low_max, dev_upp_max)
-        dv[2,i] = get_avg(dev_low_min, dev_upp_min)
-
-        z_p = np.linspace(0,1)
+        #dev_low_max, dev_low_min = find_uncertainty(lower_reg)
+        #dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
+        #dv[1,i] = get_avg(dev_low_max, dev_upp_max)
+        #dv[2,i] = get_avg(dev_low_min, dev_upp_min)
+        dv[1,i] = get_avg(lower_reg.stderr, upper_reg.stderr)
+        dv[2,i] = -get_avg(lower_reg.stderr, upper_reg.stderr)
     print("")
     return dv
 
@@ -187,9 +189,10 @@ def find_uncertainty(reg):
             max_slope:  maximum slope based on linear regression.
             min_slope:  minimum slope based on linear regression.
     """
-    max_slope = reg.slope + reg.stderr
-    min_slope = reg.slope - reg.stderr
-    return max_slope, min_slope
+    #max_slope = reg.slope + reg.stderr
+    #min_slope = reg.slope - reg.stderr
+    #return max_slope, min_slope
+    return reg.stderr, -reg.stderr
 
 
 def get_area(Lx, Ly):
@@ -249,9 +252,12 @@ def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks, per_time):
     #Ptot = np.sort(Ptot)
     #print(Ptot.shape, t.shape)
 
+    print("dv", dv)
     eta = viscosity(Ptot, A, t, dv[0])
-    eta_max = viscosity(Ptot, A, t, dv[1])
-    eta_min = viscosity(Ptot, A, t, dv[2])
+    eta_max = viscosity(Ptot, A, t, dv[0]**2)*dv[1]
+    eta_min = -viscosity(Ptot, A, t, dv[0]**2)*dv[2]
+    #eta_max = eta + stderr
+    #eta_min = eta - stderr
     return eta, eta_max, eta_min
 
 
