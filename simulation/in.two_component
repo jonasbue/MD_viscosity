@@ -23,9 +23,9 @@
 # The log-name can be accessed from python, through function 
 # convert_LAMMPS_output.extract_constants_from_log().
 
-variable    EQUILLIBRATION_DURATION     equal 100   # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 0     # Name -> RUN_TIME
-variable    PACKING                     equal 0.4   # Name -> PF
+variable    EQUILLIBRATION_DURATION     equal 10   # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 100     # Name -> RUN_TIME
+variable    PACKING                     equal 0.1   # Name -> PF
 
 # Light component
 variable    LIGHT_NUMBER        equal 500   # Name -> N
@@ -35,7 +35,7 @@ variable    LIGHT_DIAMETER      equal 1.0   # Name -> SIGMA
 # Heavy component
 variable    HEAVY_NUMBER        equal 500   # Name -> N
 variable    HEAVY_MASS          equal 1.0   # Name -> MASS
-variable    HEAVY_DIAMETER      equal 2.0   # Name -> SIGMA
+variable    HEAVY_DIAMETER      equal 1.0   # Name -> SIGMA
 
 
 ### ======================================================================== ###
@@ -212,8 +212,8 @@ fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 
 print "THERMO"
 # Write out thermodynamic quantities to console:
-thermo_style    custom step etotal pe ke temp press vol 
-thermo          ${THERMO_OUTPUT}        
+#thermo_style    custom step etotal pe ke temp press vol 
+#thermo          ${THERMO_OUTPUT}        
 
 # Run simulation to equillibrate the system.
 # This can be swapped with a save-file of a system in equillibrium.

@@ -76,6 +76,10 @@ def main_viscosity():
 
 
 def main_equation_of_state():
+    N = 1000
+    eta_list = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5])
+    variable_list = ["p", "V", "T"]
+
     # Calculate values of Z from measured p, V and T.
     for eta in eta_list:
         filename = f"log.eta_{eta}.lammps"
@@ -106,8 +110,14 @@ def main_equation_of_state():
     plt.show()
 
 
+def main_mix():
+    eos.test_mix()
+
 if "eos" in sysargs:
     main_equation_of_state()
 
 if "viscosity" in sysargs:
     main_viscosity()
+
+if "mix" in sysargs:
+    main_mix()

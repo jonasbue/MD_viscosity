@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import convert_LAMMPS_output as convert
 import files
-import plotting
+import tests
 
 
 def radial_distribution(pf):
@@ -310,25 +310,9 @@ def find_viscosity_from_files(log_filename, fix_filename, per_time=True):
     t = t - constants["EQUILL_TIME"]
 
     # Check that chunk number is correct.
-    assert_chunk_number(N_chunks, constants)
+    tests.assert_chunk_number(N_chunks, constants)
 
     # Compute viscosity.
     # Should z be multiplied by 2*Lz to get the correct height?
     eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, per_time)
     return eta, constants, eta_max, eta_min
-
-
-def assert_chunk_number(N_chunks, constants):
-    """ Checks that the number of chunks given in
-        fix viscosity and fix ave/chunk are the same.
-        If they are not the same, computation is assumed 
-        to be prone to error, and the program is halted.
-    """
-    N_chunks_given = constants["CHUNK_NUMBER"]
-    chunk_thickness = constants["CHUNK_THICKNESS"]
-    assert np.abs(2*constants["LZ"] - chunk_thickness*N_chunks) < 1e-6, f"\
-        Height is not the same in terms of LZ and chunk thickness: \
-        {chunk_thickness*N_chunks} != {2*constants['LZ']}"
-    assert N_chunks_given == N_chunks, f"\
-        Number of chunks is not equal in fix viscosity and fix/ave: \
-        {N_chunks} is not {N_chunks_given}"
