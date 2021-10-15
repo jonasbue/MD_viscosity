@@ -6,6 +6,7 @@ import files
 import viscosity
 import plotting
 import eos
+import tests
 
 sysargs = sys.argv
 
@@ -111,7 +112,7 @@ def main_equation_of_state():
 
 
 def main_mix():
-    eos.test_mix()
+    tests.test_mix()
 
 if "eos" in sysargs:
     main_equation_of_state()

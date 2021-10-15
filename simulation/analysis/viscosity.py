@@ -7,14 +7,6 @@ import files
 import tests
 
 
-def radial_distribution(pf):
-    """ Returns the thoretical radial distribution 
-        function, as given in Pousaneh and de Wijn's paper.
-    """
-    xi = pf
-    return (1-xi/2)/(1-xi)**3
-
-
 def enskog(pf, sigma, T, m, k=1.0):
     """ Returns the theoretical value of the 
         viscosity for a given packing fraction.
@@ -22,7 +14,7 @@ def enskog(pf, sigma, T, m, k=1.0):
     eta_0 =  5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
     V_excl = 2*np.pi*(sigma**3)/3
     rho = 6*pf/np.pi
-    g = radial_distribution(pf)
+    g = eos.rdf_PY(pf)
     eta = eta_0 * (
         1/g 
         + 0.8 * V_excl * rho

@@ -1,3 +1,6 @@
+import eos
+import numpy as np
+
 def assert_chunk_number(N_chunks, constants):
     """ Checks that the number of chunks given in
         fix viscosity and fix ave/chunk are the same.
@@ -12,3 +15,28 @@ def assert_chunk_number(N_chunks, constants):
     assert N_chunks_given == N_chunks, f"\
         Number of chunks is not equal in fix viscosity and fix/ave: \
         {N_chunks} is not {N_chunks_given}"
+
+def test_mix():
+    sigma = np.array([[1.0,1.0],[1.0,1.0]])
+    x = np.array([1.0, 0.0])
+    pf = 0.4
+    rho = 6*pf/np.pi
+    print(eos.rdf_PY(pf))
+    print(eos.Z_CS(pf))
+    g = eos.rdf_SPT(sigma, x, rho, 1,1)
+    print(g)
+    g = eos.rdf_SPT(sigma, x, rho, 1,2)
+    print(g)
+    g = eos.rdf_SPT(sigma, x, rho, 2,2)
+    print(g)
+    g = eos.rdf_PY_mix(sigma, x, rho, 1,1)
+    print(g)
+    g = eos.rdf_PY_mix(sigma, x, rho, 1,2)
+    print(g)
+    g = eos.rdf_PY_mix(sigma, x, rho, 2,2)
+    print(g)
+    Z = eos.Z_SPT(sigma, x, rho)
+    print(Z)
+    Z = eos.Z_PY(sigma, x, rho)
+    print(Z)
+
