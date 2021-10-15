@@ -16,5 +16,13 @@ File structure:
         |./                 -- The .tex files live here
         |out/               -- Where the LaTeX output files go
 
+
+To run LAMMPS:
 $ lmp -in filename
 $ ovito dump.lammps
+
+TODO:
+- Plot radial distributuion functions and equations of state for mixtures.
+- Calculate viscosity for mixtures.
+- Run simulations for different mixtures.
+- Compare results to Thorne equation
