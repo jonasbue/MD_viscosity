@@ -5,8 +5,8 @@ import sys
 import files
 import viscosity
 import plotting
-import eos
 import tests
+import muller_plathe
 
 sysargs = sys.argv
 
@@ -16,7 +16,7 @@ if "convert" in sysargs:
 packing_list = files.find_all_packing_fractions("data")
 #filenames = files.find_all_filenames("data")
 cut_fraction = 0.95
-per_time=False
+per_time=True
 
 def main_viscosity():
     C = {}
@@ -37,7 +37,7 @@ def main_viscosity():
             plotting.plot_velocity_profile_from_file(fix_name)
 
         # Compute and plot viscosity for all packing fractions
-        eta, C, eta_err = viscosity.find_viscosity_from_files(
+        eta, C, eta_err = muller_plathe.find_viscosity_from_files(
             log_name, fix_name, cut_fraction, per_time
         )
 

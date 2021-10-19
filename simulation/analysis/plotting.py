@@ -1,3 +1,8 @@
+#########################################################
+# This file contains all relevant plotting functions,   #
+# wrapped to reduce repetitions and manual writing.     #
+#########################################################
+
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -6,7 +11,6 @@ font = {
     "size"  : "22",
 }
 plt.rc("font", **font)
-matplotlib.rcParams['agg.path.chunksize'] = 1000000
 
 
 def plot_velocity_regression(reg, z, slab=""):
@@ -32,14 +36,6 @@ def plot_velocity_regression_error(reg, z):
         label="Lower error bound",
         linestyle=":"
     )
-    #plt.fill_between(
-    #    (lower_reg.slope+lower_reg.stderr)*z_lower 
-    #    + (lower_reg.intercept+lower_reg.intercept_stderr),
-    #    lower_reg.slope*z_lower + lower_reg.intercept,
-    #    #(lower_reg.slope-lower_reg.stderr)*z_lower 
-    #    #+ (lower_reg.intercept-lower_reg.intercept_stderr),
-    #    z_lower
-    #)
 
 
 def plot_velocity_profile(vx, z, packing=None):

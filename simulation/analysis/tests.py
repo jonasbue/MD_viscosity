@@ -1,3 +1,8 @@
+#####################################################
+# This file contains a few test that can be used    #
+# when developing the remaining project code.       #
+#####################################################
+
 import eos
 import numpy as np
 

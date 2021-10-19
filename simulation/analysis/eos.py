@@ -1,8 +1,13 @@
 #########################################################
-# Outdated description:                                 #
-# This script takes a log file from LAMMPS and plots    #
-# its compressibility factor vs. the Carnahan-Starling  #
-# equation of state.                                    #
+# This file contains various functions that calculate   #
+# different equations of state for a HS fluid.          #
+# Function names are a bit unclear, so here is a table  #
+# of contents:                                          #
+# Z: Packing fraction, or the value of the EoS.         #
+# rdf: Radial distribution function.                    #
+# CS: Carnahan-Starling.                                #
+# PY: Percus-Yervick.                                   #
+# SPT: Scaled Particle Theory.                          #
 #########################################################
 
 import numpy as np
