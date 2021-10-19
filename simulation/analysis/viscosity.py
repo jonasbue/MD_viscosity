@@ -5,6 +5,7 @@ from scipy import stats
 import convert_LAMMPS_output as convert
 import files
 import tests
+import eos
 
 
 def enskog(pf, sigma, T, m, k=1.0):
@@ -68,6 +69,7 @@ def get_velocity_profile(fix_filename):
 
 
 def remove_nans(arr):
+    """ Removes all instances of np.nan in arr. """
     return arr[~np.isnan(arr)]
 
 
@@ -129,36 +131,34 @@ def velocity_profile_regression(vx, z):
 
 
 def regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper):
-    dv = np.zeros(3)
+    """ Performs a linear regression of the velocity profile,
+        using values from all times. This approach is faster, 
+        but slightly rough compared to computing a different
+        slope for all times, and then obtaining a mean.
+    """
     lower_reg = velocity_profile_regression(vx_lower, z_lower)
     upper_reg = velocity_profile_regression(vx_upper, z_upper)
-    dv[0] = get_avg(lower_reg.slope, upper_reg.slope)
-    dv[1] = get_avg(lower_reg.stderr, upper_reg.stderr)
-    dv[2] = -get_avg(lower_reg.stderr, upper_reg.stderr)
-
-    #dev_low_max, dev_low_min = find_uncertainty(lower_reg)
-    #dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
-    #dv[1] = get_avg(dev_low_max, dev_upp_max)
-    #dv[2] = get_avg(dev_low_min, dev_upp_min)
-    return dv
+    dv = get_avg(lower_reg.slope, upper_reg.slope)
+    std_err = get_avg(lower_reg.stderr, upper_reg.slope)
+    return dv, std_err
 
 
 def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
-    dv = np.zeros((3, len(t)))
+    """ Performs a linear regression of the velocity profile,
+        using values from one single time step. This approach 
+        is slower, but a priori slightly more robust compared 
+        to computing the slope from all time values at once.
+    """
+    dv = np.zeros(len(t))
+    std_err = np.zeros(len(t))
     for i in range(len(t)):
         print(f"\r{100*i/len(t):.0f} %", end="")
         lower_reg = velocity_profile_regression(vx_lower[i], z_lower[i])
         upper_reg = velocity_profile_regression(vx_upper[i], z_upper[i])
-        dv[0,i] = get_avg(lower_reg.slope, upper_reg.slope)
-
-        #dev_low_max, dev_low_min = find_uncertainty(lower_reg)
-        #dev_upp_max, dev_upp_min = find_uncertainty(upper_reg)
-        #dv[1,i] = get_avg(dev_low_max, dev_upp_max)
-        #dv[2,i] = get_avg(dev_low_min, dev_upp_min)
-        dv[1,i] = get_avg(lower_reg.stderr, upper_reg.stderr)
-        dv[2,i] = -get_avg(lower_reg.stderr, upper_reg.stderr)
+        dv[i] = get_avg(lower_reg.slope, upper_reg.slope)
+        std_err[i] = get_avg(lower_reg.stderr, upper_reg.stderr)
     print("")
-    return dv
+    return dv, std_err
 
 def get_avg(lower, upper):
     """ Returns an average (typically of slopes).
@@ -181,9 +181,6 @@ def find_uncertainty(reg):
             max_slope:  maximum slope based on linear regression.
             min_slope:  minimum slope based on linear regression.
     """
-    #max_slope = reg.slope + reg.stderr
-    #min_slope = reg.slope - reg.stderr
-    #return max_slope, min_slope
     return reg.stderr, -reg.stderr
 
 
@@ -205,13 +202,31 @@ def make_time_dependent(arr, t, number_of_chunks):
         at that time.
     """
     t = np.unique(t)
+
     # Ad hoc: With current data, two values are missing from first timestep.
     arr = np.insert(arr, 0, np.nan)
     arr = np.insert(arr, 0, np.nan)
     arr = np.reshape(arr, (len(t), number_of_chunks))
     return t, arr
 
-def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks, per_time):
+
+def cut_time(cut_fraction, arr):
+    """ Removes the first values of arr,
+        to remove early values from the analysis.
+    """
+    cut = int(cut_fraction*len(arr))
+    print(f"Cutting the first {cut} values.")
+    arr = arr[cut:]
+    print(arr.shape)
+    return arr
+
+
+def compute_viscosity(
+        vx, z, t, A, Ptot, 
+        number_of_chunks, 
+        cut_fraction, 
+        per_time
+    ):
     """ Computes the viscosity of a fluid, given arrays of 
         values extracted from a Müller-Plathe experiment.
         Input:
@@ -229,31 +244,43 @@ def compute_viscosity(vx, z, t, A, Ptot, number_of_chunks, per_time):
             eta_min:    Estimated minimum value of eta:
                         eta-standard error.
     """
-    dv = np.zeros((3, len(t)))
     if per_time:
         t, vx = make_time_dependent(vx, t, number_of_chunks)
         t, z = make_time_dependent(z, t, number_of_chunks)
+
+        # Remove early values. They are not useful.
+        t = cut_time(cut_fraction, t)
+        z = cut_time(cut_fraction, z)
+        vx = cut_time(cut_fraction, vx)
+
         vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
-        dv = regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t)
+        dv, std_err = regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t)
     else:
+        # Remove early values. They are not useful.
+        t = cut_time(cut_fraction, t)
+        z = cut_time(cut_fraction, z)
+        vx = cut_time(cut_fraction, vx)
         vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
-        dv = regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper)
+        dv, std_err = regression_for_single_time(
+                vx_lower, vx_upper, z_lower, z_upper)
 
     Ptot = Ptot[-1]
-    #Ptot = np.resize(Ptot, t.shape)
-    #Ptot = np.sort(Ptot)
-    #print(Ptot.shape, t.shape)
 
-    print("dv", dv)
-    eta = viscosity(Ptot, A, t, dv[0])
-    eta_max = viscosity(Ptot, A, t, dv[0]**2)*dv[1]
-    eta_min = -viscosity(Ptot, A, t, dv[0]**2)*dv[2]
-    #eta_max = eta + stderr
-    #eta_min = eta - stderr
+    eta = viscosity(Ptot, A, t, dv)
+
+    # eta_max = - eta_min, so only one value is needed.
+    # For generality, both are computed here.
+    eta_max = viscosity(Ptot, A, t, dv**2)*std_err
+    eta_min = viscosity(Ptot, A, t, dv**2)*(-std_err)
     return eta, eta_max, eta_min
 
 
-def find_viscosity_from_files(log_filename, fix_filename, per_time=True):
+def find_viscosity_from_files(
+        log_filename, 
+        fix_filename, 
+        cut_fraction, 
+        per_time=True
+    ):
     """ Given a log and fix file from a Müller-Plathe simulation, 
         compute the viscosity of the simulated fluid.
         Inputs:
@@ -270,10 +297,15 @@ def find_viscosity_from_files(log_filename, fix_filename, per_time=True):
     # Extract vx and z from fix file.
     vx, z = get_velocity_profile(fix_filename)
 
+
     # Extract time and momentum transferred from log file.
     variable_list = ["t", "Px"]
     log_table = files.load_system(log_filename)
-    log_vals = files.unpack_variables(log_table, log_filename, variable_list)
+    log_vals = files.unpack_variables(
+        log_table, 
+        log_filename, 
+        variable_list
+    )
 
     # Extract all constants from log file.
     constants = convert.extract_constants_from_log(log_filename)
@@ -306,5 +338,5 @@ def find_viscosity_from_files(log_filename, fix_filename, per_time=True):
 
     # Compute viscosity.
     # Should z be multiplied by 2*Lz to get the correct height?
-    eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, per_time)
-    return eta, constants, eta_max, eta_min
+    eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time)
+    return eta, constants, eta_max

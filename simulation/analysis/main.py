@@ -15,7 +15,7 @@ if "convert" in sysargs:
     files.all_files_to_csv("data")
 packing_list = files.find_all_packing_fractions("data")
 #filenames = files.find_all_filenames("data")
-cut_fraction = 0.9
+cut_fraction = 0.95
 per_time=False
 
 def main_viscosity():
@@ -24,7 +24,7 @@ def main_viscosity():
         print("Number of packings:", len(packing_list)) 
     PF_list = np.zeros(len(packing_list))
     eta_list = np.zeros(len(packing_list))
-    std_err_list = np.zeros((2, len(packing_list)))
+    error_list = np.zeros(len(packing_list))
 
     for (i, packing) in enumerate(packing_list):
         if "verbose" in sysargs:
@@ -36,43 +36,41 @@ def main_viscosity():
         if "plot-profiles" in sysargs:
             plotting.plot_velocity_profile_from_file(fix_name)
 
-
         # Compute and plot viscosity for all packing fractions
-        eta, C, eta_max, eta_min = viscosity.find_viscosity_from_files(
-            log_name, fix_name, per_time
+        eta, C, eta_err = viscosity.find_viscosity_from_files(
+            log_name, fix_name, cut_fraction, per_time
         )
-        cut = int(cut_fraction*len(eta))
-        print(f"Cutting the first {cut} values.")
 
         PF_list[i] = C["PF"]
-        eta_list[i] = np.mean(eta[cut:])
-        eta_error = np.array([eta_min, eta_max])
-        std_err_list[:,i] = np.mean(eta_error[:,cut:], axis=1)
+        eta_list[i] = np.mean(eta)
+        error_list[i] = np.mean(eta_err)
         if "time-to-eq" in sysargs:
             plt.plot(np.linspace(0,100,num=len(eta)), eta)
             plt.show()
         if "verbose" in sysargs:
             print("Viscosities:", eta_list) 
-            print("Errors:\n", std_err_list) 
+            print("Errors:\n", error_list) 
 
     plotting.plot_viscosity(
         6*packing_list/np.pi,
         eta_list,
-        std_err_list,
+        error_list,
     )
 
-    #plotting.plot_viscosity(
-    #    6*packing_list/np.pi,
-    #    eta_list/viscosity.enskog(packing_list, sigma, T, m),
-    #    std_err_list/viscosity.enskog(packing_list, sigma, T, m),
-    #)
-    #plt.plot(rho, np.ones_like(rho))
-
-    # Plot theoretical Enskog equation
     m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]
+    # Plot theoretical Enskog equation
     pf = np.linspace(0,0.6)
     rho = 6*pf/np.pi
     plt.plot(rho, viscosity.enskog(pf, sigma, T, m, k=1.0))
+    plt.show()
+
+    #renormalize to relative viscosity:
+    plotting.plot_viscosity(
+        6*packing_list/np.pi,
+        eta_list/viscosity.enskog(packing_list, sigma, T, m),
+        error_list/viscosity.enskog(packing_list, sigma, T, m),
+    )
+    plt.plot(rho, np.ones_like(rho))
     plt.show()
 
 
