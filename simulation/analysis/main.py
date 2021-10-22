@@ -15,8 +15,9 @@ if "convert" in sysargs:
     files.all_files_to_csv("data")
 packing_list = files.find_all_packing_fractions("data")
 #filenames = files.find_all_filenames("data")
-cut_fraction = 0.95
-per_time=True
+cut_fraction = 0.94
+per_time=False
+#packing_list = packing_list[:-2]
 
 def main_viscosity():
     C = {}
@@ -51,8 +52,9 @@ def main_viscosity():
             print("Viscosities:", eta_list) 
             print("Errors:\n", error_list) 
 
+    rho_list = 6*packing_list/np.pi
     plotting.plot_viscosity(
-        6*packing_list/np.pi,
+        packing_list,
         eta_list,
         error_list,
     )
@@ -61,16 +63,16 @@ def main_viscosity():
     # Plot theoretical Enskog equation
     pf = np.linspace(0,0.6)
     rho = 6*pf/np.pi
-    plt.plot(rho, viscosity.enskog(pf, sigma, T, m, k=1.0))
+    plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0))
     plt.show()
 
     #renormalize to relative viscosity:
     plotting.plot_viscosity(
-        6*packing_list/np.pi,
+        packing_list,
         eta_list/viscosity.enskog(packing_list, sigma, T, m),
         error_list/viscosity.enskog(packing_list, sigma, T, m),
     )
-    plt.plot(rho, np.ones_like(rho))
+    plt.plot(pf, np.ones_like(pf))
     plt.show()
 
 
@@ -110,7 +112,10 @@ def main_equation_of_state():
 
 
 def main_mix():
-    tests.test_mix()
+    tests.test_thorne()
+    tests.test_rdf()
+
+
 
 if "eos" in sysargs:
     main_equation_of_state()

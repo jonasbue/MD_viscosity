@@ -5,6 +5,7 @@
 #####################################################
 
 import numpy as np
+import sys
 
 def remove_nans(arr):
     """ Removes all instances of np.nan in arr. """
@@ -42,7 +43,7 @@ def cut_time(cut_fraction, arr):
         to remove early values from the analysis.
     """
     cut = int(cut_fraction*len(arr))
-    print(f"Cutting the first {cut} values.")
+    if "verbose" in sys.argv:
+        print(f"Cutting the first {cut} values.")
     arr = arr[cut:]
-    print(arr.shape)
     return arr

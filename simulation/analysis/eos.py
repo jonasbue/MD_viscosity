@@ -81,7 +81,7 @@ def Z_PY(sigma, x, rho):
     Z = (
         Z_SPT(sigma, x, rho) 
         - 18/(np.pi*rho)
-        * xi(3)*xi(2)**2 / (1-xi(3))**3
+        * xi(3)*xi(2)**3 / (1-xi(3))**3
     )
     return Z
 
