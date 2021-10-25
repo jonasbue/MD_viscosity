@@ -23,29 +23,24 @@ def assert_chunk_number(N_chunks, constants):
         Number of chunks is not equal in fix viscosity and fix/ave: \
         {N_chunks} is not {N_chunks_given}"
 
-def test_mix():
-    sigma = np.array([[1.0,1.0],[1.0,1.0]])
-    x = np.array([1.0, 0.0])
-    pf = 0.4
-    rho = 6*pf/np.pi
-    print(eos.rdf_PY(pf))
-    print(eos.Z_CS(pf))
-    g = eos.rdf_SPT(sigma, x, rho, 1,1)
-    print(g)
-    g = eos.rdf_SPT(sigma, x, rho, 1,2)
-    print(g)
-    g = eos.rdf_SPT(sigma, x, rho, 2,2)
-    print(g)
-    g = eos.rdf_PY_mix(sigma, x, rho, 1,1)
-    print(g)
-    g = eos.rdf_PY_mix(sigma, x, rho, 1,2)
-    print(g)
-    g = eos.rdf_PY_mix(sigma, x, rho, 2,2)
-    print(g)
-    Z = eos.Z_SPT(sigma, x, rho)
-    print(Z)
-    Z = eos.Z_PY(sigma, x, rho)
-    print(Z)
+def test_eos():
+    pf = np.linspace(0.01, 0.5)
+    sigma = np.array([1,2])
+    sigma = viscosity.get_sigma(sigma)
+    print(sigma)
+    x = np.array([0.5, 0.5])
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    plt.plot(pf, eos.Z_CS(pf), label="CS EoS")
+    #plt.title("CS EoS")
+    #plt.legend()
+    #plt.show()
+
+    plt.plot(pf, eos.Z_SPT(sigma, x, rho), label="SPT EoS")
+    plt.plot(pf, eos.Z_PY(sigma, x, rho), label="PY EoS")
+    plt.title("Mixture EoS")
+    plt.legend()
+    plt.yscale("log")
+    plt.show()
 
 
 def test_thorne():

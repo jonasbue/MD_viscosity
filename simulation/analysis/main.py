@@ -76,6 +76,7 @@ def main_eos(path, number_of_components, packing_list):
     Z_list = np.zeros(len(packing_list))
     sigma_list = np.zeros(number_of_components)
     N_list = np.zeros(number_of_components)
+    V_list = np.zeros(len(packing_list))
     C = {}
 
     for (i, packing) in enumerate(packing_list):
@@ -95,6 +96,7 @@ def main_eos(path, number_of_components, packing_list):
         V = constants["LX"]*constants["LY"]*constants["LZ"]
         T = np.mean(pvt[variable_list.index("T")])
         PF_list[i] = constants["PF"]
+        V_list[i] = V
 
         if number_of_components == 2:
             N_list = np.array([constants["N_L"], constants["N_H"]])
@@ -118,16 +120,19 @@ def main_eos(path, number_of_components, packing_list):
 
     # Plot theoretical values, from CS-EoS
     if number_of_components > 1:
-        rho_list = 6*pf/np.pi
+        #rho_list = np.sum(N_list)/V_list
+        #print(rho_list)
         x = N_list/np.sum(N_list)
         SPT = np.zeros_like(pf)
         PY = np.zeros_like(pf)
         sigma = viscosity.get_sigma(sigma_list)
+        # TODO: Write a rho/pf conversion function.
+        rho_list = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
         for i, rho in enumerate(rho_list):
             SPT[i] = eos.Z_SPT(sigma, x, rho)
             PY[i] = eos.Z_PY(sigma, x, rho)
-        #plt.plot(pf, SPT, "-", label="SPT", linewidth=3)
-        #plt.plot(pf, PY, "-", label="PY", linewidth=3)
+        plt.plot(pf, SPT, "-", label="SPT", linewidth=3)
+        plt.plot(pf, PY, "-", label="PY", linewidth=3)
             
     # Show figure
     plt.xlabel("Packing fraction")
@@ -155,8 +160,9 @@ if "eos" in sysargs:
     packing_list = files.find_all_packing_fractions(path)
     main_eos(path, N, packing_list)
 if "test" in sysargs:
-    tests.test_thorne()
-    tests.test_rdf()
+    tests.test_eos()
+    #tests.test_thorne()
+    #tests.test_rdf()
 if "viscosity" in sysargs:
     cut_fraction = 0.9
     per_time=False

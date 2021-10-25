@@ -33,10 +33,16 @@ def Z_measured(p, V, N, T, k=1):
 
 
 def partial_pf(sigma, x, rho):
+    # xi(3) is the packing fraction of the system.
+    # rho is the number density, N/V.
     def xi(l):
         pfi = np.pi/6 * rho * np.sum(x*np.diagonal(sigma**l))
         return pfi
     return xi
+
+def pf_to_rho(sigma, x, pf):
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    return rho
 
 
 def Z_CS(pf):
