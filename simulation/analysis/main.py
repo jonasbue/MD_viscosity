@@ -9,6 +9,7 @@ import plotting
 import tests
 import muller_plathe
 import eos
+import convert_LAMMPS_output as convert
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -70,107 +71,64 @@ def main_viscosity(mix=True):
         )
 
 
-def mix_eos():
+def main_eos(path, number_of_components, packing_list):
     PF_list = np.zeros(len(packing_list))
-    eta_list = np.zeros(len(packing_list))
-    error_list = np.zeros(len(packing_list))
-    C = {}
     Z_list = np.zeros(len(packing_list))
+    sigma_list = np.zeros(number_of_components)
+    N_list = np.zeros(number_of_components)
+    C = {}
 
     for (i, packing) in enumerate(packing_list):
-        if "verbose" in sysargs:
-            print(packing)
-        dir = "data/equillibrium/"
-        fix_name = f"{dir}fix.viscosity_mix_eta_{packing}.lammps"
-        log_name = f"{dir}log.mix_eta_{packing}.lammps"
+        if number_of_components > 1:
+            fix_name = f"{path}/fix.viscosity_mix_eta_{packing}.lammps"
+            log_name = f"{path}/log.mix_eta_{packing}.lammps"
+        else:
+            fix_name = f"{path}/fix.viscosity_eta_{packing}.lammps"
+            log_name = f"{path}/log.eta_{packing}.lammps"
         variable_list = ["p", "V", "T"]
         
-        # constants = convert.extract_constants_from_log(filename)
+        constants = convert.extract_constants_from_log(log_name)
         log_table = files.load_system(log_name)
         pvt = files.unpack_variables(log_table, log_name, variable_list)
-        Z_list[i] = eos.Z_measured(
-            np.mean(pvt[variable_list.index("p")]), 
-            np.mean(pvt[variable_list.index("V")]), 
-            1000,
-            np.mean(pvt[variable_list.index("T")])
-        )
 
-    # Plot theoretical values, from CS-EoS
+        p = np.mean(pvt[variable_list.index("p")])
+        V = constants["LX"]*constants["LY"]*constants["LZ"]
+        T = np.mean(pvt[variable_list.index("T")])
+        PF_list[i] = constants["PF"]
+
+        if number_of_components == 2:
+            N_list = np.array([constants["N_L"], constants["N_H"]])
+            sigma_list = np.array([constants["SIGMA_L"], constants["SIGMA_H"]])
+            Z_list[i] = (
+                    eos.Z_measured(p, V, N_list[0], T)
+                    + eos.Z_measured(p, V, N_list[1], T)
+                )
+        else:
+            N_list = constants["N"]
+            sigma_list = constants["SIGMA"]
+            Z_list[i] = eos.Z_measured(p, V, N_list, T)
+
+    # Plot measured packing fraction
+    plt.plot(PF_list, Z_list, "o", label="Measured Z")
+
+    # Pot carnahan Starling
     pf = np.linspace(0, 0.5)
-    rho_list = 6*pf/np.pi
-    SPT = np.zeros_like(pf)
-    PY = np.zeros_like(pf)
-    for i, rho in enumerate(rho_list):
-        sigma = np.array([1,1])
-        sigma = viscosity.get_sigma(sigma)
-        x = np.array([0.5,0.5])
-        SPT[i] = eos.Z_SPT(sigma, x, rho)
-        PY[i] = eos.Z_PY(sigma, x, rho)
     CS = eos.Z_CS(pf)
-    pf_vals = np.array([0.1,0.2,0.4])
-    plt.plot(
-        pf_vals, 
-        Z_list,
-        "o", 
-        label="Measured",
-        linewidth=3
-    )
-    plt.plot(
-        pf, 
-        SPT,
-        "-", 
-        label="SPT",
-        linewidth=3
-    )
-    plt.plot(
-        pf, 
-        CS,
-        "-", 
-        label="CS",
-        linewidth=3
-    )
-    plt.plot(
-        pf, 
-        PY,
-        "-", 
-        label="PY",
-        linewidth=3
-    )
-    # Show figure
-    plt.xlabel("Packing fraction")
-    plt.ylabel("Compressibility factor")
-    plt.legend()
-    plt.show()
-
-
-def main_equation_of_state():
-    N = 1000
-    eta_list = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5])
-    variable_list = ["p", "V", "T"]
-
-    # Calculate values of Z from measured p, V and T.
-    for eta in eta_list:
-        filename = f"log.eta_{eta}.lammps"
-        # constants = convert.extract_constants_from_log(filename)
-        log_table = files.load_system(filename)
-        pvt = files.unpack_varables(log_table, filename, variable_list)
-        plot_Z(
-            np.mean(pvt[variable_list.index("p")]), 
-            np.mean(pvt[variable_list.index("V")]), 
-            np.mean(pvt[variable_list.index("T")]), 
-            eta
-        )
+    plt.plot(pf, CS, "-", label="CS (one component)", linewidth=3)
 
     # Plot theoretical values, from CS-EoS
-    eta_range = np.linspace(0, 0.5)
-    plt.plot(
-        eta_range, 
-        Z_Carnahan_Starling(eta_range), 
-        "-", 
-        label="Carnahan-Starling EoS",
-        linewidth=3
-    )
-
+    if number_of_components > 1:
+        rho_list = 6*pf/np.pi
+        x = N_list/np.sum(N_list)
+        SPT = np.zeros_like(pf)
+        PY = np.zeros_like(pf)
+        sigma = viscosity.get_sigma(sigma_list)
+        for i, rho in enumerate(rho_list):
+            SPT[i] = eos.Z_SPT(sigma, x, rho)
+            PY[i] = eos.Z_PY(sigma, x, rho)
+        #plt.plot(pf, SPT, "-", label="SPT", linewidth=3)
+        #plt.plot(pf, PY, "-", label="PY", linewidth=3)
+            
     # Show figure
     plt.xlabel("Packing fraction")
     plt.ylabel("Compressibility factor")
@@ -178,25 +136,28 @@ def main_equation_of_state():
     plt.show()
 
 
-if "one-eos" in sysargs:
-    main_equation_of_state()
-if "mix-eos" in sysargs:
-    packing_list = files.find_all_packing_fractions("data/equillibrium")
-    mix_eos()
+path = None
+mix = False
+N = 1
+if "mix" in sysargs:
+    path = "data/two_component"
+    mix = True
+    N = 2
+if "eos" in sysargs:
+    path = "data/equillibrium"
+if "one" in sysargs:
+    path = "data/one_component"
+
+filenames = files.get_all_filenames(path)
+packing_list = files.find_all_packing_fractions(path)
+
+if "eos" in sysargs:
+    packing_list = files.find_all_packing_fractions(path)
+    main_eos(path, N, packing_list)
 if "test" in sysargs:
     tests.test_thorne()
     tests.test_rdf()
 if "viscosity" in sysargs:
-    #packing_list = packing_list[:-2]
     cut_fraction = 0.9
     per_time=False
-    if "one" in sysargs:
-        filenames = files.get_all_filenames("data/one_component")
-        packing_list = files.find_all_packing_fractions("data/one_component")
-        main_viscosity(mix=False)
-    if "mix" in sysargs:
-        filenames = files.get_all_filenames("data/two_component")
-        log.info(filenames)
-        packing_list = files.find_all_packing_fractions("data/two_component")
-        main_viscosity(mix=True)
-
+    main_viscosity(mix)

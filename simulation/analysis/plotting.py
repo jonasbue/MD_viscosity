@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import regression
 import viscosity
+import eos
 
 # Increase font size in plots
 font = {
@@ -161,7 +162,7 @@ def plot_viscosity(packing, eta, std_err=None):
     plt.ylabel("Viscosity")
 
 
-def plot_Z(p, V, T, eta):
+def plot_Z(p, V, N, T, pf):
     """ Plots compressibility factor of the system,
         from measurred values of p, V and T,
         for a given packing fraction.
@@ -169,12 +170,12 @@ def plot_Z(p, V, T, eta):
             p:      pressure, one-dimensional array.
             V:      volume, one-dimensional array.
             T:      temperature, one-dimensional array.
-            eta:    packing fraction, float. 
+            pf:    packing fraction, float. 
     """
     plt.plot(
-        np.full_like(p, eta),
-        Z(p, V, N, T),
-        "o", label=f"$\eta$ = {eta}"
+        np.full_like(p, pf),
+        eos.Z_measured(p, V, N, T),
+        "o", label=f"$\\xi$ = {pf}"
     )                          
 
 def plot_velocity_profile_from_file(fix_name):
