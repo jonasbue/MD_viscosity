@@ -53,10 +53,10 @@ def test_thorne():
     # The packing fraction, however, is 
     # a different, independent quantity.
 
-    pf_list = np.linspace(0,0.6)
+    pf_list = np.linspace(0,0.5)
     thorne_eta_list = np.zeros_like(pf_list)
 
-    x1 = 0.1
+    x1 = 0.5
     sigma_list = np.array([1,1])
     x = np.array([1-x1,x1])
     m = np.array([1,1])
@@ -81,8 +81,9 @@ def test_thorne():
 
 def test_rdf():
     pf = np.linspace(0.001,0.5)
-    sigma_list = np.array([1,1])
+    sigma_list = np.array([1,2])
     sigma = viscosity.get_sigma(sigma_list, len(sigma_list))
+    print(sigma)
     x1 = 0.5
     x = np.array([1-x1,x1])
     m = np.array([1,1])

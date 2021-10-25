@@ -14,6 +14,11 @@ import convert_LAMMPS_output as convert
 from os import listdir
 
 
+def get_all_filenames(directory):
+    files = [f for f in listdir(directory)]
+    return files
+
+
 def file_to_csv(filename, filetype):
     """ Converts a file to a csv, depending on its type.
         This is simply a wrapper of the functions in 
@@ -25,6 +30,7 @@ def file_to_csv(filename, filetype):
     elif filetype == "log":
         print("Converting", filename, "of type", filetype)
         convert.convert_log_to_csv(filename)
+
 
 def get_filetype(filename):
     """ Returns the filetype of a file.

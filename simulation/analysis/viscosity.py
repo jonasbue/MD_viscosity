@@ -16,9 +16,8 @@ def enskog(pf, sigma, T, m, k=1.0):
     """ Returns the theoretical value of the 
         viscosity for a given packing fraction.
     """
-    # 
     V_excl = 2*np.pi*(sigma**3)/3
-    eta_0 = get_eta_0_single_component(m, sigma, T, k)
+    eta_0 = zero_density_viscosity(m, sigma, T, k)
     rho = 6*pf/np.pi
     g = eos.rdf_PY(pf)
     eta = eta_0 * (
@@ -28,14 +27,16 @@ def enskog(pf, sigma, T, m, k=1.0):
     )
     return eta
 
-def get_eta_0_single_component(m, sigma, T, k):
+
+def zero_density_viscosity(m, sigma, T, k):
     return 5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
+
 
 def thorne(pf, x, m, sigma_list, T):
     N       = len(x)
     rho     = 6*pf/np.pi
 
-    sigma   = get_sigma(sigma_list, N)
+    sigma   = get_sigma(sigma_list)
     b       = get_b(sigma)
     alpha   = get_alpha(b)
     eta_0   = get_eta_0(N, m, T, sigma)
@@ -57,7 +58,8 @@ def eta_mix(H, y, omega):
     eta = -np.linalg.det(Hy)/np.linalg.det(H) + 3*omega/5
     return eta
 
-def get_sigma(sigma_list, N):
+def get_sigma(sigma_list):
+    N = len(sigma_list)
     sigma_ij = np.zeros((N,N))
     for i in range(N):
         for j in range(N):
@@ -70,7 +72,6 @@ def get_eta_0(N, m, T, sigma, k=1):
     for i in range(N):
         for j in range(N):
             m_reduced[i,j] = 2*m[i]*m[j] / (m[i]+m[j])
-    # TODO: Check if this definition of eta_ij is correct
     eta_0 =  5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
     return eta_0
 
@@ -159,15 +160,15 @@ def get_omega_mix(N, rho, x, eta_0, Xi, alpha):
     return omega
 
 
+
 def get_viscosity(Ptot, A, t, dv_dz):
     """ Computes the measured value of the viscosity,
         from the Müller-Plathe experiment.
-        Dangerous behaviour: 
-            The first values of the array will be undefined,
-            due to for example division by zero.
-            This is not a problem since these values 
-            are not used in the actual computation of 
-            the viscosity, but a check would be wise.
+
+        This function may give warning about divisions 
+        by zero. This is not a problem, since these 
+        values are first in the list, and are not used 
+        in the actual computation of the viscosity.
         Input:
             Ptot:   np.array. The total momentum which has 
                     passed through A at a time index.
@@ -179,10 +180,10 @@ def get_viscosity(Ptot, A, t, dv_dz):
             eta:        Computed viscosity.
             
     """
-    #print("In visc:\t", Ptot.shape, t.shape, dv_dz.shape)
     j = Ptot/(2*A*t)
     eta = -j/dv_dz
     return eta
+
 
 def get_area(Lx, Ly):
     """ Return the cross-section of the box, 
@@ -194,33 +195,3 @@ def get_area(Lx, Ly):
             A:  float. Area.
     """
     return 4*Lx*Ly
-
-"""
-def get_Xi(x, sigma, n):
-    b_ij = get_b(sigma)
-    Xi = 1
-    s0 = np.einsum("i,j->ij", sigma[:,0], sigma[:,0].T)
-    s1 = np.einsum("i,j->ij", sigma[:,1], sigma[:,1].T)
-    s2 = np.einsum("i->i", sigma[:,0] + sigma[:,0].T)/2
-    s3 = np.einsum("i->i", sigma[:,1] + sigma[:,1].T)/2
-    print("sigma sigma = ", (s0 + s1)/sigma)
-    #print("sigma + sigma = ", np.tile(s2+s3, (2,1)) + np.fliplr(np.diag(s2+s3)))
-    for i in range(n):
-        for j in range(n):
-            for k in range(n):
-        Xi += n*np.pi/36* (
-            x[k] * (
-                sigma**3 
-                + np.einsum("i,j->ij", sigma[:,k]**3, sigma[:,k]**3) / sigma**3
-                + np.einsum("i,j->ij", sigma[:,k].T**3, sigma[:,k].T) / sigma**3
-                + 18*(np.einsum("i,j->ij", sigma[:,k]**2, sigma[:,k].T**2) / sigma)
-                + 16*(sigma[:,k]**3 + sigma[:,k].T**3) # ???
-                + 16*(np.einsum("i,j->ij", sigma[:,k], sigma[:,k].T) / sigma)**3
-                - 9*(sigma[:,k]**2 + sigma[:,k].T**2) # ???
-                * (sigma + np.einsum("i,j->ij", sigma[:,k]**2, sigma[:,k].T**2) / sigma**3)
-                - 9*(sigma[:,k]**4 + sigma[:,k].T**4) / sigma # ???
-            )
-        )
-    return Xi
-"""
-

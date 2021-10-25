@@ -22,7 +22,8 @@ $ lmp -in filename
 $ ovito dump.lammps
 
 TODO:
-- Plot radial distributuion functions and equations of state for mixtures.
-- Calculate viscosity for mixtures.
+x Plot radial distributuion functions and equations of state for mixtures.
+x Calculate viscosity for mixtures.
+- Debug functions
 - Run simulations for different mixtures.
-- Compare results to Thorne equation
+- Compare results to Thorne equation and the EoS

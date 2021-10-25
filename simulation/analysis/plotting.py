@@ -5,12 +5,93 @@
 
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import regression
+import viscosity
 
 # Increase font size in plots
 font = {
     "size"  : "22",
 }
 plt.rc("font", **font)
+
+
+def plot_result_vs_thorne(
+        eta_list, 
+        packing_list, 
+        error_list,
+        C, 
+        mix=True, 
+        relative=False
+    ):
+    m = np.array([C["MASS_L"], C["MASS_H"]])
+    sigma = np.array([C["SIGMA_L"], C["SIGMA_H"]])
+    T = C["TEMP"]
+    N = np.array([C["N_L"], C["N_H"]])
+    x = N/np.sum(N)
+    pf = np.linspace(0,0.5)
+
+    # Plot the measured viscosity
+    plot_viscosity(
+        packing_list,
+        eta_list,
+        error_list,
+    )
+
+    # Plot the theoretical viscosity
+    thorne_eta_list = np.zeros_like(pf)
+    for i, pfi in enumerate(pf):
+        thorne_eta_list[i] = viscosity.thorne(pfi, x, m, sigma, T)
+    plt.plot(pf, thorne_eta_list, 
+        label="Thorne equation, two components")
+
+    # Plot the Enskog equation as well, for comparison
+    enskog_eta_list = viscosity.enskog(
+            pf,
+            np.mean(sigma),
+            T,
+            np.mean(m)
+        )
+    plt.plot(pf, enskog_eta_list, 
+        label="Enskog equation, one component")
+    plt.legend()
+    plt.show()
+
+def plot_result_vs_enskog(
+        eta_list, 
+        packing_list, 
+        error_list,
+        C, 
+        mix=True, 
+        relative=False
+    ):
+    # Extract constants from C
+    m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]
+    pf = np.linspace(0,0.5)
+
+    if relative==False:
+        # Plot the measured viscosity.
+        plot_viscosity(
+            packing_list,
+            eta_list,
+            error_list,
+        )
+        # Plot the Enskog equation
+        plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0), 
+                label="Enskog viscosity, one component"
+        )
+    else:
+        # Divide by Enskog to get more readable plots
+        plot_viscosity(
+            packing_list,
+            eta_list/viscosity.enskog(packing_list, sigma, T, m),
+            error_list/viscosity.enskog(packing_list, sigma, T, m),
+            label="Measured viscosity, two components"
+        )
+        # Plot the Enskog equation, which is one in this case.
+        plt.plot(pf, np.ones_like(pf))
+    plt.legend()
+    plt.show()
 
 
 def plot_velocity_regression(reg, z, slab=""):
@@ -97,17 +178,17 @@ def plot_Z(p, V, T, eta):
     )                          
 
 def plot_velocity_profile_from_file(fix_name):
-    vx, z = viscosity.get_velocity_profile(fix_name)
-    vxl, vxu, zl, zu = viscosity.isolate_slabs(vx, z)
-    lreg = viscosity.velocity_profile_regression(vxl, zl)
-    ureg = viscosity.velocity_profile_regression(vxu, zu)
+    vx, z = regression.get_velocity_profile(fix_name)
+    vxl, vxu, zl, zu = regression.isolate_slabs(vx, z)
+    lreg = regression.velocity_profile_regression(vxl, zl)
+    ureg = regression.velocity_profile_regression(vxu, zu)
 
-    plotting.plot_velocity_profile(vxl[::6], zl[::6], packing)
-    plotting.plot_velocity_profile(vxu[::6], zu[::6], packing)
-    plotting.plot_velocity_regression(lreg, zl, slab="Lower")
-    plotting.plot_velocity_regression_error(lreg, zl)
-    plotting.plot_velocity_regression(ureg, zu, slab="Upper")
-    plotting.plot_velocity_regression_error(ureg, zu)
-    plt.legend(loc="left")
+    plot_velocity_profile(vxl[::6], zl[::6])
+    plot_velocity_profile(vxu[::6], zu[::6])
+    plot_velocity_regression(lreg, zl, slab="Lower")
+    plot_velocity_regression_error(lreg, zl)
+    plot_velocity_regression(ureg, zu, slab="Upper")
+    plot_velocity_regression_error(ureg, zu)
+    plt.legend(loc="center left")
     plt.show()
 

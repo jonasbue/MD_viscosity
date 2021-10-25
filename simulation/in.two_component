@@ -23,9 +23,9 @@
 # The log-name can be accessed from python, through function 
 # convert_LAMMPS_output.extract_constants_from_log().
 
-variable    EQUILLIBRATION_DURATION     equal 10   # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 100     # Name -> RUN_TIME
-variable    PACKING                     equal 0.1   # Name -> PF
+variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 4000  # Name -> RUN_TIME
+#variable    PACKING                     equal 0.1  # Name -> PF
 
 # Light component
 variable    LIGHT_NUMBER        equal 500   # Name -> N
@@ -35,7 +35,7 @@ variable    LIGHT_DIAMETER      equal 1.0   # Name -> SIGMA
 # Heavy component
 variable    HEAVY_NUMBER        equal 500   # Name -> N
 variable    HEAVY_MASS          equal 1.0   # Name -> MASS
-variable    HEAVY_DIAMETER      equal 1.0   # Name -> SIGMA
+variable    HEAVY_DIAMETER      equal 2.0   # Name -> SIGMA
 
 
 ### ======================================================================== ###
@@ -49,7 +49,7 @@ variable    HEAVY_DIAMETER      equal 1.0   # Name -> SIGMA
 # the input script from the command line, i.e.,
 # lmp -in in.script -var PACKING 0.5
 variable FILENAME   string mix_eta_${PACKING}               # Filename template
-variable DIR        string data/                            # Directory
+variable DIR        string data/equillibrium/              # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.viscosity_${FILENAME}.lammps  # Fix file
@@ -98,9 +98,7 @@ variable CUTOFF_LH  equal ${MIE_REP}/${MIE_ATT}*${SIGMA_LH}
 variable Z_SCALE    equal 2.0   # Ratio LZ/LX, giving the height of the box.
 variable Y_SCALE    equal 1.0   # Ratio LY/LX, giving the depth of the box.
 
-# Unreadable and unchecked equation, but probably more or less right.
-#variable LX         equal ((PI*(${N_L}*${SIGMA_L}^3)/(6*${Z_SCALE}*${Y_SCALE}*${PACKING}))^(1/3))/2
-variable LX         equal ((PI*(${N_L}*${SIGMA_L}^3+${N_H}*${SIGMA_H}^3)/(6*${Z_SCALE}*${Y_SCALE}*${PACKING}))^(1/3))/2
+variable LX         equal ((PI/(6*${Z_SCALE}*${Y_SCALE}*${PACKING})*(${N_L}*${SIGMA_L}^3+${N_H}*${SIGMA_H}^3))^(1/3)/2)
 
 variable LY         equal (${Y_SCALE}*${LX})
 variable LZ         equal (${Z_SCALE}*${LX})
@@ -200,24 +198,20 @@ timestep    ${DT}
 ###                             Run simulation                               ###
 ### ======================================================================== ###
 
-print "MINIMIZE"
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
 
-print "FIX NVE"
 # Fix the system in the microcanonical ensemble
 fix NVE_FIX all nve
 # Fix the temperature with a Berendsen thermostat
 fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
 
-print "THERMO"
 # Write out thermodynamic quantities to console:
-#thermo_style    custom step etotal pe ke temp press vol 
-#thermo          ${THERMO_OUTPUT}        
+thermo_style    custom step etotal pe ke temp press vol 
+thermo          ${THERMO_OUTPUT}        
 
 # Run simulation to equillibrate the system.
 # This can be swapped with a save-file of a system in equillibrium.
-print "RUNNING"
 run ${EQUILL_STEPS}
 
 
