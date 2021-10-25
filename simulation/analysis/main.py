@@ -160,9 +160,9 @@ if "eos" in sysargs:
     packing_list = files.find_all_packing_fractions(path)
     main_eos(path, N, packing_list)
 if "test" in sysargs:
-    tests.test_eos()
+    #tests.test_eos()
     #tests.test_thorne()
-    #tests.test_rdf()
+    tests.test_rdf()
 if "viscosity" in sysargs:
     cut_fraction = 0.9
     per_time=False

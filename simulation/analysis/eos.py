@@ -109,8 +109,6 @@ def rdf_SPT(sigma, x, rho, i, j):
                     number of components in the fluid.
             xi:     np.array of length n. One-dimensional.
     """
-    i -= 1
-    j -= 1
     xi = partial_pf(sigma, x, rho)
     g_ij = ( 
         1/(1-xi(3))
@@ -123,8 +121,6 @@ def rdf_SPT(sigma, x, rho, i, j):
 
 
 def rdf_PY_mix(sigma, x, rho, i, j):
-    i -= 1
-    j -= 1
     xi = partial_pf(sigma, x, rho)
     g_ij = (
         1/(1-xi(3))

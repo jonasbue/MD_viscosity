@@ -39,7 +39,6 @@ def test_eos():
     plt.plot(pf, eos.Z_PY(sigma, x, rho), label="PY EoS")
     plt.title("Mixture EoS")
     plt.legend()
-    plt.yscale("log")
     plt.show()
 
 
@@ -76,17 +75,25 @@ def test_thorne():
 
 def test_rdf():
     pf = np.linspace(0.001,0.5)
-    sigma_list = np.array([1,2])
-    sigma = viscosity.get_sigma(sigma_list, len(sigma_list))
+    sigma_list = np.array([1,4])
+    sigma = viscosity.get_sigma(sigma_list)
     print(sigma)
     x1 = 0.5
     x = np.array([1-x1,x1])
     m = np.array([1,1])
-    rho = 6*pf/np.pi
-    plt.plot(pf, eos.Z_CS(pf), label="Carnahan-Starling")
-    plt.plot(pf, eos.Z_PY(sigma, x, rho), label="Percus-Yervick", linestyle="-.")
-    plt.plot(pf, eos.Z_SPT(sigma, x, rho), label="SPT", linestyle="--")
-    plt.title("Comparing equations of state")
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    plt.plot(pf, eos.rdf_PY(pf), 
+            label="PY (one component)", color="y")
+
+    plt.plot(pf, eos.rdf_PY_mix(sigma, x, rho, 0, 0), 
+            label="Percus-Yervick(0,0)", color="k", linestyle="-.")
+    plt.plot(pf, eos.rdf_SPT(sigma, x, rho, 0, 0), 
+            label="SPT(0,0)", color="k", linestyle="--")
+    plt.plot(pf, eos.rdf_PY_mix(sigma, x, rho, 1, 1), 
+            label="Percus-Yervick(1,1)", color="b", linestyle="-.")
+    plt.plot(pf, eos.rdf_SPT(sigma, x, rho, 1, 1), 
+            label="SPT(1,1)", color="b", linestyle="--")
+    plt.title("Comparing radial distribution functions")
     plt.xlabel("Packing fraction")
     plt.ylabel("Compressibility factor")
     plt.legend()
