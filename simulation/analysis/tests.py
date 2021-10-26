@@ -65,17 +65,17 @@ def test_thorne():
             T,
             np.mean(m)
         )
-    plt.plot(pf_list, enskog_eta_list, label="Enskog", linestyle="-")
+    plt.plot(pf_list, enskog_eta_list, label="Enskog", linestyle="--")
     plt.title("Enskog vs. Thorne with one component")
     plt.xlabel("Packing fraction")
     plt.ylabel("Viscosity")
-    plt.legend()
-    plt.show()
+    #plt.legend()
+    #plt.show()
 
 
 def test_rdf():
     pf = np.linspace(0.001,0.5)
-    sigma_list = np.array([1,4])
+    sigma_list = np.array([1,2])
     sigma = viscosity.get_sigma(sigma_list)
     print(sigma)
     x1 = 0.5

@@ -43,8 +43,8 @@ def plot_result_vs_thorne(
     thorne_eta_list = np.zeros_like(pf)
     for i, pfi in enumerate(pf):
         thorne_eta_list[i] = viscosity.thorne(pfi, x, m, sigma, T)
-    plt.plot(pf, thorne_eta_list, 
-        label="Thorne equation, two components")
+    #plt.plot(pf, thorne_eta_list, 
+    #    label="Thorne equation, two components")
 
     # Plot the Enskog equation as well, for comparison
     enskog_eta_list = viscosity.enskog(
@@ -53,8 +53,8 @@ def plot_result_vs_thorne(
             T,
             np.mean(m)
         )
-    plt.plot(pf, enskog_eta_list, 
-        label="Enskog equation, one component")
+    #plt.plot(pf, enskog_eta_list, 
+    #    label="Enskog equation, one component")
     plt.legend()
     plt.show()
 

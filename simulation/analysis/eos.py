@@ -32,6 +32,10 @@ def Z_measured(p, V, N, T, k=1):
     return p*V/(N*k*T)
 
 
+def Z_measured_mix(p, rho, T, k=1):
+    """ rho is the number density """
+    return p/(rho*T)
+
 def partial_pf(sigma, x, rho):
     # xi(3) is the packing fraction of the system.
     # rho is the number density, N/V.

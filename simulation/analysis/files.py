@@ -12,7 +12,13 @@ import numpy as np
 import pandas as pd
 import convert_LAMMPS_output as convert
 from os import listdir
+import logging
+import sys
 
+log = logging.getLogger("__main__." + __name__)
+log.addHandler(logging.StreamHandler(sys.stdout))
+if "debug" in sys.argv:
+    log.setLevel(logging.INFO)
 
 def get_all_filenames(directory):
     files = [f for f in listdir(directory)]
@@ -102,6 +108,7 @@ def load_system(filename):
                         First index selects the variable,
                         second index selects the timestep.
     """
+    log.info(f"loading file: {filename}")
     log_table = pd.read_csv(
         filename + ".csv", 
         skiprows=2, 

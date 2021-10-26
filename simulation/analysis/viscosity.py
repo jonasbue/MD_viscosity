@@ -34,9 +34,9 @@ def zero_density_viscosity(m, sigma, T, k):
 
 def thorne(pf, x, m, sigma_list, T):
     N       = len(x)
-    rho     = 6*pf/np.pi
 
     sigma   = get_sigma(sigma_list)
+    rho     = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
     b       = get_b(sigma)
     alpha   = get_alpha(b)
     eta_0   = get_eta_0(N, m, T, sigma)
@@ -72,7 +72,7 @@ def get_eta_0(N, m, T, sigma, k=1):
     for i in range(N):
         for j in range(N):
             m_reduced[i,j] = 2*m[i]*m[j] / (m[i]+m[j])
-    eta_0 =  5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
+    eta_0 =  5 * np.sqrt((m_reduced*k*T)/np.pi) / (16*sigma**2)
     return eta_0
 
 
@@ -93,8 +93,6 @@ def get_Xi(x, sigma, N, rho):
     for i in range(N):
         for j in range(N):
             for k in range(N):
-                # This is a mess, but I think this solutions is 
-                # simpler -- and more readable -- than any other
                 ij = sigma[i,j]
                 ik = sigma[i,k]
                 jk = sigma[j,k]
@@ -102,11 +100,12 @@ def get_Xi(x, sigma, N, rho):
                     x[k]*(ij**3     
                         + ik**3 * (ik / ij)**3
                         + jk**3 * (jk / ij)**3
-                        + 18*(ik**2 * jk**2 / ij)
-                        + 16*(ik**3 + jk**3)    
-                        + 16*(ik * jk / ij)**3
-                        - 9*(ik**2 + jk**2) * (ij + (ik**2 * jk**2) / ij**3)
-                        - 9*(ik**4 + jk**4) / ij
+                        + 18 * (ik**2 * jk**2 / ij)
+                        + 16 * (ik**3 + jk**3)    
+                        + 16 * (ik * jk / ij)**3
+                        -  9 * (ik**2 + jk**2) 
+                             * (ij + (ik**2 * jk**2)/ij**3)
+                        -  9 * (ik**4 + jk**4) / ij
                     )
                 )
     return Xi

@@ -14,6 +14,7 @@
 #       and then the actual Müller-Plathe experiment.                       #
 #############################################################################
 
+
 # When running different simulations, change the 
 # following values, instead of editing the script below.
 # The values are copied after filename definitions, and are 
@@ -23,9 +24,14 @@
 # The log-name can be accessed from python, through function 
 # convert_LAMMPS_output.extract_constants_from_log().
 
+# The following parameters are required on input:
+#   - PACKING:      Volume packing fraction of the system
+#   - DIRECTORY:    Where to store the output data. 
+#                   Currently commented out.
+# variable   DIR     string data/${DIRECTORY}/
+
 variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 4000  # Name -> RUN_TIME
-#variable    PACKING                     equal 0.1  # Name -> PF
+variable    SIMULATION_DURATION         equal 1000  # Name -> RUN_TIME
 
 # Light component
 variable    LIGHT_NUMBER        equal 500   # Name -> N
@@ -35,7 +41,7 @@ variable    LIGHT_DIAMETER      equal 1.0   # Name -> SIGMA
 # Heavy component
 variable    HEAVY_NUMBER        equal 500   # Name -> N
 variable    HEAVY_MASS          equal 1.0   # Name -> MASS
-variable    HEAVY_DIAMETER      equal 2.0   # Name -> SIGMA
+variable    HEAVY_DIAMETER      equal 1.0   # Name -> SIGMA
 
 
 ### ======================================================================== ###
@@ -49,7 +55,7 @@ variable    HEAVY_DIAMETER      equal 2.0   # Name -> SIGMA
 # the input script from the command line, i.e.,
 # lmp -in in.script -var PACKING 0.5
 variable FILENAME   string mix_eta_${PACKING}               # Filename template
-variable DIR        string data/equillibrium/              # Directory
+variable DIR        string data/two_component/              # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.viscosity_${FILENAME}.lammps  # Fix file
@@ -241,6 +247,7 @@ fix VEL_PROFILE_FIX all ave/chunk   &
     file ${FIX_FILE}
 
 
+## Does this append to the same log file or does it overwrite it?
 # Write out thermodynamic quantities to console:
 thermo_style    custom step etotal pe ke temp press vol f_MULLER_PLATHE
 thermo          ${THERMO_OUTPUT}        
