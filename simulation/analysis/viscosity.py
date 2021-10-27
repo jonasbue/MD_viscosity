@@ -68,11 +68,13 @@ def get_sigma(sigma_list):
 
 
 def get_eta_0(N, m, T, sigma, k=1):
-    m_reduced=np.zeros((N,N))
+    eta_0 = np.zeros((N,N))
     for i in range(N):
         for j in range(N):
-            m_reduced[i,j] = 2*m[i]*m[j] / (m[i]+m[j])
-    eta_0 =  5 * np.sqrt((m_reduced*k*T)/np.pi) / (16*sigma**2)
+            m_reduced = 2*m[i]*m[j] / (m[i]+m[j])
+            eta_0[i,j] = zero_density_viscosity(
+                    m_reduced, sigma[i,j], T, k
+                )
     return eta_0
 
 

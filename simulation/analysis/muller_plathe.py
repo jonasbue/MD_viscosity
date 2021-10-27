@@ -130,6 +130,5 @@ def find_viscosity_from_file(
     tests.assert_chunk_number(N_chunks, constants)
 
     # Compute viscosity.
-    # Should z be multiplied by 2*Lz to get the correct height?
     eta, eta_max, eta_min = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time)
     return eta, constants, eta_max

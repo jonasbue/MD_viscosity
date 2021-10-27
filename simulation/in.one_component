@@ -23,12 +23,11 @@
 # The log-name can be accessed from python, through function 
 # convert_LAMMPS_output.extract_constants_from_log().
 
-#variable PACKING                   equal 0.5   # Name -> PF
 variable PARTICLE_NUMBER            equal 1000  # Name -> N
 variable PARTICLE_DIAMETER          equal 1.0   # Name -> SIGMA
-#variable PARTICLE_MASS             equal 1.0   # Name -> MASS
-variable SIMULATION_DURATION        equal 1000  # Name -> RUN_TIME
+
 variable EQUILLIBRATION_DURATION    equal 1000  # Name -> RUN_TIME
+variable SIMULATION_DURATION        equal 4000  # Name -> RUN_TIME
 
 
 ### ======================================================================== ###

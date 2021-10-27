@@ -151,7 +151,7 @@ def main_eos(path, filenames, cut_fraction, number_of_components):
 path = None
 mix = False
 N = 1
-cut_fraction = 0.9
+cut_fraction = 0.96
 if "mix" in sysargs:
     path = "data/two_component"
     mix = True
@@ -178,7 +178,7 @@ if "test" in sysargs:
 if "eos" in sysargs:
     main_eos(path, filenames, cut_fraction, N)
 if "viscosity" in sysargs:
-    per_time=False
+    per_time=True
     main_viscosity(cut_fraction, path, filenames)
 if "plot-vs-time" in sysargs:
     cut_fraction = 0.01

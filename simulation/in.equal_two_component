@@ -39,7 +39,7 @@ variable    LIGHT_DIAMETER      equal 1.0   # Name -> SIGMA
 # Heavy component
 variable    HEAVY_NUMBER        equal 500   # Name -> N
 variable    HEAVY_MASS          equal 1.0   # Name -> MASS
-variable    HEAVY_DIAMETER      equal 2.0   # Name -> SIGMA
+variable    HEAVY_DIAMETER      equal 1.0   # Name -> SIGMA
 
 
 ### ======================================================================== ###

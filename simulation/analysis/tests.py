@@ -50,10 +50,11 @@ def test_thorne():
     pf_list = np.linspace(0,0.5)
     thorne_eta_list = np.zeros_like(pf_list)
 
-    x1 = 0.5
-    sigma_list = np.array([1,1])
-    x = np.array([1-x1,x1])
-    m = np.array([1,1])
+    x1 = 0.3
+    x2 = 0.1
+    sigma_list = np.array([1,1,2])
+    x = np.array([1-x1-x2,x1,x2])
+    m = np.array([1,1,1])
     T = 1.5
     for i, pf in enumerate(pf_list):
         thorne_eta_list[i] = viscosity.thorne(pf, x, m, sigma_list, T)
