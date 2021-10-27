@@ -68,7 +68,7 @@ def compute_viscosity(
     return eta, eta_max, eta_min
 
 
-def find_viscosity_from_files(
+def find_viscosity_from_file(
         log_filename, 
         fix_filename, 
         cut_fraction, 

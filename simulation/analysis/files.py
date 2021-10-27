@@ -20,10 +20,26 @@ log.addHandler(logging.StreamHandler(sys.stdout))
 if "debug" in sys.argv:
     log.setLevel(logging.INFO)
 
+
 def get_all_filenames(directory):
     files = [f for f in listdir(directory)]
     return files
 
+
+def sort_files(filenames, packing_fractions):
+    fix = []
+    log = []
+    for pf in packing_fractions:
+        for f in filenames:
+            extension = get_file_extension(f)
+            if get_packing_from_filename(f) == pf and extension != ".csv":
+                filetype = get_filetype(f)
+                if filetype == "fix":
+                    fix.append(f)
+                elif filetype == "log":
+                    log.append(f)
+    files = np.array([fix, log], dtype=str)
+    return files.transpose()
 
 def file_to_csv(filename, filetype):
     """ Converts a file to a csv, depending on its type.
@@ -76,6 +92,15 @@ def all_files_to_csv(directory):
             file_to_csv(f"{directory}/{filename}", filetype)
 
 
+def get_packing_from_filename(filename):
+    pf_key = "eta_"
+    end_key = ".lammps"
+    pf_index = filename.find(pf_key) + len(pf_key)
+    end_index = filename.find(end_key)
+    pf_val = float(filename[pf_index:end_index])
+    return pf_val
+
+
 def find_all_packing_fractions(directory):
     """ Searches a directory for .csv files,
         and returns a list of all packing fractions
@@ -88,11 +113,8 @@ def find_all_packing_fractions(directory):
     for filename in files:
         filetype = get_filetype(filename)
         if get_file_extension(filename) == ".csv":
-            eta_str = "eta_"
-            i = filename.find(eta_str) + len(eta_str)
-            j = filename.find(".lammps")
-            eta_val = float(filename[i:j])
-            packing_list = np.append(packing_list, eta_val)
+            pf_val = get_packing_from_filename(filename)
+            packing_list = np.append(packing_list, pf_val)
     packing_list = np.unique(packing_list)
     return np.sort(packing_list)
 

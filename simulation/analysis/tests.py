@@ -57,20 +57,23 @@ def test_thorne():
     T = 1.5
     for i, pf in enumerate(pf_list):
         thorne_eta_list[i] = viscosity.thorne(pf, x, m, sigma_list, T)
-    plt.plot(pf_list, thorne_eta_list, label=f"Thorne", linestyle="-")
+    plt.plot(pf_list, thorne_eta_list, 
+        label=f"Thorne, sigma={sigma_list}", linestyle="-")
 
+    enskog_sigma = sigma_list[0]
     enskog_eta_list = viscosity.enskog(
             pf_list,
-            np.mean(sigma_list),
+            enskog_sigma,
             T,
-            np.mean(m)
+            m[0]
         )
-    plt.plot(pf_list, enskog_eta_list, label="Enskog", linestyle="--")
+    plt.plot(pf_list, enskog_eta_list, 
+        label=f"Enskog, sigma={enskog_sigma}", linestyle="--")
     plt.title("Enskog vs. Thorne with one component")
     plt.xlabel("Packing fraction")
     plt.ylabel("Viscosity")
-    #plt.legend()
-    #plt.show()
+    plt.legend()
+    plt.show()
 
 
 def test_rdf():

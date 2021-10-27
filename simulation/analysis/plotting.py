@@ -33,28 +33,20 @@ def plot_result_vs_thorne(
     pf = np.linspace(0,0.5)
 
     # Plot the measured viscosity
-    plot_viscosity(
-        packing_list,
-        eta_list,
-        error_list,
-    )
+    plot_viscosity(packing_list, eta_list, error_list)
+    plt.title(f"Viscosity, sigma={sigma}")
 
     # Plot the theoretical viscosity
     thorne_eta_list = np.zeros_like(pf)
     for i, pfi in enumerate(pf):
         thorne_eta_list[i] = viscosity.thorne(pfi, x, m, sigma, T)
-    #plt.plot(pf, thorne_eta_list, 
-    #    label="Thorne equation, two components")
+    plt.plot(pf, thorne_eta_list, 
+        label=f"Thorne equation, sigma={sigma}")
 
     # Plot the Enskog equation as well, for comparison
-    enskog_eta_list = viscosity.enskog(
-            pf,
-            np.mean(sigma),
-            T,
-            np.mean(m)
-        )
-    #plt.plot(pf, enskog_eta_list, 
-    #    label="Enskog equation, one component")
+    enskog_eta_list = viscosity.enskog(pf, sigma[0], T, m[0])
+    plt.plot(pf, enskog_eta_list, 
+        label=f"Enskog equation, sigma={sigma}")
     plt.legend()
     plt.show()
 
@@ -77,17 +69,31 @@ def plot_result_vs_enskog(
             eta_list,
             error_list,
         )
+        plt.title(f"Viscosity, sigma={sigma}")
+
         # Plot the Enskog equation
         plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0), 
-                label="Enskog viscosity, one component"
+                label=f"Enskog viscosity, sigma={sigma}"
         )
+        # Plot the theoretical viscosity
+        thorne_eta_list = np.zeros_like(pf)
+        for i, pfi in enumerate(pf):
+            thorne_eta_list[i] = viscosity.thorne(
+                    pfi, 
+                    np.array([0.5,0.5]), 
+                    np.array([m,m]), 
+                    np.array([sigma, sigma]), 
+                    T
+                )
+        plt.plot(pf, thorne_eta_list, 
+            label=f"Thorne equation, sigma={sigma}")
     else:
         # Divide by Enskog to get more readable plots
         plot_viscosity(
             packing_list,
             eta_list/viscosity.enskog(packing_list, sigma, T, m),
             error_list/viscosity.enskog(packing_list, sigma, T, m),
-            label="Measured viscosity, two components"
+            label=f"Measured viscosity, sigma={sigma}"
         )
         # Plot the Enskog equation, which is one in this case.
         plt.plot(pf, np.ones_like(pf))
