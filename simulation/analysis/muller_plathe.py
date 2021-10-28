@@ -63,8 +63,8 @@ def compute_viscosity(
 
     # eta_max = - eta_min, so only one value is needed.
     # For generality, both are computed here.
-    eta_max = viscosity.get_viscosity(Ptot, A, t, dv**2)*std_err
-    eta_min = viscosity.get_viscosity(Ptot, A, t, dv**2)*(-std_err)
+    eta_max = -eta*std_err
+    eta_min = eta*std_err
     return eta, eta_max, eta_min
 
 

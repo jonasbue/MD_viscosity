@@ -159,7 +159,7 @@ def main_eos(path, filenames, cut_fraction, number_of_components):
 path = None
 mix = False
 N = 1
-cut_fraction = 0.96
+cut_fraction = 0.9
 if "mix" in sysargs:
     path = "data/two_component"
     mix = True

@@ -23,7 +23,7 @@ def plot_result_vs_thorne(
         error_list,
         C, 
         mix=True, 
-        relative=False
+        relative=True
     ):
     m = np.array([C["MASS_L"], C["MASS_H"]])
     sigma = np.array([C["SIGMA_L"], C["SIGMA_H"]])
@@ -32,21 +32,37 @@ def plot_result_vs_thorne(
     x = N/np.sum(N)
     pf = np.linspace(0,0.5)
 
-    # Plot the measured viscosity
-    plot_viscosity(packing_list, eta_list, error_list)
-    plt.title(f"Viscosity, sigma={sigma}")
-
-    # Plot the theoretical viscosity
     thorne_eta_list = np.zeros_like(pf)
     for i, pfi in enumerate(pf):
         thorne_eta_list[i] = viscosity.thorne(pfi, x, m, sigma, T)
-    plt.plot(pf, thorne_eta_list, 
-        label=f"Thorne equation, sigma={sigma}")
 
-    # Plot the Enskog equation as well, for comparison
-    enskog_eta_list = viscosity.enskog(pf, sigma[0], T, m[0])
-    plt.plot(pf, enskog_eta_list, 
-        label=f"Enskog equation, sigma={sigma}")
+    if relative == False:
+        # Plot the measured viscosity
+        plot_viscosity(packing_list, eta_list, error_list)
+        plt.title(f"Viscosity, sigma={sigma}")
+
+        # Plot the theoretical viscosity
+        plt.plot(pf, thorne_eta_list, 
+            label=f"Thorne equation, sigma={sigma}")
+
+        # Plot the Enskog equation as well, for comparison
+        enskog_eta_list = viscosity.enskog(pf, sigma[0], T, m[0])
+        plt.plot(pf, enskog_eta_list, 
+            label=f"Enskog equation, sigma={sigma}")
+    else:
+        normalize_values = np.zeros_like(packing_list)
+        for i, pfi in enumerate(packing_list):
+            normalize_values[i] = viscosity.thorne(pfi, x, m, sigma, T)
+        plot_viscosity(
+            packing_list, 
+            eta_list/normalize_values, 
+            error_list/normalize_values
+        )
+        plt.plot(pf, np.ones_like(pf),
+            label=f"Thorne equation, sigma={sigma}"
+        )
+
+    plt.title(f"Viscosity, sigma={sigma}")
     plt.legend()
     plt.show()
 
@@ -56,7 +72,7 @@ def plot_result_vs_enskog(
         error_list,
         C, 
         mix=True, 
-        relative=False
+        relative=True
     ):
     # Extract constants from C
     m, sigma, T, N = C["MASS"], C["SIGMA"], C["TEMP"], C["N"]
@@ -69,8 +85,6 @@ def plot_result_vs_enskog(
             eta_list,
             error_list,
         )
-        plt.title(f"Viscosity, sigma={sigma}")
-
         # Plot the Enskog equation
         plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0), 
                 label=f"Enskog viscosity, sigma={sigma}"
@@ -97,6 +111,7 @@ def plot_result_vs_enskog(
         )
         # Plot the Enskog equation, which is one in this case.
         plt.plot(pf, np.ones_like(pf))
+    plt.title(f"Viscosity, sigma={sigma}")
     plt.legend()
     plt.show()
 
@@ -148,7 +163,7 @@ def plot_velocity_profile(vx, z, packing=None):
     plt.legend(loc="upper right")
 
 
-def plot_viscosity(packing, eta, std_err=None):
+def plot_viscosity(packing, eta, std_err=None, label=""):
     """ Plots viscosity for a list of packing fractions,
         including error bars if provided.
         Input:
@@ -163,6 +178,7 @@ def plot_viscosity(packing, eta, std_err=None):
         eta,
         yerr = std_err,
         fmt="o",
+        label=label
     )
     plt.xlabel("Packing fraction")
     plt.ylabel("Viscosity")
