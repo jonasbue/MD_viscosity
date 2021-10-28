@@ -19,9 +19,9 @@ def assert_chunk_number(N_chunks, constants):
     #assert np.abs(2*constants["LZ"] - chunk_thickness*N_chunks) < 1e-6, f"\
     #    Height is not the same in terms of LZ and chunk thickness: \
     #    {chunk_thickness*N_chunks} != {2*constants['LZ']}"
-    assert N_chunks_given == N_chunks, f"\
-        Number of chunks is not equal in fix viscosity and fix/ave: \
-        {N_chunks} is not {N_chunks_given}"
+    #assert N_chunks_given == N_chunks, f"\
+    #    Number of chunks is not equal in fix viscosity and fix/ave: \
+    #    {N_chunks} is not {N_chunks_given}"
 
 def test_eos():
     pf = np.linspace(0.01, 0.5)
@@ -52,16 +52,16 @@ def test_thorne():
 
     x1 = 0.3
     x2 = 0.1
-    sigma_list = np.array([1,1,2])
-    x = np.array([1-x1-x2,x1,x2])
-    m = np.array([1,1,1])
+    sigma_list = np.array([1,1])
+    x = np.array([1-x1,x1])
+    m = np.array([1,1])
     T = 1.5
     for i, pf in enumerate(pf_list):
         thorne_eta_list[i] = viscosity.thorne(pf, x, m, sigma_list, T)
     plt.plot(pf_list, thorne_eta_list, 
         label=f"Thorne, sigma={sigma_list}", linestyle="-")
 
-    enskog_sigma = sigma_list[0]
+    enskog_sigma = np.array([1])
     enskog_eta_list = viscosity.enskog(
             pf_list,
             enskog_sigma,

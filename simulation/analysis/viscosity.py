@@ -19,6 +19,7 @@ def enskog(pf, sigma, T, m, k=1.0):
     V_excl = 2*np.pi*(sigma**3)/3
     eta_0 = zero_density_viscosity(m, sigma, T, k)
     rho = 6*pf/np.pi
+    #rho = 3*pf/(4*np.pi*sigma**3)
     g = eos.rdf_PY(pf)
     eta = eta_0 * (
         1/g 
@@ -41,7 +42,8 @@ def thorne(pf, x, m, sigma_list, T):
     alpha   = get_alpha(b)
     eta_0   = get_eta_0(N, m, T, sigma)
 
-    Xi      = get_Xi(x, sigma, N, rho)
+    sigma_eff = get_effective_sigma(pf, sigma, x, rho)
+    Xi      = get_Xi(x, sigma_eff, N, rho)
     y       = get_y(x, m, sigma, alpha, Xi, N, rho)
     H       = get_H(x, Xi, eta_0, m, N, rho)
     omega   = get_omega_mix(N, rho, x, eta_0, Xi, alpha)
@@ -89,6 +91,16 @@ def get_y(x, m, sigma, alpha, Xi, N, rho):
     y = y * x
     return y
 
+
+def get_effective_sigma(pf, sigma, x, rho, rdf=eos.rdf_SPT):
+    N = len(sigma)
+    Xi = np.zeros(N)
+    for i in range(N):
+        Xi[i] = rdf(sigma, x, rho, i, i)
+
+    sigma_eff_list = (12/(5*np.pi*rho) * (Xi - 1))**(1/3)
+    sigma_eff = get_sigma(sigma_eff_list)
+    return sigma_eff
 
 def get_Xi(x, sigma, N, rho):
     Xi = np.ones((N,N))

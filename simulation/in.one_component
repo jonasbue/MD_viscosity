@@ -98,12 +98,12 @@ variable EQUILL_TIME    equal ${EQUILLIBRATION_DURATION}
 variable DT             equal 0.001                 # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
 variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
-variable DUMP_STEPS     equal 1000                  # Timesteps between every dump
+variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
 variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo output
 
 # Müller-Plathe experiment parameters
 
-variable CHUNK_NUMBER       equal 100   # Number of chunks in MP experiment.
+variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
 variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
 #variable V_TARGET          equal INF   # Target velocity of slab boundaries.
 variable CHUNK_WIDTH        equal 2*${LX}

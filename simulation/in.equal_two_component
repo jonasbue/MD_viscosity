@@ -99,7 +99,7 @@ variable CUTOFF_H   equal ${MIE_REP}/${MIE_ATT}*${SIGMA_H}
 variable CUTOFF_LH  equal ${MIE_REP}/${MIE_ATT}*${SIGMA_LH}
 
 # Length of box
-variable Z_SCALE    equal 2.0   # Ratio LZ/LX, giving the height of the box.
+variable Z_SCALE    equal 3.0   # Ratio LZ/LX, giving the height of the box.
 variable Y_SCALE    equal 1.0   # Ratio LY/LX, giving the depth of the box.
 
 variable LX         equal ((PI/(6*${Z_SCALE}*${Y_SCALE}*${PACKING})*(${N_L}*${SIGMA_L}^3+${N_H}*${SIGMA_H}^3))^(1/3)/2)
@@ -122,11 +122,11 @@ variable EQUILL_TIME    equal ${EQUILLIBRATION_DURATION}
 variable DT             equal 0.001                 # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
 variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
-variable DUMP_STEPS     equal 100                   # Timesteps between every dump
+variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
 variable THERMO_OUTPUT  equal 100                   # Timesteps between thermo output
 
 # Müller-Plathe experiment parameters
-variable CHUNK_NUMBER       equal 100   # Number of chunks in MP experiment.
+variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
 variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
 #variable V_TARGET          equal INF   # Target velocity of slab boundaries.
 variable CHUNK_WIDTH        equal 1     # This uses a dimensionless number.

@@ -20,7 +20,7 @@ if "debug" in sysargs:
     log.setLevel(logging.INFO)
 
 
-def main_viscosity(cut_fraction, path, filenames, per_time=False):
+def main_viscosity(cut_fraction, path, filenames, per_time=False, plot_vs_time=False):
     C = {}
     PF_list = np.zeros(len(filenames))
     eta_list = np.zeros(len(filenames))
@@ -41,10 +41,18 @@ def main_viscosity(cut_fraction, path, filenames, per_time=False):
             log_name, fix_name, cut_fraction, per_time
         )
         # Note: Cut fraction must be low for this plot to be useful
-        if "plot-vs-time" in sysargs:
-            t = np.linspace(0, C["RUN_TIME"], len(eta))
+        if plot_vs_time:
+            t = np.linspace(C["RUN_TIME"]*cut_fraction, C["RUN_TIME"], len(eta))
             plt.plot(t, eta, label="Viscosity")
-            plt.title("Measured viscosity vs time")
+            markers, caps, bars = plt.errorbar(
+                t[::5],
+                eta[::5],
+                yerr = eta_err[::5],
+                fmt="yo",
+                ecolor="b"
+            )
+
+            plt.title(f"Measured viscosity vs time, packing={C['PF']}")
             plt.legend()
             plt.show()
 
@@ -182,4 +190,4 @@ if "viscosity" in sysargs:
     main_viscosity(cut_fraction, path, filenames)
 if "plot-vs-time" in sysargs:
     cut_fraction = 0.01
-    main_viscosity(cut_fraction, path, filenames)
+    main_viscosity(cut_fraction, path, filenames, plot_vs_time=True)
