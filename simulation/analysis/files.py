@@ -92,8 +92,28 @@ def all_files_to_csv(directory):
             file_to_csv(f"{directory}/{filename}", filetype)
 
 
+def read_filename(filename):
+    vals = {}
+    value_identifiers = ["N", "sigma", "mass", "pf", ".lammps"]
+    for name in value_identifiers:
+        get_value_from_filename(filename, name, name, next_name)
+    
+def get_value_from_filename(filename, value_name, value_key, next_name):
+    value_index = filename.find(value_name) + len(value_name)
+    next_index = filename.find(next_name)
+    sub_index = filename.find("_", start=value_index)
+    if sub_index+1 == next_index:
+        value = float(filename[value_index:next_index])
+    else:
+        value = (
+                    float(filename[value_index:sub_index]), 
+                    float(filename[value_index+sub_index:next_index])
+                )
+        value_name = (value_name+"L", value_name+"H")
+    return value, value_name
+
 def get_packing_from_filename(filename):
-    pf_key = "eta_"
+    pf_key = "pf_"
     end_key = ".lammps"
     pf_index = filename.find(pf_key) + len(pf_key)
     end_index = filename.find(end_key)

@@ -23,7 +23,7 @@ def plot_result_vs_thorne(
         error_list,
         C, 
         mix=True, 
-        relative=True
+        relative=False
     ):
     m = np.array([C["MASS_L"], C["MASS_H"]])
     sigma = np.array([C["SIGMA_L"], C["SIGMA_H"]])
@@ -61,7 +61,8 @@ def plot_result_vs_thorne(
         plt.plot(pf, np.ones_like(pf),
             label=f"Thorne equation, sigma={sigma}"
         )
-
+        plt.ylim(((1-eta_max*1.15), (1+eta_max*1.15)))
+    eta_max = np.amax(packing_list)
     plt.title(f"Viscosity, sigma={sigma}")
     plt.legend()
     plt.show()

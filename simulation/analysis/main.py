@@ -161,7 +161,7 @@ mix = False
 N = 1
 cut_fraction = 0.9
 if "mix" in sysargs:
-    path = "data/two_component"
+    path = "data/binary_mixture"
     mix = True
     N = 2
 if "equal-mix" in sysargs:
