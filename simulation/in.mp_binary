@@ -25,38 +25,46 @@
 # convert_LAMMPS_output.extract_constants_from_log().
 
 # The following parameters are required on input:
-#   - PACKING:      Volume packing fraction of the system
-#   - DIRECTORY:    Where to store the output data. 
+#   - PACKING:          Volume packing fraction of the system.
+#   - DIRECTORY:        Where to store the output data. 
+#   - HEAVY_FRACTION:   The portion of particles that are heavy/large.
+#   - HEAVY_MASS:       The mass of the heavy particle.
+#   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
 
-variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 4000  # Name -> RUN_TIME
+variable    EQUILLIBRATION_DURATION     equal 20  # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 100  # Name -> RUN_TIME
+variable    TOTAL_NUMBER                equal 1000  # Name -> N
+
+variable    HEAVY_NUMBER    equal ${TOTAL_NUMBER}*${HEAVY_FRACTION}
+variable    LIGHT_NUMBER    equal ${TOTAL_NUMBER}-${HEAVY_NUMBER}
 
 # Light component
-variable    LIGHT_NUMBER        equal 500   # Name -> N
-variable    LIGHT_MASS          equal 1.0   # Name -> MASS
-variable    LIGHT_DIAMETER      equal 1.0   # Name -> SIGMA
+variable    LIGHT_MASS      equal 1.0   # Name -> MASS
+variable    LIGHT_DIAMETER  equal 1.0   # Name -> SIGMA
 
 # Heavy component
-variable    HEAVY_NUMBER        equal 500   # Name -> N
-variable    HEAVY_MASS          equal 1.0   # Name -> MASS
-variable    HEAVY_DIAMETER      equal 2.0   # Name -> SIGMA
+#variable    HEAVY_MASS      equal 1.0   # Name -> MASS_H
+#variable    HEAVY_DIAMETER  equal 2.0   # Name -> SIGMA_H
 
 
 ### ======================================================================== ###
 ###                               Define filenames                           ###
 ### ======================================================================== ###
 # Files will have the structure 
-#   log.eta_0.05.lammps
+#   log.variable1_value1_value2.lammps
 # For safety, consider swapping the period decimal with a dash.
 
-# The packing fraction should be given when running
-# the input script from the command line, i.e.,
-# lmp -in in.script -var PACKING 0.5
-variable FILENAME   string mix_eta_${PACKING}               # Filename template
+variable N_STR      string N_${LIGHT_NUMBER}_${HEAVY_NUMBER} 
+variable S_STR      string sigma_${LIGHT_DIAMETER}_${HEAVY_DIAMETER}
+variable M_STR      string mass_${LIGHT_MASS}_${HEAVY_MASS} 
+variable PF_STR     string pf_${PACKING}
+variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename template
+
+#variable FILENAME   string mix_mass-${LIGHT_MASS}-${HEAVY_MASS}_eta_${PACKING}  # Filename template
 variable DIR        string data/${DIRECTORY}/               # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
-variable FIX_FILE   string ${DIR}fix.viscosity_${FILENAME}.lammps  # Fix file
+variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps  # Fix file
 
     ### Write out data to logfile ###
 log     ${LOG_FILE}
@@ -85,13 +93,16 @@ variable MIE_REP    equal 50    # Repulsive exponent
 variable MIE_ATT    equal 49    # Attractive exponent
 
 # Parameters defining the two gas compounds
+variable N          equal ${TOTAL_NUMBER}   # Number of atoms
+variable N_L        equal ${LIGHT_NUMBER}   # Number of light atoms
+variable N_H        equal ${HEAVY_NUMBER}   # Number of heavy atoms
+
 variable MASS_L     equal ${LIGHT_MASS}     # Particle mass, light
 variable MASS_H     equal ${HEAVY_MASS}     # Particle mass, heavy
-variable N_L        equal ${LIGHT_NUMBER}   # Number of atoms
-variable N_H        equal ${HEAVY_NUMBER}   # Number of atoms
 variable SIGMA_L    equal ${LIGHT_DIAMETER} # Particle size, light
 variable SIGMA_H    equal ${HEAVY_DIAMETER} # Particle size, heavy
-variable SIGMA_LH   equal (${SIGMA_L}+${SIGMA_H})/2 # Average size in mixture
+variable SIGMA_LH   equal (${SIGMA_L}+${SIGMA_H})/2 # Average particle size
+
 
 # Radius at which interaction potential is zero:
 variable CUTOFF_L   equal ${MIE_REP}/${MIE_ATT}*${SIGMA_L}
