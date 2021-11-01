@@ -9,6 +9,7 @@ import plotting
 import tests
 import muller_plathe
 import eos
+import save
 import convert_LAMMPS_output as convert
 
 sysargs = sys.argv
@@ -25,6 +26,7 @@ def main_viscosity(cut_fraction, path, filenames, per_time=False, plot_vs_time=F
     PF_list = np.zeros(len(filenames))
     eta_list = np.zeros(len(filenames))
     error_list = np.zeros(len(filenames))
+    savedata = np.zeros((len(filenames),9))
 
     for (i, f) in enumerate(filenames):
         fix_name = f"{path}/" + f[0]
@@ -57,10 +59,11 @@ def main_viscosity(cut_fraction, path, filenames, per_time=False, plot_vs_time=F
             plt.show()
 
         PF_list[i] = C["PF"]
-        # Consider saving eta, t and C to a file.
         eta_list[i] = np.mean(eta)
         error_list[i] = np.mean(eta_err)
         log.info("Viscosity = {eta_list[i]} +/- {error_list[i]}")
+        save.insert_results_in_array(savedata, np.mean(eta), np.mean(eta_err), C, i)
+    save.save_simulation_data("savetest.csv", savedata)
 
     if mix:
         plotting.plot_result_vs_thorne(
