@@ -32,12 +32,16 @@ def sort_files(filenames, packing_fractions):
     for pf in packing_fractions:
         for f in filenames:
             extension = get_file_extension(f)
-            if get_packing_from_filename(f) == pf and extension != ".csv":
-                filetype = get_filetype(f)
-                if filetype == "fix":
-                    fix.append(f)
-                elif filetype == "log":
-                    log.append(f)
+            if extension[-3:] != ".sh":
+                if (
+                        get_packing_from_filename(f) == pf 
+                        and extension != ".csv"
+                    ):
+                    filetype = get_filetype(f)
+                    if filetype == "fix":
+                        fix.append(f)
+                    elif filetype == "log":
+                        log.append(f)
     files = np.array([fix, log], dtype=str)
     return files.transpose()
 

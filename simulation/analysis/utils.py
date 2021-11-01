@@ -12,6 +12,24 @@ def remove_nans(arr):
     return arr[~np.isnan(arr)]
 
 
+def status_bar(i, n, l=30, fmt="percent"):
+    p = int((i/n)*l)
+    r = l-p-l/10
+    if fmt=="percent":
+        print(f"\r{100*i/n:.0f} %", end="")
+    elif fmt=="arrow":
+        print("\r[" + "="*p + ">" + " "*r + "]", end="")
+    elif fmt=="train":
+        if i == 0:
+            print("\n\n")
+        print(f"""\033[A\033[A\033[A\033[A
+            \r|{' '*p}____        {' '*r}|
+            \r|{' '*p}|DD|____T_  {' '*r}|
+            \r|{' '*p}|_ |_____|< {' '*r}|
+            \r|{'_'*p}_@-@-@-oo\__{'_'*r}|""", 
+        end="")
+
+
 def get_avg(lower, upper):
     """ Returns an average (typically of slopes).
         Inputs:

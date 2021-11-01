@@ -10,6 +10,7 @@ import tests
 import muller_plathe
 import eos
 import save
+import utils
 import convert_LAMMPS_output as convert
 
 sysargs = sys.argv
@@ -21,28 +22,43 @@ if "debug" in sysargs:
     log.setLevel(logging.INFO)
 
 
-def main_viscosity(cut_fraction, path, filenames, per_time=False, plot_vs_time=False):
+def main_viscosity(
+        cut_fraction, 
+        path,
+        filenames,
+        per_time=False,
+        savedata=True,
+        plot=True,
+        plot_vs_time=False
+    ):
     C = {}
     PF_list = np.zeros(len(filenames))
     eta_list = np.zeros(len(filenames))
     error_list = np.zeros(len(filenames))
-    savedata = np.zeros((len(filenames),9))
+    data = np.zeros((len(filenames),9))
 
     for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
         log.info(f"Loading file\t{log_name}")
 
-        if "plot-profiles" in sysargs:
-            # Plot velocity profiles and regressions of them
-            plotting.plot_velocity_profile_from_file(fix_name)
-
         # Compute and plot viscosity for all packing fractions
         eta, C, eta_err = muller_plathe.find_viscosity_from_file(
             log_name, fix_name, cut_fraction, per_time
         )
+
+        PF_list[i] = C["PF"]
+        eta_list[i] = np.mean(eta)
+        error_list[i] = np.mean(eta_err)
+        log.info("Viscosity = {eta_list[i]} +/- {error_list[i]}")
+        save.insert_results_in_array(data, np.mean(eta), np.mean(eta_err), C, i)
+
         # Note: Cut fraction must be low for this plot to be useful
+        if "plot-profiles" in sysargs:
+            # Plot velocity profiles and regressions of them
+            plotting.plot_velocity_profile_from_file(fix_name)
         if plot_vs_time:
             t = np.linspace(C["RUN_TIME"]*cut_fraction, C["RUN_TIME"], len(eta))
             plt.plot(t, eta, label="Viscosity")
@@ -53,32 +69,17 @@ def main_viscosity(cut_fraction, path, filenames, per_time=False, plot_vs_time=F
                 fmt="yo",
                 ecolor="b"
             )
-
             plt.title(f"Measured viscosity vs time, packing={C['PF']}")
             plt.legend()
             plt.show()
 
-        PF_list[i] = C["PF"]
-        eta_list[i] = np.mean(eta)
-        error_list[i] = np.mean(eta_err)
-        log.info("Viscosity = {eta_list[i]} +/- {error_list[i]}")
-        save.insert_results_in_array(savedata, np.mean(eta), np.mean(eta_err), C, i)
-    save.save_simulation_data("savetest.csv", savedata)
-
-    if mix:
-        plotting.plot_result_vs_thorne(
-            eta_list, 
-            PF_list, 
-            error_list, 
-            C
-        )
-    else:
-        plotting.plot_result_vs_enskog(
-            eta_list, 
-            PF_list, 
-            error_list, 
-            C
-        )
+    if save:
+        save.save_simulation_data("savetest.csv", data)
+    if plot:
+        if mix:
+            plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C)
+        else:
+            plotting.plot_result_vs_enskog(eta_list, PF_list, error_list, C)
 
 
 def main_eos(path, filenames, cut_fraction, number_of_components):
@@ -160,19 +161,24 @@ def main_eos(path, filenames, cut_fraction, number_of_components):
 
 
 path = None
-mix = False
+per_time=False
+savedata=False
+mix=True
 N = 1
 cut_fraction = 0.9
 if "mix" in sysargs:
-    path = "data/binary_mixture"
-    mix = True
+    path = "data/varying_mass"
     N = 2
 if "equal-mix" in sysargs:
     path = "data/equal_two_component"
-    mix = True
     N = 2
 if "one" in sysargs:
     path = "data/one_component"
+    mix = False
+if "per-time" in sysargs:
+    per_time=True
+if "nosave" in sysargs:
+    savedata=False
 
 # Convert all files in data to csv format.
 if "convert" in sysargs:
@@ -183,14 +189,13 @@ packing_list = files.find_all_packing_fractions(path)
 filenames = files.sort_files(filenames, packing_list)
 
 if "test" in sysargs:
-    #tests.test_eos()
+    tests.test_eos()
     tests.test_thorne()
-    #tests.test_rdf()
+    tests.test_rdf()
 if "eos" in sysargs:
     main_eos(path, filenames, cut_fraction, N)
 if "viscosity" in sysargs:
-    per_time=True
-    main_viscosity(cut_fraction, path, filenames)
+    main_viscosity(cut_fraction, path, filenames, savedata=savedata)
 if "plot-vs-time" in sysargs:
     cut_fraction = 0.01
-    main_viscosity(cut_fraction, path, filenames, plot_vs_time=True)
+    main_viscosity(cut_fraction, path, filenames, savedata=False, plot=True, plot_vs_time=True)
