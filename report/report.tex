@@ -7,6 +7,40 @@
 \usepackage[hidelinks]{hyperref}
 %\usepackage{glossaries}
 
+% Drawing plots with pgfplots:
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=newest}
+\usepgfplotslibrary{external}
+\tikzexternalize[prefix=out/]
+
+% The following defines pgfplots commands that
+% allows selection of rows from data files.
+% With this, all viscosity measurements can be
+% written to the same file, and the data can 
+% be selected when plotting the figure.
+\pgfplotsset{
+    discard if/.style 2 args={
+        x filter/.code={
+            \edef\tempa{\thisrow{#1}}
+            \edef\tempb{#2}
+            \ifx\tempa\tempb
+                \def\pgfmathresult{nan}
+            \fi
+        }
+    },
+    discard if not/.style 2 args={
+        x filter/.code={
+            \edef\tempa{\thisrow{#1}}
+            \edef\tempb{#2}
+            \ifx\tempa\tempb
+            \else
+                \def\pgfmathresult{nan}
+            \fi
+        }
+    }
+}
+
 % Bibliography
 \usepackage[
     backend=biber,
@@ -41,6 +75,7 @@
 \pagebreak
 
 \input{theory.tex}
+\input{results.tex}
 
 \pagebreak
 \printbibliography[heading=bibintoc]

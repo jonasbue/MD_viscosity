@@ -1,0 +1,17 @@
+\begin{tikzpicture}
+    \begin{axis}[
+        title=Viscosity,
+        xlabel=Packing fraction,
+        ylabel = $\eta$,
+    ]
+        \addplot[
+            only marks,
+            mark options = {black},
+            discard if not={m2}{1.000e+00},
+        ] table[
+            x = pf,
+            y = viscosity,
+            col sep = comma,
+        ]{data/savetest.csv};
+    \end{axis}
+\end{tikzpicture}
