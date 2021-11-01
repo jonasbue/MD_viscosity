@@ -31,8 +31,8 @@
 #   - HEAVY_MASS:       The mass of the heavy particle.
 #   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
 
-variable    EQUILLIBRATION_DURATION     equal 20  # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 100  # Name -> RUN_TIME
+variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 4000  # Name -> RUN_TIME
 variable    TOTAL_NUMBER                equal 1000  # Name -> N
 
 variable    HEAVY_NUMBER    equal ${TOTAL_NUMBER}*${HEAVY_FRACTION}
@@ -82,7 +82,7 @@ variable RAND_SEED      equal 999           # Seed for random functions
 variable RAND_SEED_L    equal 313           # Seed for random functions
 variable RAND_SEED_H    equal 666           # Seed for random functions
 variable TEMP           equal 1.5           # Temperature
-variable TDAMP          equal 100.0         # Damping constant for thermostat 
+variable TDAMP          equal 1000          # Damping constant for thermostat 
                                             # determining how quickly the system 
                                             # relaxes to desired temperature.
 
@@ -158,7 +158,7 @@ variable STEPS_IN_AVERAGE   equal 2                 # Steps between entries in
 
 ## Strings
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
-variable THERMOSTAT string "temp/berendsen" # Berendsen thermostat
+variable THERMOSTAT string "temp/csvr"      # CSVR thermostat
 
 # Make a dump of system:
 dump    DUMP all custom ${DUMP_STEPS} & 

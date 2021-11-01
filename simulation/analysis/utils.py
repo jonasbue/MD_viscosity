@@ -14,7 +14,7 @@ def remove_nans(arr):
 
 def status_bar(i, n, l=30, fmt="percent"):
     p = int((i/n)*l)
-    r = l-p-l/10
+    r = l-p-int(l/10)
     if fmt=="percent":
         print(f"\r{100*i/n:.0f} %", end="")
     elif fmt=="arrow":

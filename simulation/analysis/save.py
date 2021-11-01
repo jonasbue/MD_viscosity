@@ -23,7 +23,7 @@ def save_simulation_data(filename, data, fmt="%.3e"):
         name of the data file.
     """
     header = "pf, N1, N2, m1, m2, sigma1, sigma2, viscosity, error"
-    np.savetxt(filename, data, header=header, fmt=fmt)
+    np.savetxt(filename, data, header=header, fmt=fmt, delimiter=",")
 
 
 def insert_results_in_array(data, eta, err, C, i):
