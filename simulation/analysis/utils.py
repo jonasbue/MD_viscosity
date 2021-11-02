@@ -15,6 +15,7 @@ def remove_nans(arr):
 def status_bar(i, n, l=30, fmt="percent"):
     p = int((i/n)*l)
     r = l-p-int(l/10)
+    oo = " O o"
     if fmt=="percent":
         print(f"\r{100*i/n:.0f} %", end="")
     elif fmt=="arrow":
@@ -22,8 +23,10 @@ def status_bar(i, n, l=30, fmt="percent"):
     elif fmt=="train":
         if i == 0:
             print("\n\n")
+        if i % 2:
+            oo = "O Oo"
         print(f"""\033[A\033[A\033[A\033[A
-            \r|{' '*p}____        {' '*r}|
+            \r|{' '*p}____{oo}    {' '*r}|
             \r|{' '*p}|DD|____T_  {' '*r}|
             \r|{' '*p}|_ |_____|< {' '*r}|
             \r|{'_'*p}_@-@-@-oo\__{'_'*r}|""", 

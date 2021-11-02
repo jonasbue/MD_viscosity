@@ -22,13 +22,79 @@ if "debug" in sysargs:
     log.setLevel(logging.INFO)
 
 
-def main_viscosity(
+def save_viscosity(
+        cut_fraction, 
+        path,
+        filenames,
+        savename
+    ):
+    C = {}
+    PF_list = np.zeros(len(filenames))
+    eta_list = np.zeros(len(filenames))
+    error_list = np.zeros(len(filenames))
+    data = np.zeros((len(filenames),9))
+
+    for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="train")
+        fix_name = f"{path}/" + f[0]
+        log_name = f"{path}/" + f[1]
+        log.info(f"Loading file\t{fix_name}")
+        log.info(f"Loading file\t{log_name}")
+
+        # Compute and plot viscosity for all packing fractions
+        eta, C, eta_err = muller_plathe.find_viscosity_from_file(
+            log_name, fix_name, cut_fraction, per_time
+        )
+        save.insert_results_in_array(data, np.mean(eta), np.mean(eta_err), C, i)
+    save.save_simulation_data("savetest.csv", data)
+
+def save_eos(path, filenames, cut_fraction, number_of_components):
+    packing_list = np.zeros(len(filenames))
+    PF_list = np.zeros(len(filenames))
+    Z_list = np.zeros(len(filenames))
+    V_list = np.zeros(len(filenames))
+    sigma_list = np.zeros(number_of_components)
+    N_list = np.zeros(number_of_components)
+    C = {}
+    data = np.zeros((len(filenames), 9))
+
+    for (i, f) in enumerate(filenames):
+        fix_name = f"{path}/" + f[0]
+        log_name = f"{path}/" + f[1]
+        log.info(f"Loading file\t{fix_name}")
+        log.info(f"Loading file\t{log_name}")
+
+        variable_list = ["p", "V", "T"]
+        
+        constants = convert.extract_constants_from_log(log_name)
+        log_table = files.load_system(log_name)
+        pvt = files.unpack_variables(log_table, log_name, variable_list)
+
+        eq_steps = int(
+                constants["EQUILL_TIME"]
+                /constants["DT"]
+                /constants["THERMO_OUTPUT"]
+            )
+        cut = int(eq_steps*cut_fraction)
+        p = np.mean(pvt[variable_list.index("p")][cut:eq_steps])
+        T = np.mean(pvt[variable_list.index("T")][cut:eq_steps])
+
+        N_list = np.array([constants["N_L"], constants["N_H"]])
+        sigma_list = np.array([constants["SIGMA_L"], constants["SIGMA_H"]])
+        x = N_list/np.sum(N_list)
+        rho = 6*constants["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
+        Z = (
+                eos.Z_measured_mix(p, rho, T)
+            )
+        save.insert_results_in_array(data, Z, 0, constants, i)
+    save.save_simulation_data("../report/data/eos.csv", data, data_name="Z")
+
+
+def plot_viscosity(
         cut_fraction, 
         path,
         filenames,
         per_time=False,
-        savedata=True,
-        plot=True,
         plot_vs_time=False
     ):
     C = {}
@@ -52,8 +118,6 @@ def main_viscosity(
         PF_list[i] = C["PF"]
         eta_list[i] = np.mean(eta)
         error_list[i] = np.mean(eta_err)
-        log.info("Viscosity = {eta_list[i]} +/- {error_list[i]}")
-        save.insert_results_in_array(data, np.mean(eta), np.mean(eta_err), C, i)
 
         # Note: Cut fraction must be low for this plot to be useful
         if "plot-profiles" in sysargs:
@@ -72,17 +136,13 @@ def main_viscosity(
             plt.title(f"Measured viscosity vs time, packing={C['PF']}")
             plt.legend()
             plt.show()
-
-    if save:
-        save.save_simulation_data("savetest.csv", data)
-    if plot:
-        if mix:
-            plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C)
-        else:
-            plotting.plot_result_vs_enskog(eta_list, PF_list, error_list, C)
+    if mix:
+        plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C)
+    else:
+        plotting.plot_result_vs_enskog(eta_list, PF_list, error_list, C)
 
 
-def main_eos(path, filenames, cut_fraction, number_of_components):
+def plot_eos(path, filenames, cut_fraction, number_of_components):
     packing_list = np.zeros(len(filenames))
     PF_list = np.zeros(len(filenames))
     Z_list = np.zeros(len(filenames))
@@ -90,6 +150,7 @@ def main_eos(path, filenames, cut_fraction, number_of_components):
     sigma_list = np.zeros(number_of_components)
     N_list = np.zeros(number_of_components)
     C = {}
+    data = np.zeros((len(filenames), 9))
 
     for (i, f) in enumerate(filenames):
         fix_name = f"{path}/" + f[0]
@@ -124,6 +185,7 @@ def main_eos(path, filenames, cut_fraction, number_of_components):
             Z_list[i] = (
                     eos.Z_measured_mix(p, rho, T)
                 )
+            save.insert_results_in_array(data, Z_list[i], 0, constants, i)
         else:
             N_list = constants["N"]
             sigma_list = constants["SIGMA"]
@@ -152,6 +214,7 @@ def main_eos(path, filenames, cut_fraction, number_of_components):
             PY[i] = eos.Z_PY(sigma, x, rho)
         plt.plot(pf, SPT, "-", label="SPT", linewidth=3)
         plt.plot(pf, PY, "-", label="PY", linewidth=3)
+        save.save_simulation_data("../report/data/eos.csv", data, data_name="Z")
             
     # Show figure
     plt.xlabel("Packing fraction")

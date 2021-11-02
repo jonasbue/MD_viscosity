@@ -5,7 +5,7 @@
 #############################################################
 import numpy as np
 
-def save_simulation_data(filename, data, fmt="%.3e"):
+def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
     """ Appends resuls of a simulation, and the
         configuration of the system, to a given
         .csv file.
@@ -22,11 +22,11 @@ def save_simulation_data(filename, data, fmt="%.3e"):
         This quantity should be specified in the 
         name of the data file.
     """
-    header = "pf, N1, N2, m1, m2, sigma1, sigma2, viscosity, error"
-    np.savetxt(filename, data, header=header, fmt=fmt, delimiter=",")
+    header = f"pf, N1, N2, m1, m2, sigma1, sigma2, {data_name}, error"
+    np.savetxt(filename, data, header=header, fmt=fmt, delimiter=", ", comments="")
 
 
-def insert_results_in_array(data, eta, err, C, i):
+def insert_results_in_array(data, value, err, C, i):
     N1 = C["N_L"]
     N2 = C["N_H"]
     m1 = C["MASS_L"]
@@ -35,5 +35,5 @@ def insert_results_in_array(data, eta, err, C, i):
     sigma2 = C["SIGMA_H"]
     pf = C["PF"]
 
-    data[i] = np.array([pf, N1, N2, m1, m2, sigma1, sigma2, eta, err])
+    data[i] = np.array([pf, N1, N2, m1, m2, sigma1, sigma2, value, err])
     return data
