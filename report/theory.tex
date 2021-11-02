@@ -1,14 +1,14 @@
-\section{Theory}
+\chapter{Theory}
 \label{sec:theory}
 
-\subsection{Kinetic theory}
+\section{Kinetic theory}
 % TODO: Skriv en litt generell intro.
 % Boltzmannlikningen
 % Antakelser
 % Enskogteori
 % Likevekt
 
-\subsection{Hard-sphere fluids}
+\section{Hard-sphere fluids}
 Hard-sphere (HS) fluids are fluids consisting of spherical particles 
 interacting via the non-continuous potential 
 \begin{equation}
@@ -28,7 +28,7 @@ The HS potential is especially useful when modeling
 transport properties such as viscosity.
 
 
-\subsection{Transport properties}
+\section{Transport properties}
 % TODO: Fyll inn tekst her.
 % Nevn noe av Enskog-informasjonen fra neste seksjon her.
 % Generelt om transportegenskaper, enskogteori som en metode for å finne dem
@@ -36,7 +36,7 @@ transport properties such as viscosity.
 % Viskositet som transportegenskap
 
 
-\subsection{The viscosity of hard-sphere fluids}
+\section{The viscosity of hard-sphere fluids}
 The central equation modeling the viscosity of HS fluids is the Enskog equation. 
 This equation applies to one-component HS fluids consisting only of particles 
 with the same mass $m$ and radius $\sigma$.
@@ -96,7 +96,7 @@ Furthermore, it does not work for real fluids with long range continuous interac
 However, the assumption is more acceptable for low density HS-fluids. 
 
 
-\subsection{Viscosity of hard-sphere fluid mixtures}
+\section{Viscosity of hard-sphere fluid mixtures}
 The Enskog equation was generalized by Thorne to describe 
 two-component fluid mixtures\cite{ref:chapman:non_uniform_gases}.
 A further generalization to mixtures of arbitrary component numbers 
@@ -174,7 +174,7 @@ Finally, $\bar{\omega}_{\text{mix}}$ can be written
 %       to this project, and since it was derived first, I think it's more
 %       natural to present the two-component equation first, like Pippo does.
 
-\subsection{Simulation of hard-sphere fluids}
+\section{Simulation of hard-sphere fluids}
 Several methods exist for simulating fluids consisting of rigid spheres.
 They can be divided into two categories, namely Monte Carlo (MC) models,
 and molecular dynamics (MD) models.
@@ -193,7 +193,7 @@ This section gives an introduction to both Monte Carlo and molecular dynamics,
 focusing especially on molecular dynamics for hard and pseudo-hard spheres.
 
 % Mer generelt om MD (inkl hendelsesdrevent)
-\subsubsection{Event-driven molecular dynamics simulation}
+\section{Event-driven molecular dynamics simulation}
 A simple method for hard sphere simulations in molecular dynamics is an
 event-driven HS simulation.
 Key elements of this simultion is outlined below.
@@ -213,7 +213,7 @@ It should be noted that after a collision happens, other collisions involving
 either of the two particles will be invalid.
 These should be discarded from the list.
 
-\subsubsection{Continuous potential MD simulation methods}
+\section{Continuous potential MD simulation methods}
 Several powerful and efficient molecular dynamics programmes are easily 
 available, including LAMMPS, GROMACS, DL\_POLY and NAND. % TODO add references.
 These do, however, not handle discontinous potentials.
@@ -352,7 +352,7 @@ and that the obtained viscosity is in agreement with Enskog theory.
 % been published for fluids of more than one component. 
 % C: Detter er ikke sjekket, men er jo delvis det du skal gjøre.
 
-\subsection{Measuring the viscosity of a fluid in NEMD}
+\section{Measuring the viscosity of a fluid in NEMD}
 Müller-Plathe \cite{ref:mullerplathe:reversing_the_perturbation} 
 has proposed a method of computing the viscosity of a fluid in 
 nonequilibrium molecular dynamics (NEMD) simulations.

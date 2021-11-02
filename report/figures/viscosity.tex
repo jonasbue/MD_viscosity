@@ -2,16 +2,18 @@
     \begin{axis}[
         title=Viscosity,
         xlabel=Packing fraction,
-        ylabel = $\eta$,
+        ylabel=$\eta$,
+        scale only axis,
+        width=0.9\textwidth
     ]
         \addplot[
             only marks,
             mark options = {black},
-            discard if not={m2}{1.000e+00},
+            discard if not={sigma2}{1.000e+00},
         ] table[
             x = pf,
             y = viscosity,
             col sep = comma,
-        ]{data/savetest.csv};
+        ]{data/visc_varying_fraction.csv};
     \end{axis}
 \end{tikzpicture}

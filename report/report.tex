@@ -1,84 +1,15 @@
-\documentclass{article}
-\usepackage[utf8]{inputenc}
-\usepackage[english]{babel}
-\usepackage[left=4cm, right=4cm]{geometry}
-\usepackage{amsmath}
-\usepackage{csquotes} % Biblatex requires this
-\usepackage[hidelinks]{hyperref}
-%\usepackage{glossaries}
-
-% Drawing plots with pgfplots:
-\usepackage{pgfplots}
-\usepackage{pgfplotstable}
-\pgfplotsset{compat=newest}
-\usepgfplotslibrary{external}
-\tikzexternalize[prefix=out/]
-
-% The following defines pgfplots commands that
-% allows selection of rows from data files.
-% With this, all viscosity measurements can be
-% written to the same file, and the data can 
-% be selected when plotting the figure.
-\pgfplotsset{
-    discard if/.style 2 args={
-        x filter/.code={
-            \edef\tempa{\thisrow{#1}}
-            \edef\tempb{#2}
-            \ifx\tempa\tempb
-                \def\pgfmathresult{nan}
-            \fi
-        }
-    },
-    discard if not/.style 2 args={
-        x filter/.code={
-            \edef\tempa{\thisrow{#1}}
-            \edef\tempb{#2}
-            \ifx\tempa\tempb
-            \else
-                \def\pgfmathresult{nan}
-            \fi
-        }
-    }
-}
-
-% Bibliography
-\usepackage[
-    backend=biber,
-    % Use bibliography style authoryear, 
-    % to make it easier to read citations.
-    % This should be changed to "numeric" later:
-    style=authoryear-icomp, 
-    maxcitenames=1,
-]{biblatex}
-% To get brackets around authoryear, but without changing cite syntax:
-\renewcommand{\cite}{\parencite} % Remove later.
-\addbibresource{references.bib}
-
-\setlength{\parindent}{0em}
-\setlength{\parskip}{1em}
-
-% Some commands for simplicity
-\newcommand{\kB}{\mathrm{k}} % Boltzmann constant. 
-    % As far as I can see, k_B is typically 
-    % typeset without the B subscript.
-\newcommand{\Oh}{\mathcal{O}} % Big O notation
-
-%\makenoidxglossaries
-
-\title{Specialization project}
-\author{Jonas Bueie}
-\date{2021}
+\input{preamble.tex}
 
 \begin{document}
-\maketitle
-\tableofcontents
-\pagebreak
+    \maketitle
+    \tableofcontents
+    \pagebreak
 
-\input{theory.tex}
-\input{results.tex}
+    \input{theory.tex}
+    \input{results.tex}
 
-\pagebreak
-\printbibliography[heading=bibintoc]
-\pagebreak
-%\printnoidxglossaries
+    \pagebreak
+    \printbibliography[heading=bibintoc]
+    \pagebreak
+    %\printnoidxglossaries
 \end{document}
