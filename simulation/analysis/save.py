@@ -5,7 +5,7 @@
 #############################################################
 import numpy as np
 
-def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
+def save_simulation_data(filename, data, data_name="viscosity", error_name="error", fmt="%.3e"):
     """ Appends resuls of a simulation, and the
         configuration of the system, to a given
         .csv file.
@@ -22,18 +22,23 @@ def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
         This quantity should be specified in the 
         name of the data file.
     """
-    header = f"pf, N1, N2, m1, m2, sigma1, sigma2, {data_name}, error"
+    header = f"pf, N1, N2, m1, m2, sigma1, sigma2, {data_name}, {error_name}"
     np.savetxt(filename, data, header=header, fmt=fmt, delimiter=", ", comments="")
 
 
-def insert_results_in_array(data, value, err, C, i):
+def insert_results_in_array(data, value, err, C, i, pf=None):
     N1 = C["N_L"]
     N2 = C["N_H"]
     m1 = C["MASS_L"]
     m2 = C["MASS_H"]
     sigma1 = C["SIGMA_L"]
     sigma2 = C["SIGMA_H"]
-    pf = C["PF"]
+    if pf == None:
+        pf = C["PF"]
 
-    data[i] = np.array([pf, N1, N2, m1, m2, sigma1, sigma2, value, err])
+    parameters = np.array([pf, N1, N2, m1, m2, sigma1, sigma2])
+    l = len(parameters)
+    data[i,:l] = parameters
+    data[i,l:l+len(value)] = value
+    data[i,l+len(value):] = err
     return data

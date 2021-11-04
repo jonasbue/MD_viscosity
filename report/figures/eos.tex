@@ -1,0 +1,26 @@
+\begin{tikzpicture}
+    \begin{axis}[
+        title=Equation of state,
+        xlabel=Packing fraction,
+        ylabel=Compressibility factor,
+        scale only axis,
+        width=0.9\textwidth
+    ]
+        \addplot+ [
+            discard if not={m2}{1.000e+00},
+            mark=none
+        ] table[
+            x = pf,
+            y = SPT_EoS,
+            col sep = comma,
+        ]{data/theory_varying_mass.csv};
+        \addplot+ [
+            discard if not={m2}{1.000e+00},
+            only marks,
+        ] table[
+            x = pf,
+            y = Z,
+            col sep = comma,
+        ]{data/eos_varying_mass.csv};
+    \end{axis}
+\end{tikzpicture}
