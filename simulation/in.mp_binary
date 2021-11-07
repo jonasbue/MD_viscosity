@@ -78,11 +78,12 @@ log     ${LOG_FILE}
 ## Numbers
 # System-wide parameters
 variable PF             equal ${PACKING}    # Packing fraction of the system
-variable RAND_SEED      equal 999           # Seed for random functions
-variable RAND_SEED_L    equal 313           # Seed for random functions
-variable RAND_SEED_H    equal 666           # Seed for random functions
+variable RAND_SEED_V    equal ${SEED_V}     # Seed for velocity assignment
+variable RAND_SEED_L    equal ${SEED_L}     # Seed for light position assignment
+variable RAND_SEED_H    equal ${SEED_H}     # Seed for heavy position assignment 
+variable RAND_SEED_T    equal ${SEED_T}     # Seed for thermostat sampling
 variable TEMP           equal 1.5           # Temperature
-variable TDAMP          equal 1000          # Damping constant for thermostat 
+variable TDAMP          equal 10000         # Damping constant for thermostat 
                                             # determining how quickly the system 
                                             # relaxes to desired temperature.
 
@@ -139,7 +140,6 @@ variable THERMO_OUTPUT  equal 100                   # Timesteps between thermo o
 # Müller-Plathe experiment parameters
 variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
 variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
-#variable V_TARGET          equal INF   # Target velocity of slab boundaries.
 variable CHUNK_WIDTH        equal 1     # This uses a dimensionless number.
 variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER}
 
@@ -187,7 +187,7 @@ create_atoms    2 random ${N_H} ${RAND_SEED_H} REGION # first light, then heavy.
 #set group       HEAVY mass ${MASS_H}                # Give the heavy atoms mass.
 mass            1 ${MASS_L}
 mass            2 ${MASS_H}
-velocity        all create ${TEMP} ${RAND_SEED}     # Give the atoms random 
+velocity        all create ${TEMP} ${RAND_SEED_V}     # Give the atoms random 
                                                     # velocities, distributed 
                                                     # around one temperature.
 
@@ -219,7 +219,7 @@ minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL}
 # Fix the system in the microcanonical ensemble
 fix NVE_FIX all nve
 # Fix the temperature with a Berendsen thermostat
-fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP} ${RAND_SEED_T}
 
 # Write out thermodynamic quantities to console:
 thermo_style    custom step etotal pe ke temp press vol 
@@ -236,7 +236,7 @@ fix MULLER_PLATHE all viscosity &
     ${MOMENTUM_EXCHANGE_RATE}   &
     x z                         &
     ${CHUNK_NUMBER}             &
-    swap ${SWAP_NUMBER}         #vtarget ${V_TARGET}
+    swap ${SWAP_NUMBER}
 
 # Compute chunk velocity.
 compute LAYERS all chunk/atom   &
@@ -262,4 +262,4 @@ thermo_style    custom step etotal pe ke temp press vol f_MULLER_PLATHE
 thermo          ${THERMO_OUTPUT}        
 
 # Run simulation
-run         ${RUN_STEPS}    
+run ${RUN_STEPS}    
