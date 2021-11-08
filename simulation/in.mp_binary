@@ -77,7 +77,8 @@ variable RAND_SEED_L    equal ${SEED_L}     # Seed for light position assignment
 variable RAND_SEED_H    equal ${SEED_H}     # Seed for heavy position assignment 
 variable RAND_SEED_T    equal ${SEED_T}     # Seed for thermostat sampling
 variable TEMP           equal 1.5           # Temperature
-variable TDAMP          equal 10000         # Damping constant for thermostat 
+variable TDAMP_EQ       equal 100           # Damping constant for thermostat 
+variable TDAMP_SIM      equal 10000         # Damping constant for thermostat 
                                             # determining how quickly the system 
                                             # relaxes to desired temperature.
 
@@ -209,7 +210,7 @@ minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL}
 # Fix the system in the microcanonical ensemble
 fix NVE_FIX all nve
 # Fix the temperature with a Berendsen thermostat
-fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP} ${RAND_SEED_T}
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP_EQ} ${RAND_SEED_T}
 
 # Write out thermodynamic quantities to console:
 thermo_style    custom step etotal pe ke temp press vol 
@@ -219,6 +220,7 @@ thermo          ${THERMO_OUTPUT}
 # This can be swapped with a save-file of a system in equillibrium.
 run ${EQUILL_STEPS}
 
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP_SIM} ${RAND_SEED_T}
 
 # Viscosity measurement setup, as described by Müller-Plathe:
 fix MULLER_PLATHE all viscosity &
