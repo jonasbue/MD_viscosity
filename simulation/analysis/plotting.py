@@ -61,7 +61,9 @@ def plot_result_vs_thorne(
         plt.plot(pf, np.ones_like(pf),
             label=f"Thorne equation, sigma={sigma}"
         )
-        plt.ylim(((1-eta_max*1.15), (1+eta_max*1.15)))
+        eta_max = np.amax(eta_list/normalize_values)
+        #plt.ylim(((1-eta_max*1.15), (1+eta_max*1.15)))
+        plt.ylim((0.8, 1.2))
     eta_max = np.amax(packing_list)
     plt.title(f"Viscosity, sigma={sigma}")
     plt.legend()

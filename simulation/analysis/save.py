@@ -37,8 +37,13 @@ def insert_results_in_array(data, value, err, C, i, pf=None):
         pf = C["PF"]
 
     parameters = np.array([pf, N1, N2, m1, m2, sigma1, sigma2])
-    l = len(parameters)
-    data[i,:l] = parameters
-    data[i,l:l+len(value)] = value
-    data[i,l+len(value):] = err
+    if np.isscalar(value):
+        vals = np.append(parameters, value)
+        vals = np.append(vals, err)
+        data[i] = vals
+    else:
+        l = len(parameters)
+        data[i,:l] = parameters
+        data[i,l:l+len(value)] = value
+        data[i,l+len(value):] = err
     return data

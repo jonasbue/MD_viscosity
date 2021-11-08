@@ -137,7 +137,7 @@ def plot_viscosity(
             plt.legend()
             plt.show()
     if mix:
-        plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C)
+        plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C, relative=True)
     else:
         plotting.plot_result_vs_enskog(eta_list, PF_list, error_list, C)
 
@@ -230,7 +230,7 @@ mix=True
 N = 1
 cut_fraction = 0.9
 if "mix" in sysargs:
-    path = "data/varying_mass"
+    path = "new_data/varying_mass"
     N = 2
 if "equal-mix" in sysargs:
     path = "data/equal_two_component"
@@ -252,13 +252,13 @@ packing_list = files.find_all_packing_fractions(path)
 filenames = files.sort_files(filenames, packing_list)
 
 if "test" in sysargs:
-    tests.test_eos()
+    #tests.test_eos()
     tests.test_thorne()
     tests.test_rdf()
 if "eos" in sysargs:
-    main_eos(path, filenames, cut_fraction, N)
+    plot_eos(path, filenames, cut_fraction, N)
 if "viscosity" in sysargs:
-    main_viscosity(cut_fraction, path, filenames, savedata=savedata)
+    plot_viscosity(cut_fraction, path, filenames)
 if "plot-vs-time" in sysargs:
     cut_fraction = 0.01
-    main_viscosity(cut_fraction, path, filenames, savedata=False, plot=True, plot_vs_time=True)
+    plot_viscosity(cut_fraction, path, filenames, plot=True, plot_vs_time=True)

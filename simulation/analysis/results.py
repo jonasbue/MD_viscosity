@@ -39,12 +39,14 @@ def main():
         packing_list = files.find_all_packing_fractions(path)
         filenames = files.sort_files(filenames, packing_list)
 
-        #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv")
+        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv")
+        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_norm_{savename}.csv", normalize=True)
+
         #save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
         save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
 
 
-def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
+def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, normalize=False):
     data = np.zeros((len(filenames),9))
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="train")
@@ -57,11 +59,16 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
         eta, C, eta_err = muller_plathe.find_viscosity_from_file(
             log_name, fix_name, cut_fraction, per_time
         )
-        save.insert_results_in_array(data, np.mean(eta), np.mean(eta_err), C, i)
+        if normalize:
+            thorne_value = viscosity.get_thorne_from_C(C)
+            save.insert_results_in_array(data, np.mean(eta)/thorne_value, np.mean(eta_err)/thorne_value, C, i)
+        else:
+            save.insert_results_in_array(data, np.mean(eta), np.mean(eta_err), C, i)
+    print("")
     save.save_simulation_data(savename, data)
 
 
-def save_eos(path, filenames, cut_fraction, number_of_components, savename):
+def save_eos(path, filenames, cut_fraction, number_of_components, savename, normalize=False):
     data = np.zeros((len(filenames), 9))
     for (i, f) in enumerate(filenames):
         fix_name = f"{path}/" + f[0]

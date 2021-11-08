@@ -32,7 +32,7 @@ def sort_files(filenames, packing_fractions):
     for pf in packing_fractions:
         for f in filenames:
             extension = get_file_extension(f)
-            if extension[-3:] != ".sh":
+            if extension[-3:] != ".sh" and f[:3] != "in.":
                 if (
                         get_packing_from_filename(f) == pf 
                         and extension != ".csv"
