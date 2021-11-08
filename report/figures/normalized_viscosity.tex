@@ -1,0 +1,30 @@
+\begin{tikzpicture}
+    \begin{axis}[
+        title=Viscosity,
+        xlabel=Packing fraction,
+        ylabel=$\eta$,
+        scale only axis,
+        width=0.9\textwidth,
+        ymax=1.4,
+        xmin=0,
+        xmax=0.5,
+    ]
+        \addplot+ [
+            only marks,
+            mark options = {black},
+            discard if not={m2}{2.000e+00},
+        ] plot[
+            error bars/.cd, y dir=both, y explicit
+        ] table[
+            x = pf,
+            y = viscosity,
+            col sep = comma,
+            y error plus = error,
+            y error minus = error,
+        ]{data/visc_norm_varying_mass.csv};
+        \addplot [
+            domain=0:0.5,
+            color=black,
+        ]{1};
+    \end{axis}
+\end{tikzpicture}

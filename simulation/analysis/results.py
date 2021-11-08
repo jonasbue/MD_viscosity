@@ -33,7 +33,7 @@ def main():
     save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
 
     for path, savename in zip(data_path_list, save_path_list):
-        #files.all_files_to_csv(path)
+        files.all_files_to_csv(path)
         save_dir = "../report/data/"
         filenames = files.get_all_filenames(path)
         packing_list = files.find_all_packing_fractions(path)
@@ -101,9 +101,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename, norm
 
 
 def save_theory(path, filenames, savename, N=50):
-    print(len(filenames))
     pf_experiment = files.find_all_packing_fractions(path)
-    print(len(pf_experiment))
     data_shape = (int(len(filenames)/len(pf_experiment))*N, 13)
     data = np.zeros(data_shape)
     pf = np.linspace(0,0.5,N)

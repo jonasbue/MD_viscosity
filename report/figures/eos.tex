@@ -1,26 +1,53 @@
 \begin{tikzpicture}
-    \begin{axis}[
+    \begin{groupplot}[
+        group style = {
+            group size=2 by 1,
+            horizontal sep=0.5cm,
+        },
+        width=0.4\textwidth,
         title=Equation of state,
         xlabel=Packing fraction,
-        ylabel=Compressibility factor,
         scale only axis,
-        width=0.9\textwidth
     ]
+    \nextgroupplot [
+        yticklabel pos=left,
+        ylabel=$Z$,
+    ] \addplot+ [
+            discard if not={m2}{1.000e+00},
+            only marks,
+        ] plot[
+            error bars/.cd, y dir=both, y explicit
+        ] table[
+            x = pf,
+            y = Z,
+            col sep = comma,
+            y error plus = error,
+            y error minus = error,
+        ]{data/eos_varying_mass.csv};
         \addplot+ [
             discard if not={m2}{1.000e+00},
-            mark=none
+            mark=none,
+            y domain=0:0,
         ] table[
             x = pf,
             y = SPT_EoS,
             col sep = comma,
         ]{data/theory_varying_mass.csv};
-        \addplot+ [
-            discard if not={m2}{1.000e+00},
+    \nextgroupplot [
+        yticklabel pos=right,
+        ylabel = $Z/Z_{SPT}$,
+    ] \addplot+ [
             only marks,
+            mark options = {black},
+            discard if not={m2}{1.000e+00},
         ] table[
             x = pf,
             y = Z,
             col sep = comma,
         ]{data/eos_varying_mass.csv};
-    \end{axis}
+        \addplot [
+            domain=0:0.5,
+            color=black,
+        ]{1};
+    \end{groupplot}
 \end{tikzpicture}
