@@ -129,7 +129,7 @@ variable DT             equal 0.001                 # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
 variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
 variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
-variable THERMO_OUTPUT  equal 100                   # Timesteps between thermo output
+variable THERMO_OUTPUT  equal 1000                  # Timesteps between thermo output
 
 # Müller-Plathe experiment parameters
 variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
@@ -139,15 +139,15 @@ variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER}
 
 # Number of steps between particle swaps.
 # NOTE: Momentum exchange rate must be smaller than (or equal to) THERMO_OUTPUT.
-variable MOMENTUM_EXCHANGE_RATE equal ${THERMO_OUTPUT}   
+variable MOMENTUM_EXCHANGE_RATE equal 500
 
 
 # fix/ave sampling definitions
 variable AVERAGE_FREQUENCY  equal ${THERMO_OUTPUT}  # How often an average 
                                                     # value is computed.
-variable VALUES_IN_AVERAGE  equal 5                 # Number of values included 
+variable VALUES_IN_AVERAGE  equal 20                # Number of values included 
                                                     # in the averaging.
-variable STEPS_IN_AVERAGE   equal 10                # Steps between entries in 
+variable STEPS_IN_AVERAGE   equal 20                # Steps between entries in 
                                                     # the average computation.
 
 ## Strings
