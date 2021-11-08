@@ -1,53 +1,76 @@
 \begin{tikzpicture}
     \begin{groupplot}[
         group style = {
-            group size=2 by 1,
+            group size=2 by 3,
             horizontal sep=0.5cm,
+            vertical sep=0.5cm,
+            xticklabels at=edge bottom,
+            %yticklabels at=edge left,
+            xlabels at=edge bottom,
+            ylabels at=edge left,
         },
         width=0.4\textwidth,
         title=Equation of state,
         xlabel=Packing fraction,
         scale only axis,
+        xmin=0,
+        xmax=0.5,
     ]
-    \nextgroupplot [
-        yticklabel pos=left,
-        ylabel=$Z$,
-    ] \addplot+ [
-            discard if not={m2}{1.000e+00},
-            only marks,
-        ] plot[
-            error bars/.cd, y dir=both, y explicit
-        ] table[
-            x = pf,
-            y = Z,
-            col sep = comma,
-            y error plus = error,
-            y error minus = error,
-        ]{data/eos_varying_mass.csv};
-        \addplot+ [
-            discard if not={m2}{1.000e+00},
-            mark=none,
-            y domain=0:0,
-        ] table[
-            x = pf,
-            y = SPT_EoS,
-            col sep = comma,
-        ]{data/theory_varying_mass.csv};
-    \nextgroupplot [
-        yticklabel pos=right,
-        ylabel = $Z/Z_{SPT}$,
-    ] \addplot+ [
-            only marks,
-            mark options = {black},
-            discard if not={m2}{1.000e+00},
-        ] table[
-            x = pf,
-            y = Z,
-            col sep = comma,
-        ]{data/eos_varying_mass.csv};
-        \addplot [
-            domain=0:0.5,
-            color=black,
-        ]{1};
+    \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
+        \nextgroupplot [
+            yticklabel pos=left,
+            ylabel=$Z$,
+            title style={
+                at={(0.5,0.9)},
+                anchor=north,
+            },
+            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
+        ] \addplot+ [
+                discard if not={m2}{#1},
+                only marks,
+            ] plot[
+                error bars/.cd, y dir=both, y explicit
+            ] table[
+                x = pf,
+                y = Z,
+                col sep = comma,
+                y error plus = error,
+                y error minus = error,
+            ]{data/eos_varying_mass.csv};
+            \addplot+ [
+                discard if not={m2}{#1},
+                mark=none,
+                y domain=0:0,
+            ] table[
+                x = pf,
+                y = SPT_EoS,
+                col sep = comma,
+            ]{data/theory_varying_mass.csv};
+        \nextgroupplot [
+            ylabel = $Z/Z_{SPT}$,
+            yticklabel pos=right,
+            title style={
+                at={(0.5,0.9)},
+                anchor=north,
+            },
+            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
+        ] \addplot+ [
+                only marks,
+                mark options = {black},
+                discard if not={m2}{#1},
+            ] plot[
+                error bars/.cd, y dir=both, y explicit
+            ] table[
+                x = pf,
+                y = Z_per_SPT,
+                col sep = comma,
+                y error plus = error_per_SPT,
+                y error minus = error_per_SPT,
+            ]{data/eos_varying_mass.csv};
+            \addplot [
+                domain=0:0.5,
+                color=black,
+            ]{1};
+    }
     \end{groupplot}
 \end{tikzpicture}

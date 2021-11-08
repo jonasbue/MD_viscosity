@@ -33,16 +33,16 @@ def main():
     save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
 
     for path, savename in zip(data_path_list, save_path_list):
-        files.all_files_to_csv(path)
+        #files.all_files_to_csv(path)
         save_dir = "../report/data/"
         filenames = files.get_all_filenames(path)
         packing_list = files.find_all_packing_fractions(path)
         filenames = files.sort_files(filenames, packing_list)
 
-        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv")
-        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_norm_{savename}.csv", normalize=True)
+        #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv")
+        #ave_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_norm_{savename}.csv", normalize=True)
 
-        #save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
+        save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
         save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
 
 
@@ -69,7 +69,7 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, norm
 
 
 def save_eos(path, filenames, cut_fraction, number_of_components, savename, normalize=False):
-    data = np.zeros((len(filenames), 9))
+    data = np.zeros((len(filenames), 13))
     for (i, f) in enumerate(filenames):
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
@@ -77,7 +77,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename, norm
         log.info(f"Loading file\t{log_name}")
 
         variable_list = ["p", "V", "T"]
-        C = convert.extract_C_from_log(log_name)
+        C = convert.extract_constants_from_log(log_name)
         log_table = files.load_system(log_name)
         pvt = files.unpack_variables(log_table, log_name, variable_list)
 
@@ -96,13 +96,20 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename, norm
         rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
         Z = eos.Z_measured_mix(p, rho, T)
 
-        save.insert_results_in_array(data, Z, 0, constants, i)
-    save.save_simulation_data(savename, data, data_name="Z")
+        # Compute theoretical values, and normalize by them
+        spt = eos.Z_SPT(viscosity.get_sigma(sigma_list), x, rho)
+        py = eos.Z_PY(viscosity.get_sigma(sigma_list), x, rho)
+        err = 0.1 # TODO: Compute this
+        vals = np.array([Z, Z/spt, Z/py])
+        errors = np.array([err, err/spt, err/py])
+
+        save.insert_results_in_array(data, vals, errors, C, i)
+    save.save_simulation_data(savename, data, data_name="Z, Z_per_SPT, Z_per_PY", error_name="error, error_per_SPT, error_per_PY")
 
 
 def save_theory(path, filenames, savename, N=50):
     pf_experiment = files.find_all_packing_fractions(path)
-    data_shape = (int(len(filenames)/len(pf_experiment))*N, 13)
+    data_shape = (int(len(filenames)/len(pf_experiment))*N, 11)
     data = np.zeros(data_shape)
     pf = np.linspace(0,0.5,N)
     included_masses = np.empty(0)
@@ -132,7 +139,6 @@ def save_theory(path, filenames, savename, N=50):
             included_numbers = np.append(included_numbers, N_list[1])
             included_masses = np.append(included_masses, mass_list[1])
             included_sigmas = np.append(included_sigmas, sigma_list[1])
-            print("I'm", i)
 
             thorne_vals = np.zeros(50)
             SPT_vals = np.zeros(50)
@@ -148,10 +154,8 @@ def save_theory(path, filenames, savename, N=50):
                 # rdf_PY = ...
                 vals = np.array([thorne_vals[j], SPT_vals[j], PY_vals[j]])
 
-                # TODO: Find out how to estimate 
-                errors = np.array([30, -10, 20])
-                save.insert_results_in_array(data, vals, errors, C, i*N+j, pf=pf[j])
+                save.insert_results_in_array(data, vals, 0, C, i*N+j, pf=pf[j])
 
-    save.save_simulation_data(savename, data, data_name="viscosity, SPT_EoS, PY_EoS", error_name="viscosity_error, SPT_error, PY_error")
+    save.save_simulation_data(savename, data, data_name="viscosity, SPT_EoS, PY_EoS")
 
 main()
