@@ -42,11 +42,6 @@ variable    LIGHT_NUMBER    equal ${TOTAL_NUMBER}-${HEAVY_NUMBER}
 variable    LIGHT_MASS      equal 1.0   # Name -> MASS
 variable    LIGHT_DIAMETER  equal 1.0   # Name -> SIGMA
 
-# Heavy component
-#variable    HEAVY_MASS      equal 1.0   # Name -> MASS_H
-#variable    HEAVY_DIAMETER  equal 2.0   # Name -> SIGMA_H
-
-
 ### ======================================================================== ###
 ###                               Define filenames                           ###
 ### ======================================================================== ###
@@ -60,7 +55,6 @@ variable M_STR      string mass_${LIGHT_MASS}_${HEAVY_MASS}
 variable PF_STR     string pf_${PACKING}
 variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename template
 
-#variable FILENAME   string mix_mass-${LIGHT_MASS}-${HEAVY_MASS}_eta_${PACKING}  # Filename template
 variable DIR        string data/${DIRECTORY}/               # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
@@ -139,7 +133,7 @@ variable THERMO_OUTPUT  equal 100                   # Timesteps between thermo o
 
 # Müller-Plathe experiment parameters
 variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
-variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
+variable SWAP_NUMBER        equal 1     # Number of pairs to swap every time.
 variable CHUNK_WIDTH        equal 1     # This uses a dimensionless number.
 variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER}
 
@@ -151,9 +145,9 @@ variable MOMENTUM_EXCHANGE_RATE equal ${THERMO_OUTPUT}
 # fix/ave sampling definitions
 variable AVERAGE_FREQUENCY  equal ${THERMO_OUTPUT}  # How often an average 
                                                     # value is computed.
-variable VALUES_IN_AVERAGE  equal 50                # Number of values included 
+variable VALUES_IN_AVERAGE  equal 5                 # Number of values included 
                                                     # in the averaging.
-variable STEPS_IN_AVERAGE   equal 2                 # Steps between entries in 
+variable STEPS_IN_AVERAGE   equal 10                # Steps between entries in 
                                                     # the average computation.
 
 ## Strings
@@ -176,18 +170,16 @@ atom_style atomic
 # Create a box shaped region with sides 2L_{x,y,x} and center in the origin:
 region          REGION block -${LX} ${LX} -${LY} ${LY} -${LZ} ${LZ} units box
 
-create_box      ${ATOM_TYPES} REGION                # Create a box in REGION.
-create_atoms    1 random ${N_L} ${RAND_SEED_L} REGION # Fill the box with atoms,
-#group           LIGHT region REGION                 # Add all atoms to a group.
-create_atoms    2 random ${N_H} ${RAND_SEED_H} REGION # first light, then heavy.
-#group           HEAVY subtract all LIGHT            # All atoms not in group
-                                                    # LIGHT are heavy.
+create_box      ${ATOM_TYPES} REGION                    # Create a box in REGION.
+create_atoms    1 random ${N_L} ${RAND_SEED_L} REGION   # Fill the box with atoms,
+#group           LIGHT region REGION                    # Add all atoms to a group.
+create_atoms    2 random ${N_H} ${RAND_SEED_H} REGION   # first light, then heavy.
+#group           HEAVY subtract all LIGHT               # All atoms not in group
+                                                        # LIGHT are heavy.
 
-#set group       LIGHT mass ${MASS_L}                # Give the light atoms mass.
-#set group       HEAVY mass ${MASS_H}                # Give the heavy atoms mass.
-mass            1 ${MASS_L}
-mass            2 ${MASS_H}
-velocity        all create ${TEMP} ${RAND_SEED_V}     # Give the atoms random 
+mass            1 ${MASS_L}                         # Give the light atoms mass.
+mass            2 ${MASS_H}                         # Give the heavy atoms mass.
+velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
                                                     # velocities, distributed 
                                                     # around one temperature.
 
@@ -198,11 +190,9 @@ pair_style  ${POTENTIAL} ${CUTOFF_L}
 pair_coeff  1 1 ${EPSILON} ${SIGMA_L} ${MIE_REP} ${MIE_ATT} ${CUTOFF_L}
 pair_coeff  2 2 ${EPSILON} ${SIGMA_H} ${MIE_REP} ${MIE_ATT} ${CUTOFF_H}
 pair_coeff  1 2 ${EPSILON} ${SIGMA_LH} ${MIE_REP} ${MIE_ATT} ${CUTOFF_LH}
-# pair_modify, mix_value
-# rdf fra LAMMPS
 
 # Shifts the Mie potensial so that its cutoff is at zero:
-pair_modify shift yes #mix arithmetic
+pair_modify shift yes 
 
 # Define timestep
 timestep    ${DT}
@@ -228,7 +218,6 @@ thermo          ${THERMO_OUTPUT}
 # Run simulation to equillibrate the system.
 # This can be swapped with a save-file of a system in equillibrium.
 run ${EQUILL_STEPS}
-
 
 
 # Viscosity measurement setup, as described by Müller-Plathe:
