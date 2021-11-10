@@ -28,9 +28,15 @@ if "debug" in sysargs:
 ## Rename to convert_something_something
 def main():
     N = 2
-    cut_fraction = 0.9
-    data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
-    save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
+    cut_fraction = 0.85
+    per_time=False
+
+    #data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
+    #save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
+    #data_path_list = ["data/run_test/varying_mass"]
+    #save_path_list = ["run_test_per_time"]
+    data_path_list = ["data/const_temp"]
+    save_path_list = ["const_temp"]
 
     for path, savename in zip(data_path_list, save_path_list):
         #files.all_files_to_csv(path)
@@ -39,8 +45,8 @@ def main():
         packing_list = files.find_all_packing_fractions(path)
         filenames = files.sort_files(filenames, packing_list)
 
-        #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv")
-        #ave_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_norm_{savename}.csv", normalize=True)
+        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
+        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_norm_{savename}.csv", normalize=True, per_time=per_time)
 
         save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
         save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
@@ -59,12 +65,17 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, norm
         eta, C, eta_err = muller_plathe.find_viscosity_from_file(
             log_name, fix_name, cut_fraction, per_time
         )
+        error = np.mean(eta_err)
+        if per_time:
+            error = np.amax(np.abs(eta_err))
+
         if normalize:
             thorne_value = viscosity.get_thorne_from_C(C)
-            save.insert_results_in_array(data, np.mean(eta)/thorne_value, np.mean(eta_err)/thorne_value, C, i)
+            save.insert_results_in_array(data, np.mean(eta)/thorne_value, error/thorne_value, C, i)
         else:
-            save.insert_results_in_array(data, np.mean(eta), np.mean(eta_err), C, i)
+            save.insert_results_in_array(data, np.mean(eta), error, C, i)
     print("")
+    print(np.mean(eta_err)/np.amax(np.abs(eta_err)))
     save.save_simulation_data(savename, data)
 
 

@@ -35,10 +35,8 @@ def compute_viscosity(
                         eta-standard error.
     """
     if per_time:
-        t, vx = utils.make_time_dependent(
-                vx, t, number_of_chunks)
-        t, z = utils.make_time_dependent(
-                z, t, number_of_chunks)
+        t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
+        t, z = utils.make_time_dependent(z, t, number_of_chunks)
 
         # Remove early values. They are not useful.
         t = utils.cut_time(cut_fraction, t)
@@ -50,15 +48,19 @@ def compute_viscosity(
                 vx_lower, vx_upper, z_lower, z_upper, t)
     else:
         # Remove early values. They are not useful.
-        t = utils.cut_time(cut_fraction, t)
-        z = utils.cut_time(cut_fraction, z)
-        vx = utils.cut_time(cut_fraction, vx)
+        t = utils.cut_time(cut_fraction, t)     # These arrays contain the
+        z = utils.cut_time(cut_fraction, z)     # same values many times, 
+        vx = utils.cut_time(cut_fraction, vx)   # corresponding to 
+                                                # different chunks.
+
         vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
         dv, std_err = regression.regression_for_single_time(
                 vx_lower, vx_upper, z_lower, z_upper)
 
-    Ptot = Ptot[-1]
-
+    Ptot = utils.cut_time(cut_fraction, Ptot)
+    t = np.unique(t)
+    assert Ptot.shape == np.unique(t).shape, f"Ptot: {Ptot.shape}, t: {t.shape}"
+    # Only unique times:
     eta = viscosity.get_viscosity(Ptot, A, t, dv)
 
     # eta_max = - eta_min, so only one value is needed.
@@ -102,9 +104,16 @@ def find_viscosity_from_file(
 
     # Extract all constants from log file.
     constants = convert.extract_constants_from_log(log_filename)
+    t0 = constants["EQUILL_TIME"]
+    dt = constants["DT"]
+    eq_steps = constants["EQUILL_STEPS"]
+    sim_steps = constants["RUN_STEPS"]
+    N_measure_eq = int(eq_steps/constants["THERMO_OUTPUT"])
+    N_measure_sim = int(sim_steps/constants["THERMO_OUTPUT"])
 
     # Extract total transferred momentum
-    Ptot = log_vals[variable_list.index("Px")]
+    # The +4 is to remove some extra steps
+    Ptot = log_vals[variable_list.index("Px")][N_measure_eq+4:] 
 
     # Get cross-section area.
     Lx = constants["LX"]
@@ -123,8 +132,9 @@ def find_viscosity_from_file(
 
     # Have t contain time values instead of 
     # time steps, and make it start at t=0.
-    t = fix_vals[fix_variable_list.index("t_fix")]*constants["DT"]
-    t = t - constants["EQUILL_TIME"]
+    t = fix_vals[fix_variable_list.index("t_fix")]
+    t = t*dt
+    t = t - t[0]
 
     # Check that chunk number is correct.
     tests.assert_chunk_number(N_chunks, constants)

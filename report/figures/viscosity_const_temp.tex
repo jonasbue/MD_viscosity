@@ -12,7 +12,7 @@
         xlabel=Packing fraction,
         scale only axis,
         xmin=0,
-        xmax=0.43,
+        xmax=0.42,
     ]
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
@@ -35,7 +35,7 @@
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
-            ]{data/visc_varying_mass.csv};
+            ]{data/visc_const_temp.csv};
                 \addplot+ [
                     color=black,
                     mark=none,
@@ -44,7 +44,7 @@
                     x = pf,
                     y = viscosity,
                     col sep = comma,
-                ]{data/theory_varying_mass.csv};
+                ]{data/theory_const_temp.csv};
         \nextgroupplot [
             ylabel = {$\eta/\eta_{\,Thorne}$},
             yticklabel pos=right,
@@ -65,7 +65,7 @@
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
-            ]{data/visc_norm_varying_mass.csv};
+            ]{data/visc_norm_const_temp.csv};
             \addplot [
                 domain=0:0.5,
                 color=black,

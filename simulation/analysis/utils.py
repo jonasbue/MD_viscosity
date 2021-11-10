@@ -17,19 +17,19 @@ def status_bar(i, n, l=30, fmt="percent"):
     r = l-p-int(l/10)
     oo = " O o"
     if fmt=="percent":
-        print(f"\r{100*i/n:.0f} %", end="")
+        print(f"\r{100*i/n:.0f}\t%  ".expandtabs(2), end="")
     elif fmt=="arrow":
         print("\r[" + "="*p + ">" + " "*r + "]", end="")
     elif fmt=="train":
         if i == 0:
-            print("\n\n")
+            print("\n\n\n")
         if i % 2:
             oo = "O Oo"
-        print(f"""\033[A\033[A\033[A\033[A
+        print(f"""\033[A\033[A\033[A\033[A\033[A
             \r|{' '*p}____{oo}    {' '*r}|
             \r|{' '*p}|DD|____T_  {' '*r}|
             \r|{' '*p}|_ |_____|< {' '*r}|
-            \r|{'_'*p}_@-@-@-oo\__{'_'*r}|""", 
+            \r|{'_'*p}_@-@-@-oo\__{'_'*r}|\n""", 
         end="")
 
 

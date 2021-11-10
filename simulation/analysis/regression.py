@@ -106,12 +106,11 @@ def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
     dv = np.zeros(len(t))
     std_err = np.zeros(len(t))
     for i in range(len(t)):
-        print(f"\r{100*i/len(t):.0f} %", end="")
+        utils.status_bar(i, len(t))
         lower_reg = velocity_profile_regression(vx_lower[i], z_lower[i])
         upper_reg = velocity_profile_regression(vx_upper[i], z_upper[i])
         dv[i] = utils.get_avg(lower_reg.slope, upper_reg.slope)
         std_err[i] = utils.get_avg(lower_reg.stderr, upper_reg.stderr)
-    print("")
     return dv, std_err
 
 

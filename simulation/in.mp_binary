@@ -60,8 +60,8 @@ variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps  # Fix file
 
-    ### Write out data to logfile ###
-log     ${LOG_FILE}
+### Write out data to logfile ###
+log ${LOG_FILE}
 
 
 
@@ -152,8 +152,8 @@ variable STEPS_IN_AVERAGE   equal 20                # Steps between entries in
                                                     # the average computation.
 
 ## Strings
-variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
-variable THERMOSTAT string "temp/csvr"      # CSVR thermostat
+variable POTENTIAL          string "mie/cut"        # Lennard-Jones potential
+variable THERMOSTAT         string "temp/csvr"      # CSVR thermostat
 
 # Make a dump of system:
 dump    DUMP all custom ${DUMP_STEPS} & 
@@ -180,9 +180,7 @@ create_atoms    2 random ${N_H} ${RAND_SEED_H} REGION   # first light, then heav
 
 mass            1 ${MASS_L}                         # Give the light atoms mass.
 mass            2 ${MASS_H}                         # Give the heavy atoms mass.
-velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
-                                                    # velocities, distributed 
-                                                    # around one temperature.
+
 
 # Define pair interactions:
 pair_style  ${POTENTIAL} ${CUTOFF_L}
@@ -206,6 +204,11 @@ timestep    ${DT}
 
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
+
+# Give velocities after moving the atoms, to ensure correct temperature.
+velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
+                                                    # velocities, distributed 
+                                                    # around one temperature.
 
 # Fix the system in the microcanonical ensemble
 fix NVE_FIX all nve
