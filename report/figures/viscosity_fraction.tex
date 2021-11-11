@@ -3,7 +3,7 @@
         group style = {
             group size=2 by 3,
             horizontal sep=0.3cm,
-            vertical sep=0.0cm,
+            vertical sep=0.3cm,
             xticklabels at=edge bottom,
             xlabels at=edge bottom,
             ylabels at=edge left,
@@ -14,7 +14,7 @@
         xmin=0,
         xmax=0.44,
     ]
-    \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
+    \pgfplotsinvokeforeach{1.000e+02, 5.000e+02, 9.000e+02}{
         \nextgroupplot [
             yticklabel pos=left,
             ylabel=$\eta$,
@@ -22,11 +22,11 @@
                 at={(0.5,0.9)},
                 anchor=north,
             },
-            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
+            title={$N_2 = \num[round-mode=places, round-precision=1]{#1} N$}
         ] \addplot+ [
                 only marks,
                 mark options = {black},
-                discard if not={sigma2}{#1},
+                discard if not={N2}{#1},
             ] plot[
                 error bars/.cd, y dir=both, y explicit
             ] table[
@@ -35,16 +35,16 @@
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
-            ]{data/visc_varying_sigma.csv};
+            ]{data/visc_varying_fraction.csv};
                 \addplot+ [
                     color=black,
                     mark=none,
-                    discard if not={sigma2}{#1},
+                    discard if not={N2}{#1},
                 ] table[
                     x = pf,
                     y = viscosity,
                     col sep = comma,
-                ]{data/theory_varying_sigma.csv};
+                ]{data/theory_varying_fraction.csv};
         \nextgroupplot [
             ylabel = {$\eta/\eta_{\,Thorne}$},
             yticklabel pos=right,
@@ -52,11 +52,11 @@
                 at={(0.5,0.9)},
                 anchor=north,
             },
-            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
+            title={$N_2 = \num[round-mode=places, round-precision=1]{#1} N$}
         ] \addplot+ [
                 only marks,
                 mark options = {black},
-                discard if not={sigma2}{#1},
+                discard if not={N2}{#1},
             ] plot[
                 error bars/.cd, y dir=both, y explicit
             ] table[
@@ -65,7 +65,7 @@
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
-            ]{data/visc_norm_varying_sigma.csv};
+            ]{data/visc_norm_varying_fraction.csv};
             \addplot [
                 domain=0:0.5,
                 color=black,

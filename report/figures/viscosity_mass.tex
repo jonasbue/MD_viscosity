@@ -3,7 +3,7 @@
         group style = {
             group size=2 by 3,
             horizontal sep=0.3cm,
-            vertical sep=0.0cm,
+            vertical sep=0.3cm,
             xticklabels at=edge bottom,
             xlabels at=edge bottom,
             ylabels at=edge left,
@@ -12,7 +12,7 @@
         xlabel=Packing fraction,
         scale only axis,
         xmin=0,
-        xmax=0.44,
+        xmax=0.46,
     ]
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
@@ -26,25 +26,35 @@
         ] \addplot+ [
                 only marks,
                 mark options = {black},
-                discard if not={sigma2}{#1},
+                discard if not={m2}{#1},
             ] plot[
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = viscosity,
+                y = thorne,
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
-            ]{data/visc_varying_sigma.csv};
+            ]{data/visc_varying_mass.csv};
                 \addplot+ [
                     color=black,
                     mark=none,
-                    discard if not={sigma2}{#1},
+                    discard if not={m2}{#1},
                 ] table[
                     x = pf,
-                    y = viscosity,
+                    y = thorne,
                     col sep = comma,
-                ]{data/theory_varying_sigma.csv};
+                ]{data/theory_varying_mass.csv};
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={m2}{#1},
+                    dashed,
+                ] table[
+                    x = pf,
+                    y = enskog,
+                    col sep = comma,
+                ]{data/theory_varying_mass.csv};
         \nextgroupplot [
             ylabel = {$\eta/\eta_{\,Thorne}$},
             yticklabel pos=right,
@@ -56,16 +66,16 @@
         ] \addplot+ [
                 only marks,
                 mark options = {black},
-                discard if not={sigma2}{#1},
+                discard if not={m2}{#1},
             ] plot[
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = viscosity,
+                y = thorne,
                 col sep = comma,
-                y error plus = error,
-                y error minus = error,
-            ]{data/visc_norm_varying_sigma.csv};
+                y error plus = error_thorne,
+                y error minus = error_thorne,
+            ]{data/visc_norm_varying_mass.csv};
             \addplot [
                 domain=0:0.5,
                 color=black,

@@ -31,8 +31,8 @@
 #   - HEAVY_MASS:       The mass of the heavy particle.
 #   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
 
-variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 4000  # Name -> RUN_TIME
+variable    EQUILLIBRATION_DURATION     equal 10000 # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 20000 # Name -> RUN_TIME
 variable    TOTAL_NUMBER                equal 1000  # Name -> N
 
 variable    HEAVY_NUMBER    equal ${TOTAL_NUMBER}*${HEAVY_FRACTION}
@@ -182,6 +182,11 @@ mass            1 ${MASS_L}                         # Give the light atoms mass.
 mass            2 ${MASS_H}                         # Give the heavy atoms mass.
 
 
+# Give velocities after moving the atoms, to ensure correct temperature.
+velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
+                                                    # velocities, distributed 
+                                                    # around one temperature.
+
 # Define pair interactions:
 pair_style  ${POTENTIAL} ${CUTOFF_L}
 
@@ -205,10 +210,6 @@ timestep    ${DT}
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
 
-# Give velocities after moving the atoms, to ensure correct temperature.
-velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
-                                                    # velocities, distributed 
-                                                    # around one temperature.
 
 # Fix the system in the microcanonical ensemble
 fix NVE_FIX all nve

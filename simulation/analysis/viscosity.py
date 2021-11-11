@@ -32,6 +32,15 @@ def enskog(pf, sigma, T, m, k=1.0):
 def zero_density_viscosity(m, sigma, T, k):
     return 5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
 
+def get_enskog_from_C(C):
+    pf = C["PF"]
+    T = C["TEMP"]
+    N_list = np.array([C["N_L"], C["N_H"]])
+    sigma_list = np.array([C["SIGMA_L"], C["SIGMA_H"]])
+    mass_list = np.array([C["MASS_L"], C["MASS_H"]])
+    x = N_list/np.sum(N_list)
+    return enskog(pf, sigma_list[0], T, mass_list[0])
+
 def get_thorne_from_C(C):
     pf = C["PF"]
     T = C["TEMP"]

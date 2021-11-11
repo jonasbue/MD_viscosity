@@ -247,14 +247,15 @@ if "nosave" in sysargs:
 if "convert" in sysargs:
     files.all_files_to_csv(path)
 
-filenames = files.get_all_filenames(path)
-packing_list = files.find_all_packing_fractions(path)
-filenames = files.sort_files(filenames, packing_list)
-
 if "test" in sysargs:
-    #tests.test_eos()
+    tests.test_eos()
     tests.test_thorne()
     tests.test_rdf()
+
+#filenames = files.get_all_filenames(path)
+#packing_list = files.find_all_packing_fractions(path)
+#filenames = files.sort_files(filenames, packing_list)
+
 if "eos" in sysargs:
     plot_eos(path, filenames, cut_fraction, N)
 if "viscosity" in sysargs:

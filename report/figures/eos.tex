@@ -14,7 +14,7 @@
         xlabel=Packing fraction,
         scale only axis,
         xmin=0,
-        xmax=0.5,
+        xmax=0.51,
     ]
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
@@ -37,6 +37,7 @@
                 y error plus = error,
                 y error minus = error,
             ]{data/eos_varying_mass.csv};
+            \addlegendentry{Measurements};
             \addplot+ [
                 discard if not={m2}{#1},
                 mark=none,
@@ -46,6 +47,29 @@
                 y = SPT_EoS,
                 col sep = comma,
             ]{data/theory_varying_mass.csv};
+            \addlegendentry{SPT EoS};
+            \addplot+ [
+                discard if not={m2}{#1},
+                mark=none,
+                y domain=0:0,
+            ] table[
+                x = pf,
+                y = PY_EoS,
+                col sep = comma,
+            ]{data/theory_varying_mass.csv};
+            \addlegendentry{PY EoS};
+            \addplot+ [
+                discard if not={m2}{#1},
+                mark=none,
+                y domain=0:0,
+                dashed,
+            ] table[
+                x = pf,
+                y = CS_EoS,
+                col sep = comma,
+            ]{data/theory_varying_mass.csv};
+            \addlegendentry{CS EoS}; %
+
         \nextgroupplot [
             ylabel = $Z/Z_{SPT}$,
             yticklabel pos=right,
@@ -62,7 +86,7 @@
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = Z_per_SPT,
+                y = Z_per_CS,
                 col sep = comma,
                 y error plus = error_per_SPT,
                 y error minus = error_per_SPT,

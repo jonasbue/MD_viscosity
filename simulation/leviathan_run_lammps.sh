@@ -2,7 +2,7 @@
 dir="run_test"
 d="$HOME/Dokumenter/project/simulation/data/$dir"
 
-for x in 0.1
+for x in 0.5
 do
     for n in 0.5
     do
