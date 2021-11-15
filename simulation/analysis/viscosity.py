@@ -12,7 +12,7 @@ import sys
 import eos
 
 
-def enskog(pf, sigma, T, m, k=1.0):
+def enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY):
     """ Returns the theoretical value of the 
         viscosity for a given packing fraction.
     """
@@ -20,7 +20,7 @@ def enskog(pf, sigma, T, m, k=1.0):
     eta_0 = zero_density_viscosity(m, sigma, T, k)
     rho = 6*pf/np.pi
     #rho = 3*pf/(4*np.pi*sigma**3)
-    g = eos.rdf_PY(pf)
+    g = rdf(pf)
     eta = eta_0 * (
         1/g 
         + 0.8 * V_excl * rho
@@ -41,16 +41,16 @@ def get_enskog_from_C(C):
     x = N_list/np.sum(N_list)
     return enskog(pf, sigma_list[0], T, mass_list[0])
 
-def get_thorne_from_C(C):
+def get_thorne_from_C(C, rdf):
     pf = C["PF"]
     T = C["TEMP"]
     N_list = np.array([C["N_L"], C["N_H"]])
     sigma_list = np.array([C["SIGMA_L"], C["SIGMA_H"]])
     mass_list = np.array([C["MASS_L"], C["MASS_H"]])
     x = N_list/np.sum(N_list)
-    return thorne(pf, x, mass_list, sigma_list, T)
+    return thorne(pf, x, mass_list, sigma_list, T, rdf)
 
-def thorne(pf, x, m, sigma_list, T):
+def thorne(pf, x, m, sigma_list, T, rdf=eos.rdf_SPT):
     N       = len(x)
 
     sigma   = get_sigma(sigma_list)
@@ -59,7 +59,7 @@ def thorne(pf, x, m, sigma_list, T):
     alpha   = get_alpha(b)
     eta_0   = get_eta_0(N, m, T, sigma)
 
-    sigma_eff = get_effective_sigma(pf, sigma, x, rho)
+    sigma_eff = get_effective_sigma(pf, sigma, x, rho, rdf)
     Xi      = get_Xi(x, sigma_eff, N, rho)
     y       = get_y(x, m, sigma, alpha, Xi, N, rho)
     H       = get_H(x, Xi, eta_0, m, N, rho)
@@ -109,7 +109,7 @@ def get_y(x, m, sigma, alpha, Xi, N, rho):
     return y
 
 
-def get_effective_sigma(pf, sigma, x, rho, rdf=eos.rdf_SPT):
+def get_effective_sigma(pf, sigma, x, rho, rdf):
     N = len(sigma)
     Xi = np.zeros(N)
     for i in range(N):

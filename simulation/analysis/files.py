@@ -140,7 +140,8 @@ def find_all_packing_fractions(directory):
             pf_val = get_packing_from_filename(filename)
             packing_list = np.append(packing_list, pf_val)
     packing_list = np.unique(packing_list)
-    return np.sort(packing_list)
+    packing_list = np.sort(packing_list)
+    return packing_list
 
 
 def load_system(filename):

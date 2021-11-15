@@ -249,17 +249,19 @@ if "convert" in sysargs:
 
 if "test" in sysargs:
     tests.test_eos()
-    tests.test_thorne()
-    tests.test_rdf()
+    #tests.test_thorne()
+    #tests.test_rdf()
+    tests.test_thorne_for_different_rdfs()
 
 #filenames = files.get_all_filenames(path)
 #packing_list = files.find_all_packing_fractions(path)
 #filenames = files.sort_files(filenames, packing_list)
 
-if "eos" in sysargs:
-    plot_eos(path, filenames, cut_fraction, N)
-if "viscosity" in sysargs:
-    plot_viscosity(cut_fraction, path, filenames)
-if "plot-vs-time" in sysargs:
-    cut_fraction = 0.01
-    plot_viscosity(cut_fraction, path, filenames, plot=True, plot_vs_time=True)
+if not "test" in sysargs:
+    if "eos" in sysargs:
+        plot_eos(path, filenames, cut_fraction, N)
+    if "viscosity" in sysargs:
+        plot_viscosity(cut_fraction, path, filenames)
+    if "plot-vs-time" in sysargs:
+        cut_fraction = 0.01
+        plot_viscosity(cut_fraction, path, filenames, plot=True, plot_vs_time=True)

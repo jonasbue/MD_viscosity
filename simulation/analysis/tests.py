@@ -25,18 +25,18 @@ def assert_chunk_number(N_chunks, constants):
 
 def test_eos():
     pf = np.linspace(0.01, 0.5)
-    sigma = np.array([1,2])
+    sigma = np.array([1,1])
     sigma = viscosity.get_sigma(sigma)
-    print(sigma)
     x = np.array([0.5, 0.5])
     rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
-    plt.plot(pf, eos.Z_CS(pf), label="CS EoS")
     #plt.title("CS EoS")
     #plt.legend()
     #plt.show()
 
+    plt.plot(pf, eos.Z_CS(pf), label="CS EoS")
     plt.plot(pf, eos.Z_SPT(sigma, x, rho), label="SPT EoS")
     plt.plot(pf, eos.Z_PY(sigma, x, rho), label="PY EoS")
+    plt.plot(pf, eos.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
     plt.title("Mixture EoS")
     plt.legend()
     plt.show()
@@ -81,7 +81,6 @@ def test_rdf():
     pf = np.linspace(0.001,0.5)
     sigma_list = np.array([1,2])
     sigma = viscosity.get_sigma(sigma_list)
-    print(sigma)
     x1 = 0.5
     x = np.array([1-x1,x1])
     m = np.array([1,1])
@@ -102,3 +101,40 @@ def test_rdf():
     plt.ylabel("Compressibility factor")
     plt.legend()
     plt.show()
+
+def test_thorne_for_different_rdfs():
+    # xi is the mole fraction, so np.sum(x) should equal 1.
+    # The packing fraction, however, is 
+    # a different, independent quantity.
+
+    pf_list = np.linspace(0,0.5)
+    rdf_list = [eos.rdf_SPT, eos.rdf_PY_mix]
+    thorne_eta_list = np.zeros((len(pf_list), len(rdf_list)))
+
+    x1 = 0.5
+    x2 = 0.5
+    sigma_list = np.array([1,1])
+    x = np.array([1-x1,x1])
+    m = np.array([1,1])
+    T = 1.5
+    for i, pf in enumerate(pf_list):
+        thorne_eta_list[i,0] = viscosity.thorne(pf, x, m, sigma_list, T, rdf=rdf_list[0])
+        thorne_eta_list[i,1] = viscosity.thorne(pf, x, m, sigma_list, T, rdf=rdf_list[1])
+    plt.plot(pf_list, thorne_eta_list, 
+        label=f"Thorne, sigma={sigma_list}", linestyle="-")
+
+    enskog_sigma = np.array([1])
+    enskog_eta_list = viscosity.enskog(
+            pf_list,
+            enskog_sigma,
+            T,
+            m[0]
+        )
+    plt.plot(pf_list, enskog_eta_list, 
+        label=f"Enskog, sigma={enskog_sigma}", linestyle="--")
+    plt.title("Enskog vs. Thorne with one component")
+    plt.xlabel("Packing fraction")
+    plt.ylabel("Viscosity")
+    plt.legend()
+    plt.show()
+

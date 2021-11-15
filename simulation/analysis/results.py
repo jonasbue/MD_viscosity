@@ -28,11 +28,12 @@ if "debug" in sysargs:
 ## Rename to convert_something_something
 def main():
     N = 2
-    cut_fraction = 0.9
+    cut_fraction = 0.3
     per_time=False
 
-    data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
-    save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
+    #data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
+    data_path_list = ["large_data/data/varying_mass_large", "large_data/data/varying_fraction_large"]
+    save_path_list = ["varying_mass_large", "varying_fraction_large"]
     #data_path_list = ["data/run_test/varying_mass"]
     #save_path_list = ["run_test_per_time"]
     #data_path_list = ["data/const_temp"]
@@ -54,8 +55,11 @@ def main():
 
 def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, normalize=False):
     data = np.zeros((len(filenames),9))
+    rdf_list = [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
+    error_name="error"
+    data_name="thorne"
     if normalize:
-        data = np.zeros((len(filenames),11))
+        data = np.zeros((len(filenames),11+2*len(rdf_list)))
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
@@ -72,16 +76,23 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, norm
         if per_time:
             error = np.amax(np.abs(eta_err))
 
-        error_name="error"
-        data_name="thorne"
         if normalize:
-            thorne_value = viscosity.get_thorne_from_C(C)
+            thorne_values = np.zeros(len(rdf_list))
+            for (j, rdf) in enumerate(rdf_list):
+                thorne_values[j] = viscosity.get_thorne_from_C(C, rdf)
             enskog_value = viscosity.get_enskog_from_C(C)
-            values = np.array([eta/thorne_value, eta/enskog_value])
-            error = np.array([error/thorne_value, error/enskog_value])
+
+            values = np.array([eta/thorne_values])
+            values = np.append(values, eta/enskog_value)
+            error = np.array([error/thorne_values])
+            error = np.append(error, error/enskog_value)
+
             save.insert_results_in_array(data, values, error, C, i)
-            error_name = "error_thorne, error_enskog"
-            data_name = "thorne, enskog"
+
+            data_name = "".join([f"thorne_{r.__name__[4:]}, " for r in rdf_list])
+            error_name = "".join([f"error_thorne_{r.__name__[4:]}, " for r in rdf_list])
+            error_name = error_name+"error_enskog"
+            data_name = data_name+"enskog"
         else:
             save.insert_results_in_array(data, np.mean(eta), error, C, i)
     print("")
@@ -135,7 +146,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
 
 def save_theory(path, filenames, savename, N=50):
     pf_experiment = files.find_all_packing_fractions(path)
-    data_shape = (int(len(filenames)/len(pf_experiment))*N, 13)
+    data_shape = (int(len(filenames)/len(pf_experiment))*N, 16)
     data = np.zeros(data_shape)
     pf = np.linspace(0,0.5,N)
     included_masses = np.empty(0)
@@ -166,28 +177,49 @@ def save_theory(path, filenames, savename, N=50):
             included_masses = np.append(included_masses, mass_list[1])
             included_sigmas = np.append(included_sigmas, sigma_list[1])
 
-            thorne_vals = np.zeros(N)
-            enskog_vals = np.zeros(N)
+            thorne_vals_SPT = np.zeros(N)
+            thorne_vals_PY = np.zeros(N)
+            thorne_vals_BMCSL = np.zeros(N)
+            enskog_vals_1 = np.zeros(N)
+            enskog_vals_2 = np.zeros(N)
             SPT_vals = np.zeros(N)
             PY_vals = np.zeros(N)
             CS_vals = np.zeros(N)
+            BMCSL_vals = np.zeros(N)
             for j in range(N):
-                thorne_vals[j] = viscosity.thorne(
-                    pf[j], x, mass_list, sigma_list, T)
-                enskog_vals[j] = viscosity.enskog(
+                thorne_vals_SPT[j] = viscosity.thorne(
+                    pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_SPT)
+                thorne_vals_PY[j] = viscosity.thorne(
+                    pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_PY_mix)
+                thorne_vals_BMCSL[j] = viscosity.thorne(
+                    pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_BMCSL)
+                enskog_vals_1[j] = viscosity.enskog(
                     pf[j], sigma_list[0], T, mass_list[0])
+                enskog_vals_2[j] = viscosity.enskog(
+                    pf[j], sigma_list[1], T, mass_list[1])
                 rho = 6*pf[j]/np.pi/np.sum(x*np.diag(sigma_list)**3)
                 sigma = viscosity.get_sigma(sigma_list)
                 SPT_vals[j] = eos.Z_SPT(sigma, x, rho)
                 PY_vals[j] = eos.Z_PY(sigma, x, rho)
                 CS_vals[j] = eos.Z_CS(pf[j])
+                BMCSL_vals[j] = eos.Z_CS(pf[j])
                 # rdf_SPT = ...
                 # rdf_PY = ...
-                vals = np.array([thorne_vals[j], enskog_vals[j], SPT_vals[j], PY_vals[j], CS_vals[j]])
+                vals = np.array([
+                    thorne_vals_SPT[j], 
+                    thorne_vals_PY[j], 
+                    thorne_vals_BMCSL[j], 
+                    enskog_vals_1[j], 
+                    enskog_vals_2[j], 
+                    SPT_vals[j], 
+                    PY_vals[j], 
+                    CS_vals[j],
+                    BMCSL_vals[j]
+                ])
 
                 save.insert_results_in_array(data, vals, 0, C, i*N+j, pf=pf[j])
 
     save.save_simulation_data(savename, data, 
-            data_name="thorne, enskog, SPT_EoS, PY_EoS, CS_EoS")
+            data_name="thorne_SPT, thorne_PY, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS")
 
 main()

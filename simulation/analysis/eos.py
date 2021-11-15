@@ -96,13 +96,25 @@ def Z_PY(sigma, x, rho):
     return Z
 
 
+def Z_BMCSL(sigma, x, rho):
+    xi = partial_pf(sigma, x, rho)
+    Z = (
+        1/xi(0) * (
+            xi(0)/(1-xi(3)) 
+            + 3*xi(1)*xi(2) / (1-xi(3))**2
+            + (3-xi(3))*xi(2)**3 / (1-xi(3))**3
+        )
+    )
+    return Z
+
+
 def rdf_PY(pf):
     """ Returns the thoretical radial distribution 
         function, as given in Pousaneh and de Wijn's paper.
 
     """
     xi = pf
-    return (1-xi/2)/(1-xi)**3
+    return (1-xi/2)/(1-xi)**2
 
 
 def rdf_SPT(sigma, x, rho, i, j):
@@ -133,3 +145,14 @@ def rdf_PY_mix(sigma, x, rho, i, j):
     )
     return g_ij
 
+
+def rdf_BMCSL(sigma, x, rho, i, j):
+    xi = partial_pf(sigma, x, rho)
+    g_ij = (
+        1/(1-xi(3))
+        + 3*xi(2)/(1-xi(3))**2 
+        * (sigma[i,i] * sigma[j,j]) / (sigma[i,i] + sigma[j,j])
+        + 2*xi(2)**2 / (1-xi(3))**3
+        * ((sigma[i,i] * sigma[j,j]) / (sigma[i,i] + sigma[j,j]))**2
+    )
+    return g_ij
