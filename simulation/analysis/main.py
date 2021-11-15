@@ -253,9 +253,9 @@ if "test" in sysargs:
     #tests.test_rdf()
     tests.test_thorne_for_different_rdfs()
 
-#filenames = files.get_all_filenames(path)
-#packing_list = files.find_all_packing_fractions(path)
-#filenames = files.sort_files(filenames, packing_list)
+filenames = files.get_all_filenames(path)
+packing_list = files.find_all_packing_fractions(path)
+filenames = files.sort_files(filenames, packing_list)
 
 if not "test" in sysargs:
     if "eos" in sysargs:

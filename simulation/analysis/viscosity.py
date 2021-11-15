@@ -19,7 +19,6 @@ def enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY):
     V_excl = 2*np.pi*(sigma**3)/3
     eta_0 = zero_density_viscosity(m, sigma, T, k)
     rho = 6*pf/np.pi
-    #rho = 3*pf/(4*np.pi*sigma**3)
     g = rdf(pf)
     eta = eta_0 * (
         1/g 

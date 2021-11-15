@@ -108,13 +108,25 @@ def Z_BMCSL(sigma, x, rho):
     return Z
 
 
+def rdf_CS(pf):
+    xi = pf
+    #return (1-xi/2)/(1-xi)**2
+    return 1/(1-xi) + 3/2*xi/(1-xi)**2 + 1/2*xi**2/(1-xi)**3
+
+
 def rdf_PY(pf):
     """ Returns the thoretical radial distribution 
         function, as given in Pousaneh and de Wijn's paper.
 
     """
     xi = pf
-    return (1-xi/2)/(1-xi)**2
+    return (1+xi/2)/(1-xi)**2
+
+
+def rdf_SPT_one(pf):
+    xi = pf
+    return 1/(1-xi) + 3/2*xi/(1-xi)**2 + 3/4*xi**2/(1-xi)**3
+
 
 
 def rdf_SPT(sigma, x, rho, i, j):

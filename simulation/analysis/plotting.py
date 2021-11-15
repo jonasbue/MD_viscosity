@@ -89,8 +89,11 @@ def plot_result_vs_enskog(
             error_list,
         )
         # Plot the Enskog equation
-        plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0), 
-                label=f"Enskog viscosity, sigma={sigma}"
+        plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY), 
+                label=f"Enskog viscosity, PY, sigma={sigma}"
+        )
+        plt.plot(pf, viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_SPT_one), 
+                label=f"Enskog viscosity, SPT, sigma={sigma}"
         )
         # Plot the theoretical viscosity
         thorne_eta_list = np.zeros_like(pf)
@@ -108,12 +111,31 @@ def plot_result_vs_enskog(
         # Divide by Enskog to get more readable plots
         plot_viscosity(
             packing_list,
-            eta_list/viscosity.enskog(packing_list, sigma, T, m),
+            eta_list/viscosity.enskog(packing_list, sigma, T, m, rdf=eos.rdf_PY),
             error_list/viscosity.enskog(packing_list, sigma, T, m),
-            label=f"Measured viscosity, sigma={sigma}"
-        )
+            label=f"Measured viscosity")
         # Plot the Enskog equation, which is one in this case.
-        plt.plot(pf, np.ones_like(pf))
+        plt.plot(pf, np.ones_like(pf), 
+            label="Enskog with PY rdf",
+            color="k"
+        )
+        plt.plot(pf, (
+                viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_SPT_one)
+                / viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY)
+            ),
+            label=f"Enskog with SPT rdf",
+            linestyle="-.",
+            color="m",
+        )
+        plt.plot(pf, (
+                viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_CS)
+                / viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY)
+            ),
+            label=f"Enskog with CS rdf",
+            linestyle="--",
+            color="r",
+        )
+        plt.ylim((0.8,1.4))
     plt.title(f"Viscosity, sigma={sigma}")
     plt.legend()
     plt.show()
@@ -180,7 +202,7 @@ def plot_viscosity(packing, eta, std_err=None, label=""):
         packing,
         eta,
         yerr = std_err,
-        fmt="o",
+        fmt="ko",
         label=label
     )
     plt.xlabel("Packing fraction")

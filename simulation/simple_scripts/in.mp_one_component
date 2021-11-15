@@ -59,11 +59,14 @@ log     ${LOG_FILE}
 # System-wide parameters
 variable PF         equal ${PACKING}    # Packing fraction of the system
 variable N          equal 1000          # Number of atoms
-variable RAND_SEED  equal 313           # Seed for random functions
 variable TEMP       equal 1.5           # Temperature
 variable TDAMP      equal 100.0         # Damping constant for thermostat 
                                         # determining how quickly the system 
                                         # relaxes to desired temperature.
+
+variable RAND_SEED_P  equal ${SEED_P}   # Seed for position.
+variable RAND_SEED_V  equal ${SEED_V}   # Seed for velocity.
+variable RAND_SEED_T  equal ${SEED_T}   # Seed for thermostat.
 
 # Parameters defining atoms and interactions
 variable ATOM_TYPES equal 1     # Number of atom types 
@@ -106,8 +109,8 @@ variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo o
 variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
 variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
 #variable V_TARGET          equal INF   # Target velocity of slab boundaries.
-variable CHUNK_WIDTH        equal 2*${LX}
-variable CHUNK_THICKNESS    equal 2*${LZ}/${CHUNK_NUMBER}
+variable CHUNK_WIDTH        equal 1
+variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER}
 
 # Number of steps between particle swaps:
 variable MOMENTUM_EXCHANGE_RATE equal 500   # NOTE: Momentum exchange 
@@ -125,7 +128,7 @@ variable STEPS_IN_AVERAGE   equal 2                 # Steps between entries in
 
 ## Strings
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
-variable THERMOSTAT string "temp/berendsen" # Berendsen thermostat
+variable THERMOSTAT string "temp/csvr"      # Berendsen thermostat
 
 # Make a dump of system:
 dump    DUMP all custom ${DUMP_STEPS} & 
@@ -144,9 +147,9 @@ atom_style  atomic
 region          REGION block -${LX} ${LX} -${LY} ${LY} -${LZ} ${LZ} units box
 
 create_box      ${ATOM_TYPES} REGION                # Create a box in REGION.
-create_atoms    1 random $N ${RAND_SEED} REGION     # Fill the box with atoms.
+create_atoms    1 random $N ${RAND_SEED_P} REGION     # Fill the box with atoms.
 mass            1 ${MASS}                           # Give the atoms mass.
-velocity        all create ${TEMP} ${RAND_SEED}     # Give the atoms random 
+velocity        all create ${TEMP} ${RAND_SEED_V}     # Give the atoms random 
                                                     # velocities, distributed 
                                                     # around one temperature.
 
@@ -172,7 +175,7 @@ minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL}
 # Fix the system in the microcanonical ensemble
 fix NVE_FIX all nve
 # Fix the temperature with a Berendsen thermostat
-fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP}
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP} ${RAND_SEED_T}
 
 thermo_style    custom step etotal pe ke temp press vol 
 thermo          ${THERMO_OUTPUT}        
@@ -193,7 +196,7 @@ fix MULLER_PLATHE all viscosity &
 # Compute chunk velocity.
 compute LAYERS all chunk/atom   &
     bin/3d                      &
-    z lower 0.01                &
+    z lower ${CHUNK_THICKNESS}  &
     x lower 1                   &
     y lower 1                   &
     units reduced
