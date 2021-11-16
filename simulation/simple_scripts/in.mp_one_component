@@ -107,7 +107,7 @@ variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo o
 # Müller-Plathe experiment parameters
 
 variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
-variable SWAP_NUMBER        equal 2     # Number of particles to swap every time.
+variable SWAP_NUMBER        equal 1     # Number of particles to swap every time.
 #variable V_TARGET          equal INF   # Target velocity of slab boundaries.
 variable CHUNK_WIDTH        equal 1
 variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER}
@@ -119,12 +119,12 @@ variable MOMENTUM_EXCHANGE_RATE equal 500   # NOTE: Momentum exchange
 
 
 # fix/ave sampling definitions
-variable AVERAGE_FREQUENCY  equal ${THERMO_OUTPUT}  # How often an average 
-                                                    # value is computed.
-variable VALUES_IN_AVERAGE  equal 100               # Number of values included 
-                                                    # in the averaging.
-variable STEPS_IN_AVERAGE   equal 2                 # Steps between entries in 
-                                                    # the average computation.
+variable NFREQ      equal 500   # How often an average 
+                                # value is computed.
+variable NREPEAT    equal 1     # Number of values included 
+                                # in the averaging.
+variable NEVERY     equal 1     # Steps between entries in 
+                                # the average computation.
 
 ## Strings
 variable POTENTIAL  string "mie/cut"        # Lennard-Jones potential
@@ -191,21 +191,19 @@ fix MULLER_PLATHE all viscosity &
     ${MOMENTUM_EXCHANGE_RATE}   &
     x z                         &
     ${CHUNK_NUMBER}             &
-    swap ${SWAP_NUMBER}         #vtarget ${V_TARGET}
+    swap ${SWAP_NUMBER}
 
 # Compute chunk velocity.
 compute LAYERS all chunk/atom   &
     bin/1d                      &
-    z ${CHUNK_THICKNESS}  &
-    #x lower 1                   &
-    #y lower 1                   &
+    z ${CHUNK_THICKNESS}        &
     units reduced
 
 # Calculate average chunk velocity, for later analysis in Python.
 fix VEL_PROFILE_FIX all ave/chunk   & 
-    ${STEPS_IN_AVERAGE}             &
-    ${VALUES_IN_AVERAGE}            &
-    ${AVERAGE_FREQUENCY}            &
+    ${NEVERY}                       &
+    ${NREPEAT}                      &
+    ${NFREQ}                        &
     LAYERS                          &
     vx                              &
     file ${FIX_FILE}

@@ -1,0 +1,158 @@
+\begin{tikzpicture}
+    \begin{groupplot}[
+        group style = {
+            group size=2 by 3,
+            horizontal sep=0.3cm,
+            vertical sep=0.3cm,
+            xticklabels at=edge bottom,
+            xlabels at=edge bottom,
+            ylabels at=edge left,
+        },
+        width=0.4\textwidth,
+        xlabel=Packing fraction,
+        scale only axis,
+        xmin=0,
+        xmax=0.49,
+    ]
+    \pgfplotsinvokeforeach{1.000e+01, 5.000e+02, 9.900e+02}{
+        \nextgroupplot [
+            yticklabel pos=left,
+            ylabel=$\eta$,
+            title style={
+                at={(0.5,0.9)},
+                anchor=north,
+            },
+            title={$N_2 = \num[round-mode=places, round-precision=1]{#1} N$}
+        ] \addplot+ [
+                only marks,
+                mark options = {black},
+                discard if not={N2}{#1},
+            ] plot[
+                error bars/.cd, y dir=both, y explicit
+            ] table[
+                x = pf,
+                y = thorne,
+                col sep = comma,
+                y error plus = error,
+                y error minus = error,
+            ]{data/visc_varying_fraction_equals.csv};
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={N2}{#1},
+                    dashed,
+                ] table[
+                    x = pf,
+                    y = thorne_SPT,
+                    col sep = comma,
+                ]{data/theory_varying_fraction_equals.csv};
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={N2}{#1},
+                    solid,
+                ] table[
+                    x = pf,
+                    y = thorne_PY,
+                    col sep = comma,
+                ]{data/theory_varying_fraction_equals.csv};
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={N2}{#1},
+                    dashdotted,
+                ] table[
+                    x = pf,
+                    y = thorne_BMCSL,
+                    col sep = comma,
+                ]{data/theory_varying_fraction_equals.csv};
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={N2}{#1},
+                    dotted,
+                ] table[
+                    x = pf,
+                    y = enskog_1,
+                    col sep = comma,
+                ]{data/theory_varying_fraction_equals.csv};
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={N2}{#1},
+                    dotted,
+                ] table[
+                    x = pf,
+                    y = enskog_2,
+                    col sep = comma,
+                ]{data/theory_varying_fraction_equals.csv};
+        \nextgroupplot [
+            ylabel = {$\eta/\eta_{\,Thorne}$},
+            yticklabel pos=right,
+            title style={
+                at={(0.5,0.9)},
+                anchor=north,
+            },
+            title={$N_2 = \num[round-mode=places, round-precision=1]{#1} N$}
+        ] \addplot+ [
+                only marks,
+                mark options = {black},
+                discard if not={N2}{#1},
+                solid,
+            ] plot[
+                error bars/.cd, y dir=both, y explicit
+            ] table[
+                x = pf,
+                y = thorne_PY_mix,
+                col sep = comma,
+                y error plus = error_thorne_PY_mix,
+                y error minus = error_thorne_PY_mix,
+            ]{data/visc_norm_varying_fraction_equals.csv};
+            \addplot+ [
+                color=black,
+                mark=none,
+                discard if not={N2}{#1},
+                dashed,
+            ] table[
+                x = pf,
+                y expr = \thisrow{thorne_SPT}/\thisrow{thorne_PY},
+                col sep = comma,
+            ]{data/theory_varying_fraction_equals.csv};
+            \addplot+ [
+                color=black,
+                mark=none,
+                discard if not={N2}{#1},
+                dashdotted,
+            ] table[
+                x = pf,
+                y expr = \thisrow{thorne_BMCSL}/\thisrow{thorne_PY},
+                col sep = comma,
+            ]{data/theory_varying_fraction_equals.csv};
+            \addplot+ [
+                color=black,
+                mark=none,
+                discard if not={N2}{#1},
+                dotted,
+            ] table[
+                x = pf,
+                y expr = \thisrow{enskog_1}/\thisrow{thorne_PY},
+                col sep = comma,
+            ]{data/theory_varying_fraction_equals.csv};
+            \addplot+ [
+                color=black,
+                mark=none,
+                discard if not={N2}{#1},
+                solid,
+            ] table[
+                x = pf,
+                y expr = \thisrow{enskog_2}/\thisrow{thorne_PY},
+                col sep = comma,
+            ]{data/theory_varying_fraction_equals.csv};
+            \addplot [
+                domain=0:0.5,
+                color=black,
+            ]{1};
+    }
+    \end{groupplot}
+\end{tikzpicture}
+

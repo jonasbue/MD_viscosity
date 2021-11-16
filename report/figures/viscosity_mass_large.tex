@@ -12,7 +12,7 @@
         xlabel=Packing fraction,
         scale only axis,
         xmin=0,
-        xmax=0.47,
+        xmax=0.46,
     ]
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
@@ -57,7 +57,7 @@
                 solid,
             ] table[
                 x = pf,
-                y = thorne_CS,
+                y = thorne_PY,
                 col sep = comma,
             ]{data/theory_varying_mass_large.csv};
             \addlegendentry{$\eta_{\text{PY}}$};
@@ -113,10 +113,10 @@
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = thorne_PY_mix,
+                y = thorne_BMCSL,
                 col sep = comma,
-                y error plus = error_thorne_PY_mix,
-                y error minus = error_thorne_PY_mix,
+                y error plus = error_thorne_BMCSL,
+                y error minus = error_thorne_BMCSL,
             ]{data/visc_norm_varying_mass_large.csv};
             \addplot [
                 domain=0:0.5,
@@ -130,7 +130,7 @@
                 dashed,
             ] table[
                 x = pf,
-                y expr = \thisrow{thorne_SPT}/\thisrow{thorne_PY},
+                y expr = \thisrow{thorne_SPT}/\thisrow{thorne_BMCSL},
                 col sep = comma,
             ]{data/theory_varying_mass_large.csv};
             \addplot+ [
@@ -140,7 +140,7 @@
                 dashdotted,
             ] table[
                 x = pf,
-                y expr = \thisrow{thorne_BMCSL}/\thisrow{thorne_PY},
+                y expr = \thisrow{thorne_BMCSL}/\thisrow{thorne_BMCSL},
                 col sep = comma,
             ]{data/theory_varying_mass_large.csv};
             \addplot+ [
@@ -151,18 +151,18 @@
                 line width=1pt,
             ] table[
                 x = pf,
-                y expr = \thisrow{enskog_1}/\thisrow{thorne_PY},
+                y expr = \thisrow{enskog_1}/\thisrow{thorne_BMCSL},
                 col sep = comma,
             ]{data/theory_varying_mass_large.csv};
             \addplot+ [
                 color=black,
                 mark=none,
                 discard if not={m2}{#1},
-                dotted,
+                solid,
                 line width=1pt,
             ] table[
                 x = pf,
-                y expr = \thisrow{enskog_2}/\thisrow{thorne_PY},
+                y expr = \thisrow{thorne_PY}/\thisrow{thorne_BMCSL},
                 col sep = comma,
             ]{data/theory_varying_mass_large.csv};
     }

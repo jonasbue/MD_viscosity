@@ -29,18 +29,19 @@ if "debug" in sysargs:
 def main():
     N = 2
     cut_fraction = 0.9
-    per_time=True
+    per_time=False
 
-    #data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
-    data_path_list = ["large_data/data/varying_mass_large", "large_data/data/varying_fraction_large"]
-    save_path_list = ["varying_mass_large", "varying_fraction_large"]
+    data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
+    #data_path_list = ["data/varying_fraction_equals/varying_fraction_equals"]
+    #save_path_list = ["varying_fraction_equals"]
     #data_path_list = ["data/run_test/varying_mass"]
     #save_path_list = ["run_test_per_time"]
     #data_path_list = ["data/const_temp"]
     #save_path_list = ["const_temp"]
 
     for path, savename in zip(data_path_list, save_path_list):
-        files.all_files_to_csv(path)
+        if "convert" in sysargs:
+            files.all_files_to_csv(path)
         save_dir = "../report/data/"
         filenames = files.get_all_filenames(path)
         packing_list = files.find_all_packing_fractions(path)
@@ -146,7 +147,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
 
 def save_theory(path, filenames, savename, N=50):
     pf_experiment = files.find_all_packing_fractions(path)
-    data_shape = (int(len(filenames)/len(pf_experiment))*N, 16)
+    data_shape = (int(len(filenames)/len(pf_experiment))*N+N, 16)
     data = np.zeros(data_shape)
     pf = np.linspace(0,0.5,N)
     included_masses = np.empty(0)
