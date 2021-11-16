@@ -117,7 +117,7 @@ def get_value_from_filename(filename, value_name, value_key, next_name):
     return value, value_name
 
 def get_packing_from_filename(filename):
-    pf_key = "eta_"
+    pf_key = "pf_"
     end_key = ".lammps"
     pf_index = filename.find(pf_key) + len(pf_key)
     end_index = filename.find(end_key)

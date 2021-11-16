@@ -12,7 +12,7 @@
         xlabel=Packing fraction,
         scale only axis,
         xmin=0,
-        xmax=0.46,
+        xmax=0.47,
     ]
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
@@ -57,7 +57,7 @@
                 solid,
             ] table[
                 x = pf,
-                y = thorne_PY,
+                y = thorne_CS,
                 col sep = comma,
             ]{data/theory_varying_mass_large.csv};
             \addlegendentry{$\eta_{\text{PY}}$};

@@ -111,7 +111,7 @@ def plot_result_vs_enskog(
         # Divide by Enskog to get more readable plots
         plot_viscosity(
             packing_list,
-            eta_list/viscosity.enskog(packing_list, sigma, T, m, rdf=eos.rdf_PY),
+            eta_list/viscosity.enskog(packing_list, sigma, T, m, rdf=eos.rdf_CS),
             error_list/viscosity.enskog(packing_list, sigma, T, m),
             label=f"Measured viscosity")
         # Plot the Enskog equation, which is one in this case.
@@ -119,22 +119,22 @@ def plot_result_vs_enskog(
             label="Enskog with PY rdf",
             color="k"
         )
-        plt.plot(pf, (
-                viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_SPT_one)
-                / viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY)
-            ),
-            label=f"Enskog with SPT rdf",
-            linestyle="-.",
-            color="m",
-        )
-        plt.plot(pf, (
-                viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_CS)
-                / viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY)
-            ),
-            label=f"Enskog with CS rdf",
-            linestyle="--",
-            color="r",
-        )
+        #plt.plot(pf, (
+        #        viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_SPT_one)
+        #        / viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_CS)
+        #    ),
+        #    label=f"Enskog with SPT rdf",
+        #    linestyle="-.",
+        #    color="m",
+        #)
+        #plt.plot(pf, (
+        #        viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY)
+        #        / viscosity.enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_CS)
+        #    ),
+        #    label=f"Enskog with CS rdf",
+        #    linestyle="--",
+        #    color="r",
+        #)
         plt.ylim((0.8,1.4))
     plt.title(f"Viscosity, sigma={sigma}")
     plt.legend()

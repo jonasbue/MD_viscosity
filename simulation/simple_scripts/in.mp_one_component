@@ -195,10 +195,10 @@ fix MULLER_PLATHE all viscosity &
 
 # Compute chunk velocity.
 compute LAYERS all chunk/atom   &
-    bin/3d                      &
-    z lower ${CHUNK_THICKNESS}  &
-    x lower 1                   &
-    y lower 1                   &
+    bin/1d                      &
+    z ${CHUNK_THICKNESS}  &
+    #x lower 1                   &
+    #y lower 1                   &
     units reduced
 
 # Calculate average chunk velocity, for later analysis in Python.

@@ -127,14 +127,16 @@ def plot_viscosity(
             t = np.linspace(C["RUN_TIME"]*cut_fraction, C["RUN_TIME"], len(eta))
             plt.plot(t, eta, label="Viscosity")
             markers, caps, bars = plt.errorbar(
-                t[::5],
-                eta[::5],
-                yerr = eta_err[::5],
-                fmt="yo",
+                t,
+                eta,
+                yerr = 0*eta_err,
+                fmt="k-",
                 ecolor="b"
             )
             plt.title(f"Measured viscosity vs time, packing={C['PF']}")
             plt.legend()
+            #plt.ylim(0.85,0.9)
+            plt.xlim((1000,4000))
             plt.show()
     if mix:
         plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C, relative=True)
@@ -230,7 +232,7 @@ mix=True
 N = 1
 cut_fraction = 0.9
 if "mix" in sysargs:
-    path = "new_data/varying_mass"
+    path = "data/varying_mass"
     N = 2
 if "equal-mix" in sysargs:
     path = "data/equal_two_component"
@@ -264,4 +266,4 @@ if not "test" in sysargs:
         plot_viscosity(cut_fraction, path, filenames)
     if "plot-vs-time" in sysargs:
         cut_fraction = 0.01
-        plot_viscosity(cut_fraction, path, filenames, plot=True, plot_vs_time=True)
+        plot_viscosity(cut_fraction, path, filenames, plot_vs_time=True)

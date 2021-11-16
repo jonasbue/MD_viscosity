@@ -28,8 +28,8 @@ if "debug" in sysargs:
 ## Rename to convert_something_something
 def main():
     N = 2
-    cut_fraction = 0.3
-    per_time=False
+    cut_fraction = 0.9
+    per_time=True
 
     #data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
     data_path_list = ["large_data/data/varying_mass_large", "large_data/data/varying_fraction_large"]
@@ -40,7 +40,7 @@ def main():
     #save_path_list = ["const_temp"]
 
     for path, savename in zip(data_path_list, save_path_list):
-        #files.all_files_to_csv(path)
+        files.all_files_to_csv(path)
         save_dir = "../report/data/"
         filenames = files.get_all_filenames(path)
         packing_list = files.find_all_packing_fractions(path)
@@ -220,6 +220,8 @@ def save_theory(path, filenames, savename, N=50):
                 save.insert_results_in_array(data, vals, 0, C, i*N+j, pf=pf[j])
 
     save.save_simulation_data(savename, data, 
-            data_name="thorne_SPT, thorne_PY, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS")
+        data_name="thorne_SPT, thorne_PY, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS",
+        error_name=""
+    )
 
 main()

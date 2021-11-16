@@ -63,6 +63,8 @@ def cut_time(cut_fraction, arr):
     """ Removes the first values of arr,
         to remove early values from the analysis.
     """
+    if np.isscalar(arr):
+        return arr
     cut = int(cut_fraction*len(arr))
     if "verbose" in sys.argv:
         print(f"Cutting the first {cut} values.")

@@ -31,8 +31,8 @@
 #   - HEAVY_MASS:       The mass of the heavy particle.
 #   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
 
-variable    EQUILLIBRATION_DURATION     equal 10000 # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 20000 # Name -> RUN_TIME
+variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 4000  # Name -> RUN_TIME
 variable    TOTAL_NUMBER                equal 1000  # Name -> N
 
 variable    HEAVY_NUMBER    equal ${TOTAL_NUMBER}*${HEAVY_FRACTION}
@@ -173,14 +173,10 @@ region          REGION block -${LX} ${LX} -${LY} ${LY} -${LZ} ${LZ} units box
 
 create_box      ${ATOM_TYPES} REGION                    # Create a box in REGION.
 create_atoms    1 random ${N_L} ${RAND_SEED_L} REGION   # Fill the box with atoms,
-#group           LIGHT region REGION                    # Add all atoms to a group.
-create_atoms    2 random ${N_H} ${RAND_SEED_H} REGION   # first light, then heavy.
-#group           HEAVY subtract all LIGHT               # All atoms not in group
-                                                        # LIGHT are heavy.
+create_atoms    2 random ${N_H} ${RAND_SEED_H} REGION
 
-mass            1 ${MASS_L}                         # Give the light atoms mass.
-mass            2 ${MASS_H}                         # Give the heavy atoms mass.
-
+mass            1 ${MASS_L}     # Give the light atoms mass.
+mass            2 ${MASS_H}     # Give the heavy atoms mass.
 
 # Give velocities after moving the atoms, to ensure correct temperature.
 velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
