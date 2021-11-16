@@ -22,8 +22,8 @@ $ lmp -in filename
 $ ovito dump.lammps
 
 TODO:
-x Plot radial distributuion functions and equations of state for mixtures.
-x Calculate viscosity for mixtures.
-- Debug functions
-- Run simulations for different mixtures.
-- Compare results to Thorne equation and the EoS
+- Clean up save functions. 
+  * They should save measured values along with theoretical 
+    values, so the division can be done in pgfplots.
+- Clean up figures
+  * It should be easy to make a new for loop.
