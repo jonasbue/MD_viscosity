@@ -28,14 +28,15 @@ if "debug" in sysargs:
 ## Rename to convert_something_something
 def main():
     N = 2
-    cut_fraction = 0.9
+    cut_fraction = 0.7
     per_time=False
 
-    data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
+    #data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
+    #save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
     #data_path_list = ["data/varying_fraction_equals/varying_fraction_equals"]
     #save_path_list = ["varying_fraction_equals"]
-    #data_path_list = ["data/run_test/varying_mass"]
-    #save_path_list = ["run_test_per_time"]
+    data_path_list = ["large_data/data/varying_mass_large"]
+    save_path_list = ["varying_mass"]
     #data_path_list = ["data/const_temp"]
     #save_path_list = ["const_temp"]
 
@@ -48,21 +49,17 @@ def main():
         filenames = files.sort_files(filenames, packing_list)
 
         save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
-        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_norm_{savename}.csv", normalize=True, per_time=per_time)
-
         save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
-        save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
+        #save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
 
 
-def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, normalize=False):
-    data = np.zeros((len(filenames),9))
+def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
     rdf_list = [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
-    error_name="error"
-    data_name="thorne"
-    if normalize:
-        data = np.zeros((len(filenames),11+2*len(rdf_list)))
+    one_comp_rdf_list = [eos.rdf_CS, eos.rdf_PY]
+    columns = len(save.get_system_config()) + 2 + len(rdf_list) + 2*len(one_comp_rdf_list)
+    data = np.zeros((len(filenames),columns))
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="train")
+        utils.status_bar(i, len(filenames), fmt="percent")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
@@ -73,36 +70,43 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, norm
             log_name, fix_name, cut_fraction, per_time
         )
         eta = np.mean(eta)
+        print(eta_err)
         error = np.mean(eta_err)
+        print(eta_err)
         if per_time:
             error = np.amax(np.abs(eta_err))
 
-        if normalize:
-            thorne_values = np.zeros(len(rdf_list))
-            for (j, rdf) in enumerate(rdf_list):
-                thorne_values[j] = viscosity.get_thorne_from_C(C, rdf)
-            enskog_value = viscosity.get_enskog_from_C(C)
+        thorne_values = np.zeros(len(rdf_list))
+        enskog_values = np.zeros((len(one_comp_rdf_list),2))
+        for (j, rdf) in enumerate(rdf_list):
+            thorne_values[j] = viscosity.get_thorne_from_C(C, rdf)
+        for (j, rdf) in enumerate(one_comp_rdf_list):
+            enskog_values[j] = viscosity.get_enskog_from_C(C, rdf)
 
-            values = np.array([eta/thorne_values])
-            values = np.append(values, eta/enskog_value)
-            error = np.array([error/thorne_values])
-            error = np.append(error, error/enskog_value)
+        values = np.array([eta])
+        values = np.append(values, error)
+        values = np.append(values, thorne_values)
+        values = np.append(values, enskog_values[:,0])
+        values = np.append(values, enskog_values[:,1])
 
-            save.insert_results_in_array(data, values, error, C, i)
+        save.insert_results_in_array(data, values, C, i)
 
-            data_name = "".join([f"thorne_{r.__name__[4:]}, " for r in rdf_list])
-            error_name = "".join([f"error_thorne_{r.__name__[4:]}, " for r in rdf_list])
-            error_name = error_name+"error_enskog"
-            data_name = data_name+"enskog"
-        else:
-            save.insert_results_in_array(data, np.mean(eta), error, C, i)
+        data_name = "viscosity, error"
+        data_name += "".join(
+            [f", thorne_{r.__name__[4:]}" for r in rdf_list])
+        data_name += "".join(
+            [f", enskog1_{r.__name__[4:]}" for r in one_comp_rdf_list])
+        data_name += "".join(
+            [f", enskog2_{r.__name__[4:]}" for r in one_comp_rdf_list])
     print("")
-    save.save_simulation_data(
-        savename, data, data_name=data_name, error_name=error_name)
+    save.save_simulation_data(savename, data, data_name=data_name)
 
 
 def save_eos(path, filenames, cut_fraction, number_of_components, savename):
-    data = np.zeros((len(filenames), 15))
+    mix_eos_list = [eos.Z_SPT, eos.Z_PY, eos.Z_BMCSL]
+    one_eos_list = [eos.Z_CS]
+    columns = len(save.get_system_config()) + 2 + len(mix_eos_list) + len(one_eos_list)
+    data = np.zeros((len(filenames), columns))
     for (i, f) in enumerate(filenames):
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
@@ -129,23 +133,29 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
         Z = eos.Z_measured_mix(p, rho, T)
 
-        # Compute theoretical values, and normalize by them
-        spt = eos.Z_SPT(viscosity.get_sigma(sigma_list), x, rho)
-        py = eos.Z_PY(viscosity.get_sigma(sigma_list), x, rho)
-        cs = eos.Z_CS(C["PF"])
+        mix_eos_vals = np.zeros(len(mix_eos_list))
+        one_eos_vals = np.zeros(len(one_eos_list))
+        for (j, eq) in enumerate(mix_eos_list):
+            mix_eos_vals[j] = eq(viscosity.get_sigma(sigma_list), x, rho)
+        for (j, eq) in enumerate(one_eos_list):
+            one_eos_vals[j] = eq(C["PF"])
+            
         err = 0.0 # TODO: Compute this
-        vals = np.array([Z, Z/spt, Z/py, Z/cs])
-        errors = np.array([err, err/spt, err/py, err/cs])
+        values = np.array([Z, err])
+        values = np.append(values, mix_eos_vals)
+        values = np.append(values, one_eos_vals)
 
-        save.insert_results_in_array(data, vals, errors, C, i)
-    save.save_simulation_data(
-            savename, 
-            data, 
-            data_name="Z, Z_per_SPT, Z_per_PY, Z_per_CS",
-            error_name="error, error_per_SPT, error_per_PY, error_per_CS, error_per_Enskog")
+        save.insert_results_in_array(data, values, C, i)
+        data_name = "Z, error"
+        data_name += "".join(
+            [f", Z_{r.__name__[2:]}" for r in mix_eos_list])
+        data_name += "".join(
+            [f", Z_{r.__name__[2:]}" for r in one_eos_list])
+    save.save_simulation_data(savename, data, data_name=data_name)
 
 
 def save_theory(path, filenames, savename, N=50):
+    """ This function is now obsolete. """
     pf_experiment = files.find_all_packing_fractions(path)
     data_shape = (int(len(filenames)/len(pf_experiment))*N+N, 16)
     data = np.zeros(data_shape)

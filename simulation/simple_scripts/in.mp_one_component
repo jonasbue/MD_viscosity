@@ -40,7 +40,7 @@ variable SIMULATION_DURATION        equal 4000  # Name -> RUN_TIME
 # The packing fraction should be given when running
 # the input script from the command line, i.e.,
 # lmp -in in.script -var PACKING 0.5
-variable FILENAME   string eta_${PACKING}                   # Filename template
+variable FILENAME   string pf_${PACKING}                   # Filename template
 variable DIR        string data/one_component/              # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
@@ -196,7 +196,7 @@ fix MULLER_PLATHE all viscosity &
 # Compute chunk velocity.
 compute LAYERS all chunk/atom   &
     bin/1d                      &
-    z ${CHUNK_THICKNESS}        &
+    z lower ${CHUNK_THICKNESS}  &
     units reduced
 
 # Calculate average chunk velocity, for later analysis in Python.

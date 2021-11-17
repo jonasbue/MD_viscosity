@@ -45,6 +45,7 @@ def sort_files(filenames, packing_fractions):
     files = np.array([fix, log], dtype=str)
     return files.transpose()
 
+
 def file_to_csv(filename, filetype):
     """ Converts a file to a csv, depending on its type.
         This is simply a wrapper of the functions in 
@@ -102,6 +103,7 @@ def read_filename(filename):
     for name in value_identifiers:
         get_value_from_filename(filename, name, name, next_name)
     
+
 def get_value_from_filename(filename, value_name, value_key, next_name):
     value_index = filename.find(value_name) + len(value_name)
     next_index = filename.find(next_name)

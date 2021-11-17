@@ -23,6 +23,7 @@ dump.*.lammps
 simulation/analysis/__pycache__/*
 simulation/data/*
 simulation/large_data/*
+simulation/data_old/*
 simulation/berendsen_data/*
 
 *.png

@@ -14,6 +14,7 @@
         xmin=0,
         xmax=0.46,
     ]
+    \newcommand{\norm}{enskog1_CS}
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
             yticklabel pos=left,
@@ -25,7 +26,8 @@
             title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
             legend to name={legend},
             legend style={at={(1.01, 1.02)}, anchor=south, legend columns=5, column sep=0.2cm},
-        ] \addplot+ [
+        ] 
+        \addplot+ [
                 only marks,
                 mark options = {black},
                 discard if not={m2}{#1},
@@ -33,69 +35,24 @@
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = thorne,
+                y = viscosity,
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
-            ]{data/visc_varying_mass_large.csv};
+            ]{data/visc_varying_mass.csv};
             \addlegendentry{Measured value};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                dashed,
-            ] table[
-                x = pf,
-                y = thorne_SPT,
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addlegendentry{$\eta_{\text{SPT}}$};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                solid,
-            ] table[
-                x = pf,
-                y = thorne_PY,
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addlegendentry{$\eta_{\text{PY}}$};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                dashdotted,
-            ] table[
-                x = pf,
-                y = thorne_BMCSL,
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addlegendentry{$\eta_{\text{MBCSL}}$};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                dotted,
-                line width=1pt,
-            ] table[
-                x = pf,
-                y = enskog_1,
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addlegendentry{$\eta_{\text{Enskog,1}}$};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                dotted,
-                line width=1pt,
-            ] table[
-                x = pf,
-                y = enskog_2,
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addlegendentry{$\eta_{\text{Enskog,2}}$};
+        \pgfplotsforeachungrouped \eos in {\norm, thorne_SPT, thorne_PY_mix, thorne_BMCSL}{
+                \addplot+ [
+                    color=black,
+                    mark=none,
+                    discard if not={m2}{#1},
+                ] table[
+                    x = pf,
+                    y = \eos,
+                    col sep = comma,
+                ]{data/visc_varying_mass.csv};
+                \addlegendentry{$\eta$};
+            }
         \nextgroupplot [
             ylabel = {$\eta/\eta_{\,Thorne}$},
             yticklabel pos=right,
@@ -113,58 +70,22 @@
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = thorne_BMCSL,
+                y expr = \thisrow{viscosity}/\thisrow{\norm},
                 col sep = comma,
-                y error plus = error_thorne_BMCSL,
-                y error minus = error_thorne_BMCSL,
-            ]{data/visc_norm_varying_mass_large.csv};
-            \addplot [
-                domain=0:0.5,
-                color=black,
-                solid,
-            ]{1};
+                y error plus expr = \thisrow{error}/\thisrow{\norm},
+                y error minus expr = \thisrow{error}/\thisrow{\norm},
+            ]{data/visc_varying_mass.csv};
+        \pgfplotsforeachungrouped \eos in {\norm, thorne_SPT, thorne_PY_mix, thorne_BMCSL}{
             \addplot+ [
                 color=black,
                 mark=none,
                 discard if not={m2}{#1},
-                dashed,
             ] table[
                 x = pf,
-                y expr = \thisrow{thorne_SPT}/\thisrow{thorne_BMCSL},
+                y expr = \thisrow{\eos}/\thisrow{\norm},
                 col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                dashdotted,
-            ] table[
-                x = pf,
-                y expr = \thisrow{thorne_BMCSL}/\thisrow{thorne_BMCSL},
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                dotted,
-                line width=1pt,
-            ] table[
-                x = pf,
-                y expr = \thisrow{enskog_1}/\thisrow{thorne_BMCSL},
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
-            \addplot+ [
-                color=black,
-                mark=none,
-                discard if not={m2}{#1},
-                solid,
-                line width=1pt,
-            ] table[
-                x = pf,
-                y expr = \thisrow{thorne_PY}/\thisrow{thorne_BMCSL},
-                col sep = comma,
-            ]{data/theory_varying_mass_large.csv};
+            ]{data/visc_varying_mass.csv};
+        }
     }
     \end{groupplot}
 \end{tikzpicture}

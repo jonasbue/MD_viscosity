@@ -1,6 +1,6 @@
 #!/bin/zsh
 dir="run_test"
-d="$HOME/Dokumenter/project/simulation/data/$dir"
+d="$HOME/Dokumenter/skole/project/simulation/data/$dir"
 
 for x in 0.5
 do

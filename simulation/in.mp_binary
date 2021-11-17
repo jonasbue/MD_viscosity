@@ -58,7 +58,7 @@ variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename t
 variable DIR        string data/${DIRECTORY}/               # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
-variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps  # Fix file
+variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps     # Fix file
 
 ### Write out data to logfile ###
 log ${LOG_FILE}
@@ -231,7 +231,7 @@ fix MULLER_PLATHE all viscosity &
 # Compute chunk velocity.
 compute LAYERS all chunk/atom   &
     bin/1d                      &
-    z ${CHUNK_THICKNESS}        &
+    z lower ${CHUNK_THICKNESS}  &
     units reduced
 
 # Calculate average chunk velocity, for later analysis in Python.
