@@ -43,6 +43,7 @@ def sort_files(filenames, packing_fractions):
                     elif filetype == "log":
                         log.append(f)
     files = np.array([fix, log], dtype=str)
+    files = np.sort(files)
     return files.transpose()
 
 
@@ -119,12 +120,41 @@ def get_value_from_filename(filename, value_name, value_key, next_name):
     return value, value_name
 
 def get_packing_from_filename(filename):
-    pf_key = "pf_"
-    end_key = ".lammps"
-    pf_index = filename.find(pf_key) + len(pf_key)
-    end_index = filename.find(end_key)
-    pf_val = float(filename[pf_index:end_index])
+    start = "pf_"
+    end = ".lammps"
+    pf_val = get_parameter_from_filename(filename, start, end)
     return pf_val
+
+
+def get_mass_from_filename(filename):
+    start = "mass_1_"
+    end = "_pf"
+    m = get_parameter_from_filename(filename, start, end)
+    return m
+
+
+def get_fraction_from_filename(filename):
+    start = "N_"
+    end = "_"
+    N1 = get_parameter_from_filename(filename, start, end)
+    start = "N_"+str(int(N1))
+    end = "_"
+    N2 = get_parameter_from_filename(filename, start, end)
+    return N1, N2
+
+
+def get_fraction_from_filename(filename):
+    start = "sigma_"
+    end = "_mass"
+    sigma = get_parameter_from_filename(filename, start, end)
+    return sigma 
+
+
+def get_parameter_from_filename(filename, start_key, end_key):
+    start_index = filename.find(start_key) + len(start_key)
+    end_index = filename.find(end_key, start_index)
+    val = float(filename[start_index:end_index])
+    return val
 
 
 def find_all_packing_fractions(directory):

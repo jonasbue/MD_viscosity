@@ -111,6 +111,12 @@ def find_viscosity_from_file(
     N_measure_eq = int(eq_steps/constants["THERMO_OUTPUT"])
     N_measure_sim = int(sim_steps/constants["THERMO_OUTPUT"])
 
+    # Have t contain time values instead of 
+    # time steps, and make it start at t=0.
+    t = log_vals[variable_list.index("t")][N_measure_eq+4:]
+    t = t*dt
+    t = t - t0
+
     # Extract total transferred momentum
     # The +4 is to remove some extra steps
     Ptot = log_vals[variable_list.index("Px")][N_measure_eq+4:] 
@@ -129,12 +135,6 @@ def find_viscosity_from_file(
         fix_variable_list
     )
     N_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
-
-    # Have t contain time values instead of 
-    # time steps, and make it start at t=0.
-    t = fix_vals[fix_variable_list.index("t_fix")]
-    t = t*dt
-    t = t - t[0]
 
     # Check that chunk number is correct.
     tests.assert_chunk_number(N_chunks, constants)

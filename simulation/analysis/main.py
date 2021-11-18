@@ -230,9 +230,9 @@ per_time=False
 savedata=False
 mix=True
 N = 1
-cut_fraction = 0.9
+cut_fraction = 0.7
 if "mix" in sysargs:
-    path = "data/varying_mass"
+    path = "data/varying_sigma"
     N = 2
 if "equal-mix" in sysargs:
     path = "data/equal_two_component"

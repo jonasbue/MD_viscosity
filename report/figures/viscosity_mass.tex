@@ -2,8 +2,8 @@
     \begin{groupplot}[
         group style = {
             group size=2 by 3,
-            horizontal sep=0.3cm,
-            vertical sep=0.3cm,
+            horizontal sep=0.5cm,
+            vertical sep=1.0cm,
             xticklabels at=edge bottom,
             xlabels at=edge bottom,
             ylabels at=edge left,
@@ -12,8 +12,9 @@
         xlabel=Packing fraction,
         scale only axis,
         xmin=0,
-        xmax=0.45,
+        xmax=0.48,
     ]
+    \newcommand{\norm}{thorne_PY_mix}
     \pgfplotsinvokeforeach{1.000e+00, 1.500e+00, 2.000e+00}{
         \nextgroupplot [
             yticklabel pos=left,
@@ -22,8 +23,11 @@
                 at={(0.5,0.9)},
                 anchor=north,
             },
-            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
-        ] \addplot+ [
+            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$},
+            legend to name,
+            legend style={at={(1.01, 1.02)}, anchor=south, legend columns=5, column sep=0.2cm},
+        ] 
+        \addplot+ [
                 only marks,
                 mark options = {black},
                 discard if not={m2}{#1},
@@ -31,30 +35,25 @@
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = thorne,
+                y = viscosity,
                 col sep = comma,
                 y error plus = error,
                 y error minus = error,
             ]{data/visc_varying_mass.csv};
+            \addlegendentry{Measured value};
+        \pgfplotsforeachungrouped \eos in {thorne_SPT, thorne_PY, thorne_BMCSL}{
                 \addplot+ [
                     color=black,
                     mark=none,
-                    discard if not={m2}{#1},
+                    %discard if not={m2}{#1},
+                    discard if not={N2}{5.000e+02},
                 ] table[
                     x = pf,
-                    y = thorne,
+                    y = \eos,
                     col sep = comma,
-                ]{data/theory_varying_mass.csv};
-                \addplot+ [
-                    color=black,
-                    mark=none,
-                    discard if not={m2}{#1},
-                    dashed,
-                ] table[
-                    x = pf,
-                    y = enskog,
-                    col sep = comma,
-                ]{data/theory_varying_mass.csv};
+                ]{data/theory_varying_fraction.csv};
+                \addlegendentry{$\eta$};
+            }
         \nextgroupplot [
             ylabel = {$\eta/\eta_{\,Thorne}$},
             yticklabel pos=right,
@@ -63,7 +62,8 @@
                 anchor=north,
             },
             title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
-        ] \addplot+ [
+        ] 
+        \addplot+ [
                 only marks,
                 mark options = {black},
                 discard if not={m2}{#1},
@@ -71,15 +71,23 @@
                 error bars/.cd, y dir=both, y explicit
             ] table[
                 x = pf,
-                y = thorne,
+                y expr = \thisrow{viscosity}/\thisrow{\norm},
                 col sep = comma,
-                y error plus = error_thorne,
-                y error minus = error_thorne,
-            ]{data/visc_norm_varying_mass.csv};
-            \addplot [
-                domain=0:0.5,
+                y error plus expr = \thisrow{error}/\thisrow{\norm},
+                y error minus expr = \thisrow{error}/\thisrow{\norm},
+            ]{data/visc_varying_mass.csv};
+        \pgfplotsforeachungrouped \eos in {thorne_SPT, thorne_PY}{
+            \addplot+ [
                 color=black,
-            ]{1};
+                mark=none,
+                %discard if not={m2}{#1},
+                discard if not={N2}{5.000e+02},
+            ] table[
+                x = pf,
+                y expr = \thisrow{\eos}/\thisrow{thorne_PY},
+                col sep = comma,
+            ]{data/theory_varying_fraction.csv};
+        }
     }
     \end{groupplot}
 \end{tikzpicture}
