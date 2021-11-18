@@ -1,0 +1,47 @@
+\begin{tikzpicture}
+    \begin{axis}[
+        title=Potentials,
+        xlabel=$r$,
+        ylabel=$U$,
+        width=0.9\textwidth,
+        ymax=1.4,
+        xmin=0.98,
+        xmax=1.07,
+        cycle list = {
+            color=blue,     style=dashed,   \\%
+            color=black,    style=solid,    \\%
+            color=red,      style=dotted,   line width=0.9pt,\\%
+}
+    ]
+        % HARD SPHERE:
+        \addplot+ [
+            domain=0:1.1,
+            mark=none,
+            ] coordinates {(1,0) (1,2)};
+            \addlegendentry{Hard Sphere}
+        % MIE:
+        \addplot+ [
+            domain=0.99:1.0204,
+            ]{50*(50/49)^49 * ((1/x)^50 - (1/x)^49) + 1.0};
+            \addlegendentry{Mie (50, 49)}
+        % LENNARD-JONES
+        \addplot+ [
+            domain=0.98:1.122,
+        ]{4*((1/x)^12 - (1/x)^6) + 1};
+        \addlegendentry{Lennard-Jones}
+        % HARD SPHERE:
+        \addplot+ [
+            domain=1:1.1,
+            mark=none,
+        ] {0};
+        % MIE:
+        \addplot+ [
+            color=black,
+            domain=1.0204:1.1,
+        ]{0};
+        % LENNARD-JONES
+        \addplot+ [
+            domain=1.122:1.2,
+        ]{0};
+    \end{axis}
+\end{tikzpicture}

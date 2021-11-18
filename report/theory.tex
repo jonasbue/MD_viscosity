@@ -248,12 +248,11 @@ If the attractive part,
 $\left[- \left(\frac{\sigma}{r}\right)^{6}\right]$
 in equation \eqref{eq:lennard_jones_potential} is removed from the potential, 
 then $u_{\text{LJ}}(r)$ 
-can represent purely repulsive interactions.
-This is done by shifting the potential
-%The repulsive part of the Mie potential can be isolated by shifting it 
-upwards by its minimal value $\epsilon$ and cutting it off there. 
-Thus, the potential is excactly zero once it has reached its minimum.
-The resulting potential
+can represent purely repulsive interactions. This is done 
+by shifting the potential upwards by its minimal value 
+$\epsilon$ and cutting it off there. Thus, the potential 
+is excactly zero once it has reached its minimum. The 
+resulting potential
 \begin{equation}
     \label{eq:WCA_potential}
     u_{WCA}(r) = 
@@ -343,6 +342,14 @@ Writing it out for clarity, the Mie (50, 49)-potential has the form
         0,  & r > \frac{50}{49} \sigma.
     \end{cases}
 \end{equation}
+
+\begin{figure}
+    \input{figures/theory/potentials.tex}
+    \caption{The cut and shifted Mie (50, 49)-potential 
+            compared to the cut and shifted Lennard-Jones 
+            as well as the hard sphere potential.
+    }
+\end{figure}
 
 Pousaneh and de Wijn \cite{ref:pousaneh:shear_viscosity} 
 have shown that such a pseudo-hard sphere potential 
