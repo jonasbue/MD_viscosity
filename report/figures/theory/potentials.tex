@@ -23,12 +23,12 @@
         \addplot+ [
             domain=0.99:1.0204,
             ]{50*(50/49)^49 * ((1/x)^50 - (1/x)^49) + 1.0};
-            \addlegendentry{Mie (50, 49)}
+            \addlegendentry{WCA (50, 49)}
         % LENNARD-JONES
         \addplot+ [
             domain=0.98:1.122,
         ]{4*((1/x)^12 - (1/x)^6) + 1};
-        \addlegendentry{Lennard-Jones}
+        \addlegendentry{WCA(12, 6)}
         % HARD SPHERE:
         \addplot+ [
             domain=1:1.1,
