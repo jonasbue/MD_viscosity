@@ -50,13 +50,15 @@
                 ]{data/eos_varying_mass.csv};
             }
        \nextgroupplot [
-           ylabel = $Z/Z_{CS}$,
-           yticklabel pos=right,
-           title style={
-               at={(0.5,0.9)},
-               anchor=north,
-           },
-           title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
+            ymin=0.9,
+            ymax=1.1,
+            ylabel = $Z/Z_{CS}$,
+            yticklabel pos=right,
+            title style={
+                at={(0.5,0.9)},
+                anchor=north,
+            },
+            title={$m_2 = \num[round-mode=places, round-precision=1]{#1} m_1$}
        ] \addplot+ [
                 only marks,
                 mark options = {black},
@@ -74,27 +76,17 @@
                domain=0:0.5,
                color=black,
            ]{1};
-            \pgfplotsforeachungrouped \eos in {\norm, Z_PY}{
-            %\addplot+ [
-            %    discard if not={m2}{#1},
-            %    mark=none,
-            %    y domain=0:0,
-            %    dashed,
-            %] table[
-            %    x = pf,
-            %    y expr = \thisrow{\eos}/\thisrow{\norm},
-            %    col sep = comma,
-            %]{data/theory_varying_mass_large.csv};
-            %\addplot+ [
-            %    discard if not={m2}{#1},
-            %    mark=none,
-            %    y domain=0:0,
-            %    dashed,
-            %] table[
-            %    x = pf,
-            %    y expr = \thisrow{\eos}/\thisrow{\norm},
-            %    col sep = comma,
-            %]{data/theory_varying_mass_large.csv};
+        \pgfplotsforeachungrouped \eos in {\norm, Z_PY}{
+            \addplot+ [
+                discard if not={m2}{#1},
+                mark=none,
+                y domain=0:0,
+                dashed,
+            ] table[
+                x = pf,
+                y expr = \thisrow{\eos}/\thisrow{\norm},
+                col sep = comma,
+            ]{data/eos_varying_mass.csv};
         }
     }
     \end{groupplot}

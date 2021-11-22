@@ -1,12 +1,122 @@
-\chapter{Theory}
+\chapter{Theoretical descriptions of hard-sphere fluids}
 \label{sec:theory}
 
-\section{Kinetic theory}
+\section{Transport theory}
+\label{sec:theory:transport_theory}
+Physical systems that are out of equilibrium
+can be described by the transport of certain
+quantities in the phase space. These quantities
+are known as \emph{transport properties}. The
+theoretical description of such properties is 
+known as transport theory.
+
+
+%\subsection{Transport properties}
+% Nevn noe av Enskog-informasjonen fra neste seksjon her.
+% Generelt om transportegenskaper, enskogteori som en metode for å finne dem
+% Kanskje nevne andre metoder for å regne ut transportegenskaper?
+% Viskositet som transportegenskap
+The transport properties of fluids are diffusion, 
+thermal conductivity and viscosity. All of which
+are associated to a gradient in certain physical
+quantities in the system. Diffusion is a flux of 
+mass due to a density gradient. Thermal conductivity 
+is a flux of energy due to a temperature gradient.
+Lastly, viscosity is a momentum flux due to a
+velocity gradient. 
+
+
+\subsection{Kinetic theory}
+\label{sec:theory:kinetic_theory}
 % TODO: Skriv en litt generell intro.
-% Boltzmannlikningen
+Kinetic theory describes fluids as a large 
+collection of small particles. The properties 
+of the fluid are then derived from the properties 
+of its component particles. Kinetic theory allows 
+calculation of the transport properties of fluids, 
+given certain assumptions. This section will outline 
+some relevant results and foundations of kinetic 
+theory. Necessary assumptions and approximations 
+will be a central topic, in order to give an 
+understanding of when the theoretical descriptions 
+are valid.
+%Many quantities in thermodynamics
+%and fluid dynamics can be computed using the
+%framework of kinetic theory. The following 
+%section outlines some key models and assumptions 
+%in kinetic theory, focusing especially on Enskog 
+%theory.
+
+The Boltzmann equation is a fundamental equation
+in kinetic theory. It describes conservation 
+laws in six dimensional phase space (position 
+and velocity). Its derivation is out of scope 
+for this report. However, the assumptions made 
+during the derivation are important. 
+
+In the derivation of the Boltzmann equation, the 
+fluid is assumed to be dilute. Furthermore, the 
+particles interact in collisions that last for 
+an infinitesimally short time. Lastly, particles 
+are assumed to be uncorrelated between the collisions.
+
+The latter assumption means that there is 
+no correlation between different collisions. 
+This is known as the assumption of molecular 
+chaos. Note that if the fluid density is high, 
+or the collision durations are not small, then 
+the assumption of molecular chaos also breaks 
+down. In other words, the above assumptions 
+are interdependent.
+
+Note that the Boltzmann equation will not be 
+valid if the particles interact at long ranges, 
+as they will be correlated between collisions.
+
+%It means that the mean free time between 
+%collisions is much larger than the collision 
+%duration. 
+
+%The assumption of molecular chaos breaks 
+%down at high fluid densities, when collisions are 
+%too frequent to be uncorrelated. 
+%Furthermore, it does not work for real fluids 
+%with long range continuous interaction potentials, 
+%since long range interactions make the particles highly 
+%correlated. 
+%However, the assumption of molecular 
+%chaos is more acceptable for low density HS-fluids. 
+
+% Enskogteori:
+Enskog theory is a description of fluids derived 
+from kinetic theory. In Enskog theory, hydrodynamic
+conservation laws can be derived from the Boltzmann
+equation of kinetic theory. When deriving the Navier-
+Stokes equations in Enskog theory, theoretical 
+expressions for the transport coefficients can 
+be obtained. These are only \emph{phenomenological 
+constants} in the continuum mechanical derivation 
+of the Navier- Stokes equations.
+
+In Enskog theory, the fluid is assumed to consist 
+of particles that only collide elastically. All 
+the assumptions on which the Boltzmann equation
+is based must also be satisfied.
+
 % Antakelser
-% Enskogteori
 % Likevekt
+
+%There are several microscopic properties which 
+%define the properties of the macroscopic fluid.
+%How the particles interact with each other is
+%one important such property.
+
+
+
+
+The remaining parts of this report will focus only on viscosity.
+% Should I include macroscopic flux as a transport property?
+
 
 \section{Hard-sphere fluids}
 Hard-sphere (HS) fluids are fluids consisting of spherical particles 
@@ -19,21 +129,26 @@ interacting via the non-continuous potential
         0, & r > \sigma.
     \end{cases}
 \]
-$u$ is the interaction potential between two particles, 
-$r$ is the distance between them, and $\sigma$ is 
-the diameter of the particles. This potential makes 
-it possible to analytically describe certain fluid 
+$u$ is the interaction potential between two 
+particles, $r$ is the distance between them, 
+and $\sigma$ is the diameter of the particles. 
+Upon hitting each other, hard spheres will 
+undergo a perfectly elastic collision.
+
+In the low-density regime, the fundamental 
+assumptions made in Enskog theory 
+\ref{sec:theory:kinetic_theory} are satisfied
+for a HS fluid. Thus, Enskog theory provides a 
+theoretical description of HS fluids. 
+
+% This is not too consistent with the first section.
+Because of this, the HS potential makes it 
+possible to analytically describe certain fluid 
 properties using statistical mechanics. The HS 
-potential is especially useful when modeling 
-transport properties such as viscosity.
-
-
-\section{Transport properties}
-% TODO: Fyll inn tekst her.
-% Nevn noe av Enskog-informasjonen fra neste seksjon her.
-% Generelt om transportegenskaper, enskogteori som en metode for å finne dem
-% Kanskje nevne andre metoder for å regne ut transportegenskaper?
-% Viskositet som transportegenskap
+potential is especially useful when modelling 
+transport properties. In the following sections, 
+analytical expressions for the viscosity of HS 
+fluids are presented.
 
 
 \section{The viscosity of hard-sphere fluids}
@@ -51,16 +166,19 @@ $\sigma$. The viscosity of such fluids is
         + 0.776 \,V_{\text{excl}}^2 \,\rho^2 g(\sigma) 
         \right].
 \]
-%\[
-%    \begin{split}
-%        \eta(n,T)
-%            &= \frac{\eta^0}{\chi} (1+\frac{1}{2} \alpha \chi n)^2 + \frac{3}{5} \bar{\omega}, \quad \text{where}\\
-%        \alpha
-%            &= \frac{8}{15} \pi \sigma^3, \quad \text{and} \\
-%        \bar{\omega}
-%            &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
-%    \end{split}
-%\]
+\iffalse
+\[
+    \begin{split}
+        \eta(n,T)
+            &= \frac{\eta^0}{\chi} (1+\frac{1}{2} \alpha \chi n)^2 
+            + \frac{3}{5} \bar{\omega}, \quad \text{where}\\
+        \alpha
+            &= \frac{8}{15} \pi \sigma^3, \quad \text{and} \\
+        \bar{\omega}
+            &= \frac{4}{9} n^2 \sigma^4 \chi \sqrt{\pi m \kB T}.
+    \end{split}
+\]
+\fi
 Here, 
 \[
     \eta_0 = \eta(0, T) = 
@@ -89,21 +207,6 @@ This method is referred to as Modified Enskog Theory.
 
 % Deler av dette kan også nevnes i seksjonen om transportegenskaper. 
 % Det er et generelt problem det du beskriver om MFT (mean free time).
-
-In Enskog theory, a central assumption is that 
-there is no correlation between different collisions. 
-This assumption is known as molecular chaos. 
-This means that the mean free time between 
-collisions is much larger than the collision 
-duration. The assumption of molecular chaos 
-breaks down at high fluid densities, when 
-collisions are too frequent to be uncorrelated. 
-Furthermore, it does not work for real fluids 
-with long range continuous interaction potentials,
-since long range interactions make the particles 
-highly correlated. However, the assumption of 
-molecular chaos is more acceptable for low 
-density HS-fluids. 
 
 
 \section{Viscosity of hard-sphere fluid mixtures}
@@ -255,272 +358,3 @@ This gives equation \eqref{eq:enskog_viscosity}
         \right].
 \]
 
-\section{Simulation of hard-sphere fluids}
-Several methods exist for simulating fluids 
-consisting of rigid spheres. They can be 
-divided into two categories, namely Monte 
-Carlo (MC) models, and molecular dynamics 
-(MD) models. MC methods sample statistical 
-ensembles using random walk,  % TODO: Find a better term than random walk.
-while MD methods use Newton's equations of 
-motion to compute the deterministic path 
-of a large collection of particles.
-
-Monte Carlo methods are typically easier to 
-use with hard-sphere potentials, but can not 
-be used to compute transport coefficients. 
-% Can't, or can with difficulty? 
-% That's an important distinction.
-Molecular dynamics methods on the other 
-hand, allow calculating dynamical and 
-out-of-equilibrium properties of a system. 
-To compute the viscosity of a system, 
-MD methods should therefore be used. 
-
-This section therefore gives an introduction 
-to molecular dynamics, focusing especially on 
-molecular dynamics for hard and pseudo-hard 
-spheres \cite{ref:allen:MD_sim}.
-
-% Mer generelt om MD (inkl hendelsesdrevent)
-\section{Event-driven molecular dynamics simulation}
-A simple method for performing molecular 
-dynamics simulations with hard sphere in 
-is an \emph{event-driven simulation}. 
-Key elements of this simulation method 
-is outlined below.
-
-Compute the time until a collision occurs, for all particles in the system.
-All collisions are stored in a list containing at least information about
-the time of the collision, and the identity of the two involved particles.
-Then, the time until the earliest collision is identified by searching through the list.
-Using Newton's equations of motion, all atoms are propagated freely until
-the collision happens.
-Through conservation laws, the colliding particles' velocities are then updated.
-Their next collisions are then added to the list of upcoming collisions.
-This process is repeated, and all atom positions are updated with the time 
-until the next collision in the list.
-
-It should be noted that after a collision happens, other collisions involving
-either of the two particles will be invalid.
-These should be discarded from the list.
-
-\section{Continuous potential MD simulation methods}
-Several powerful and efficient molecular dynamics 
-programmes are easily available, including LAMMPS, 
-GROMACS, DL\_POLY and NAND. % TODO add references.  
-These do, however, not handle discontinuous potentials.
-Thus, the event-driven method is not supported by 
-any of these programmes \cite{ref:allen:MD_sim}. In 
-order to utilize the efficiency of the available MD 
-software, it is more convenient to use a different 
-method. The hard sphere potential can be approximated 
-with a steep but continuous interaction potential 
-instead. Then, the particle positions are updated 
-using numerical integration methods with short, 
-finite time steps.
-
-Additionally, once there are long-range 
-interaction forces between particles, then 
-interactions occur at all times. In this 
-case, the event driven simulation does not 
-work, and integration methods are required. 
-Therefore, continuous potential modelling 
-is much more useful for realistic fluid models.
-
-Several potentials are possible to use as 
-hard-sphere approximations. The Lennard-Jones 
-potential 
-\[
-    \label{eq:lennard_jones_potential}
-    u_{\text{LJ}}(r) = 
-        4 \epsilon \left[
-            \left(\frac{\sigma}{r}\right)^{12} -
-            \left(\frac{\sigma}{r}\right)^{6}
-        \right]
-\]
-is a well-known example of historical importance.
-Here, $\epsilon$ is the well depth -- the minimal value of 
-the potential. As in \eqref{eq:hard_sphere_potential}, 
-$\sigma$ and $r$ are the diameter and relative distance of 
-the interacting particles.
-
-If the attractive part, 
-$\left[- \left(\frac{\sigma}{r}\right)^{6}\right]$
-in equation \eqref{eq:lennard_jones_potential} 
-is removed from the potential, then $u_{\text{LJ}}(r)$ 
-can represent purely repulsive interactions. This is done 
-by shifting the potential upwards by its minimal value 
-$\epsilon$ and cutting it off there. Thus, the potential 
-is exactly zero once it has reached its minimum. The 
-resulting potential
-\[
-    \label{eq:WCA_potential}
-    u_{WCA}(r) = 
-    \begin{cases}
-        4 \epsilon \left[
-            \left(\frac{\sigma}{r}\right)^{12} -
-            \left(\frac{\sigma}{r}\right)^{6}
-        \right]
-        + \epsilon,
-            & r < 2^\frac{1}{6} \sigma\\
-        0,  & r > 2^\frac{1}{6}\sigma.
-    \end{cases}
-\]
-is known as a WCA-potential.
-This serves as an approximation to a hard sphere potential.
-% This is explained below. 
-% TODO: Move the explanation here, so that everything is chronological.
-
-Increased computer efficiency makes it more appropriate 
-to use steeper potentials than the WCA-potential.
-In particular, Jover et al. \cite{ref:jover:pseudo_hard} 
-has proposed the Mie (or generalized Lennard-Jones) potential
-\[
-    u_{\text{Mie}}(r) = 
-        \frac{\lambda_r}{\lambda_r - \lambda_a}
-        \left(\frac{\lambda_r}{\lambda_a}\right)
-        ^{\frac{\lambda_a}{\lambda_r - \lambda_a}}
-        \epsilon \left[
-            \left(\frac{\sigma}{r}\right)^{\lambda_r} -
-            \left(\frac{\sigma}{r}\right)^{\lambda_a}
-        \right],
-\]
-as an approximation to the hard-sphere interaction potential.
-% What's a better word than "strength"??
-The exponents $\lambda_r$ and $\lambda_a$ define the strength 
-of the repulsive and attractive parts of the potential.
-
-Cutting and shifting the $u_{\text{Mie}}$ potential as done in equations
-\eqref{eq:lennard_jones_potential} and \eqref{eq:WCA_potential},
-gives a steep non-negative potential of the form
-\[
-    u_{(\lambda_a, \lambda_b)}(r) = 
-    \begin{cases}
-        \frac{\lambda_r}{\lambda_r - \lambda_a}
-        \left(\frac{\lambda_r}{\lambda_a}\right)
-        ^{\frac{\lambda_a}{\lambda_r - \lambda_a}}
-        \epsilon \left[
-            \left(\frac{\sigma}{r}\right)^{\lambda_r} -
-            \left(\frac{\sigma}{r}\right)^{\lambda_a}
-        \right]
-        + \epsilon,
-            & r < \sigma \left(
-                \frac{\lambda_r}{\lambda_a}
-            \right)^\frac{1}{\lambda_r - \lambda_a} \\
-        0,  & r > \sigma \left(
-                \frac{\lambda_r}{\lambda_a}
-            \right)^\frac{1}{\lambda_r - \lambda_a},
-    \end{cases}
-\]
-closely resembling that of an infinitely steep hard 
-wall potential (equation \eqref{eq:hard_sphere_potential}).
-This potential is referred to as a pseudo hard-sphere (PHS) potential.
-
-Jover et al. chose the exponents \((\lambda_r, \lambda_a) = (50, 49)\), 
-as a compromise between faithfulness of the pseudo hard representation 
-towards the perfectly hard wall, and computational speed.
-Higher exponents will produce a steeper repulsion. 
-This however, comes at a cost. 
-The steeper the potential, the shorter time steps are 
-needed to ensure that the computations are precise.
-% TODO: Definer hva presist betyr.
-Therefore, steeper repulsions are computationally 
-more expensive to simulate.
-
-Writing it out for clarity, the Mie (50, 49)-potential has the form
-\[
-    u_{(50, 49)}(r) = 
-    \begin{cases}
-        50
-        \left(\frac{50}{49}\right)^{49}
-        \epsilon \left[
-            \left(\frac{\sigma}{r}\right)^{50} -
-            \left(\frac{\sigma}{r}\right)^{49}
-        \right]
-        + \epsilon,
-            & r < \frac{50}{49} \sigma\\
-        0,  & r > \frac{50}{49} \sigma.
-    \end{cases}
-\]
-
-\begin{figure}[htbp]
-    \input{figures/theory/potentials.tex}
-    \caption{The cut-and-shifted WCA(50, 49)-potential 
-            compared to the cut and shifted WCA(12, 6) 
-            (Lennard-Jones) as well as the hard sphere 
-            potential.
-    }
-\end{figure}
-
-Pousaneh and de Wijn \cite{ref:pousaneh:shear_viscosity} 
-have shown that such a pseudo-hard sphere potential 
-can be used to model viscosity for a one-component hard-sphere fluid, 
-and that the obtained viscosity is in agreement with Enskog theory.
-% However, to the best of our knowledge, such a confirmation has not 
-% been published for fluids of more than one component. 
-% C: Dette er er ikke sjekket, men er jo delvis det du skal gjøre.
-
-
-\section{Measuring the viscosity of a fluid in NEMD}
-Müller-Plathe \cite{ref:mullerplathe:reversing_the_perturbation} 
-has proposed a method of computing the viscosity of a fluid in 
-nonequilibrium molecular dynamics (NEMD) simulations.
-% TODO: Describe method, including figures.
-
-Consider a rectangular box with sides of length \((L_x, L_y, L_z)\) 
-with periodic boundary conditions.
-The box contains a hard sphere fluid at equilibrium.
-We divide the system into two equal slabs, their border 
-being parallel to the $xy$-plane at height \(z = L_z/2\).
-Now, we can define three parallel planes, at 
-\(z = \{0, L_z/2, L_z\}\), which are the edges of the two slabs.
-At these edges, we will control the velocity of the particles, 
-making sure that the particles flow in the directions
-\[
-    \label{eq:velocity_directions}
-    \hat{u}_x(z) =
-    \begin{cases}
-        +\hat{x}, \,z = L_z,    \\
-        -\hat{x}, \,z = L_z/2,  \\
-        +\hat{x}, \,z = 0,    \\
-    \end{cases}
-\]
-as shown in figure (??). %TODO: Figure.
-Here, \(u_x(z)\) denotes the average velocity component 
-in $x$-direction, of the particles at height $z$.
-The hat ``\(\,\, \hat{ } \,\,\)'' denotes 
-directional vectors of length unity.
-
-The particle flows are adjusted through an unphysical process known as a 
-\textbf{reverse perturbation}\cite{ref:mullerplathe:reversing_the_perturbation},
-as follows:
-
-Find the particle in the \(z = 0\) slab edge with the lowest 
-(most negative) velocity component in the \(+x\)-direction.
-Correspondingly, find the particle in the \(z = L/2\) border 
-with the largest velocity component in the \(+x\)-direction.
-Then, swap the momenta of these two particles.
-Repeat the process for the top slab, swapping the smallest momentum 
-in the \(z = L\) edge with the largest momentum in the \(z = L/2\) edge.
-This process is then repeated periodically.
-The repeated reverse perturbations cause a velocity profile in the fluid,
-as shown in figure (??). % TODO: Figure.
-At the edges of the slabs, the velocity directions 
-is given by equation \eqref{eq:velocity_directions}.
-
-The velocity profile will cause a momentum flux in $z$-direction,
-\[
-    \label{eq:momentum_flux}
-    j_z = -\eta \frac{\partial u_x}{\partial z}.
-\]
-This flux is proportional to the viscosity of the fluid, and is measurable.
-Thus, the viscosity can be calculated from velocity data generated in the 
-MD simulation.
-
-\begin{figure}
-    \begin{center}
-        \input{figures/theory/muller_plathe.tex}
-        \caption{The setup of the Müller-Plathe experiment.}
-    \end{center}
-\end{figure}

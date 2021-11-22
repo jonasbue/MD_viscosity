@@ -77,9 +77,9 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
             log_name, fix_name, cut_fraction, per_time
         )
         eta = np.mean(eta)
-        print(eta_err)
+        #print(eta_err)
         error = np.mean(eta_err)
-        print(eta_err)
+        #print(eta_err)
         if per_time:
             error = np.amax(np.abs(eta_err))
 
@@ -126,8 +126,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         pvt = files.unpack_variables(log_table, log_name, variable_list)
 
         eq_steps = int(
-                C["EQUILL_TIME"]
-                /C["DT"]
+                C["EQUILL_STEPS"]
                 /C["THERMO_OUTPUT"]
             )
         cut = int(eq_steps*cut_fraction)
@@ -153,10 +152,11 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         values = np.append(values, one_eos_vals)
 
         save.insert_results_in_array(data, values, C, i)
-        data_name += "".join(
-            [f", Z_{r.__name__[2:]}" for r in mix_eos_list])
-        data_name += "".join(
-            [f", Z_{r.__name__[2:]}" for r in one_eos_list])
+    data_name += "".join(
+        [f", Z_{r.__name__[2:]}" for r in mix_eos_list])
+    data_name += "".join(
+        [f", Z_{r.__name__[2:]}" for r in one_eos_list])
+    print(data_name)
     save.save_simulation_data(savename, data, data_name=data_name)
 
 
