@@ -3,14 +3,14 @@
 Specialization project on Enskog-Thorne viscosity.
 
 File structure:
-|project/                   -- Main directory 
+|simulation/            -- LAMMPS simulation and related files
 ----|
-    |simulation/            -- LAMMPS simulation and related files
-    ----|
-        |./                 -- simulation/ contains the most important scripts
-        |analysis/          -- Python code to analyze LAMMPS data
-        |simple_scripts/    -- Old LAMMPS scripts
-        |data/              -- Where the LAMMPS output goes
+    |./                 -- simulation/ contains the most important scripts
+    |analysis/          -- Python code to analyze LAMMPS data
+    |simple_scripts/    -- Old LAMMPS scripts
+    |data/              -- Where the LAMMPS output goes
+
+In repo "project_report":
 ----|
     report/                 -- The project report
         |./                 -- The .tex files live here
