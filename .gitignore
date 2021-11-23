@@ -1,29 +1,13 @@
-report/out/*
-!report/out/report.pdf
-*.aux
-*.bbl
-*.bcf
-*.blg
-*.fdb_latexmk
-*.fls
-*.xml
-*.gz
-*.toc
-*.log
-*.out
-*.glo
-*.ist
-
 log.*.lammps
 log.lammps
 dump.*.lammps
 *.csv
 *.profile
 
-simulation/analysis/__pycache__/*
-simulation/data/*
-simulation/large_data/*
-simulation/data_old/*
-simulation/berendsen_data/*
+analysis/__pycache__/*
+data/*
+large_data/*
+data_old/*
+berendsen_data/*
 
 *.png
