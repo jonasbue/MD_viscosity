@@ -62,12 +62,13 @@ def compute_viscosity(
     assert Ptot.shape == np.unique(t).shape, f"Ptot: {Ptot.shape}, t: {t.shape}"
     # Only unique times:
     eta = viscosity.get_viscosity(Ptot, A, t, dv)
+    err = regression.find_uncertainty(std_err, eta)
 
     # eta_max = - eta_min, so only one value is needed.
     # For generality, both are computed here.
-    eta_max = -eta*std_err
-    eta_min = eta*std_err
-    return eta, eta_max, eta_min
+    err_upper = -eta*err
+    err_lower = eta*err
+    return eta, err_upper, err_lower
 
 
 def find_viscosity_from_file(

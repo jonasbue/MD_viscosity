@@ -114,14 +114,19 @@ def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
     return dv, std_err
 
 
-def find_uncertainty(reg):
+def find_uncertainty(std_err, eta, conf=95):
     """ Returns the uncertainty in the slope estimation,
-        in the form of the maximum and minimum slope which
-        the standard error from sc.linregress() gives.
+        as a confidence interval of percentage conf.
         Input:
             reg:    sc.LinregressInstance. Linear regression object.
+            eta:    measured viscosity.
+            conf:   desired confidence.
         Output:
-            max_slope:  maximum slope based on linear regression.
-            min_slope:  minimum slope based on linear regression.
+            err:    error bound of the slope.
     """
-    return reg.stderr, -reg.stderr
+    t = stats.t
+    tinv = lambda p, df: abs(t.ppf(p/2, df))
+
+    ts = tinv(1-conf/100, len(eta))
+    err = ts * std_err
+    return err
