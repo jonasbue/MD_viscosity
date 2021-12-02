@@ -7,6 +7,7 @@ dump.*.lammps
 analysis/__pycache__/*
 data/*
 large_data/*
+large_box/*
 data_old/*
 berendsen_data/*
 

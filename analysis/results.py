@@ -31,23 +31,22 @@ def main():
     cut_fraction = 0.7
     per_time=False
 
-    #data_path_list = ["data/varying_mass", "data/varying_sigma", "data/varying_fraction"]
-    #save_path_list = ["varying_mass", "varying_sigma", "varying_fraction"]
-    data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
-    save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
-    #data_path_list = ["data/varying_fraction_equals/varying_fraction_equals"]
-    #save_path_list = ["varying_fraction_equals"]
-    #data_path_list = ["large_data/data/varying_mass_large", "large_data/data/varying_fraction_large"]
-    #save_path_list = ["varying_mass", "varying_fraction"]
-    #data_path_list = ["data/const_temp"]
-    #save_path_list = ["const_temp"]
+    #data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
+    #save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
+    #data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
+    #save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
+    data_path_list = ["large_box/varying_sigma"]
+    save_path_list = ["large_box_varying_sigma"]
 
     for path, savename in zip(data_path_list, save_path_list):
         if "convert" in sysargs:
             files.all_files_to_csv(path)
         save_dir = "../report/data/"
         filenames = files.get_all_filenames(path)
+        print(path)
+        print("Number of files: ", len(filenames))
         packing_list = files.find_all_packing_fractions(path)
+        print("Number of packing fractions:", len(packing_list))
         filenames = files.sort_files(filenames, packing_list)
         for i in range(len(filenames)):
             print("------------------------------------------------------------")
@@ -156,7 +155,6 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         [f", Z_{r.__name__[2:]}" for r in mix_eos_list])
     data_name += "".join(
         [f", Z_{r.__name__[2:]}" for r in one_eos_list])
-    print(data_name)
     save.save_simulation_data(savename, data, data_name=data_name)
 
 
@@ -237,7 +235,7 @@ def save_theory(path, filenames, savename, N=50):
                 save.insert_results_in_array(data, vals, C, i*N+j, pf=pf[j])
 
     save.save_simulation_data(savename, data, 
-        data_name="thorne_SPT, thorne_PY, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS"
+        data_name="thorne_SPT, thorne_PY_mix, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS"
     )
 
 main()
