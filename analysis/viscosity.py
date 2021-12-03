@@ -60,8 +60,9 @@ def thorne(pf, x, m, sigma_list, T, rdf=eos.rdf_SPT):
     alpha   = get_alpha(b)
     eta_0   = get_eta_0(N, m, T, sigma)
 
-    sigma_eff = get_effective_sigma(pf, sigma, x, rho, rdf)
-    Xi      = get_Xi(x, sigma_eff, N, rho)
+    #sigma_eff = get_effective_sigma(pf, sigma, x, rho, rdf)
+    #Xi      = get_Xi(x, sigma_eff, N, rho)
+    Xi      = get_rdf(x, sigma, N, rho, rdf=rdf)
     y       = get_y(x, m, sigma, alpha, Xi, N, rho)
     H       = get_H(x, Xi, eta_0, m, N, rho)
     omega   = get_omega_mix(N, rho, x, eta_0, Xi, alpha)
@@ -120,7 +121,24 @@ def get_effective_sigma(pf, sigma, x, rho, rdf):
     sigma_eff = get_sigma(sigma_eff_list)
     return sigma_eff
 
+def get_rdf(x, sigma, N, rho, rdf=eos.rdf_SPT):
+    Xi = np.ones((N,N))
+    for i in range(N):
+        for j in range(N):
+            Xi[i,j] = rdf(sigma, x, rho, i, j)
+    return Xi
+
 def get_Xi(x, sigma, N, rho):
+    """ 
+        This obtains an RDF using the formula in di Pippo et al, which is a
+        semi-empirical method. Results are qualitatively the same, but this is
+        not tested.
+        IMPORTANT: This method is now obsolete, and should not be used.
+    """
+    print("\
+        WARNING: Using an obsolete method to compute RDFs. \
+        Check source code that computes viscosity. \
+        ")
     Xi = np.ones((N,N))
     for i in range(N):
         for j in range(N):

@@ -28,7 +28,7 @@ if "debug" in sysargs:
 ## Rename to convert_something_something
 def main():
     N = 2
-    cut_fraction = 0.7
+    cut_fraction = 0.4
     per_time=False
 
     #data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
@@ -48,10 +48,6 @@ def main():
         packing_list = files.find_all_packing_fractions(path)
         print("Number of packing fractions:", len(packing_list))
         filenames = files.sort_files(filenames, packing_list)
-        for i in range(len(filenames)):
-            print("------------------------------------------------------------")
-            print(filenames[i,0])
-            print(filenames[i,1])
 
         save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
         save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
@@ -65,7 +61,7 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
     data = np.zeros((len(filenames),columns))
     data_name = "viscosity, error"
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="percent")
+        utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
@@ -76,9 +72,7 @@ def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
             log_name, fix_name, cut_fraction, per_time
         )
         eta = np.mean(eta)
-        #print(eta_err)
         error = np.mean(eta_err)
-        #print(eta_err)
         if per_time:
             error = np.amax(np.abs(eta_err))
 

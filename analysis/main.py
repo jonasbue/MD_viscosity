@@ -136,7 +136,7 @@ def plot_viscosity(
             plt.title(f"Measured viscosity vs time, packing={C['PF']}")
             plt.legend()
             #plt.ylim(0.85,0.9)
-            plt.xlim((1000,4000))
+            plt.xlim((1000,16000))
             plt.show()
     if mix:
         plotting.plot_result_vs_thorne(eta_list, PF_list, error_list, C, relative=True)
@@ -172,7 +172,6 @@ def plot_eos(path, filenames, cut_fraction, number_of_components):
                 /constants["THERMO_OUTPUT"]
             )
         cut = int(eq_steps*cut_fraction)
-        #print(cut, eqsteps)
         p = np.mean(pvt[variable_list.index("p")][cut:eq_steps])
         T = np.mean(pvt[variable_list.index("T")][cut:eq_steps])
         V = 8*constants["LX"]*constants["LY"]*constants["LZ"]
@@ -204,7 +203,6 @@ def plot_eos(path, filenames, cut_fraction, number_of_components):
     # Plot theoretical values, from CS-EoS
     if number_of_components > 1:
         #rho_list = np.sum(N_list)/V_list
-        #print(rho_list)
         x = N_list/np.sum(N_list)
         SPT = np.zeros_like(pf)
         PY = np.zeros_like(pf)
@@ -232,7 +230,7 @@ mix=True
 N = 1
 cut_fraction = 0.7
 if "mix" in sysargs:
-    path = "data/varying_sigma"
+    path = "large_box/varying_mass"
     N = 2
 if "equal-mix" in sysargs:
     path = "data/equal_two_component"
