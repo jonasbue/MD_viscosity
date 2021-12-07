@@ -76,7 +76,9 @@ def convert_fix_to_csv(fix_path):
 
 
 def convert_dump_to_csv(dump_path, constant_volume=True, constant_atoms=True):
-    """Converts a LAMMPS dump file, given by dump_path, into a csv file.
+    """
+        Converts a LAMMPS dump file, given 
+        by dump_path, into a csv file.
 
     INPUT:
         fix_path: string
@@ -101,7 +103,7 @@ def convert_dump_to_csv(dump_path, constant_volume=True, constant_atoms=True):
 
     header += '\n'
 
-    with open(dump_path) as dump_file, open(f"{dump_path}.csv", 'x') as csv_file:
+    with open(dump_path) as dump_file, open(f"{dump_path}.csv", 'w') as csv_file:
         csv_file.write(header)
         flag = None
 

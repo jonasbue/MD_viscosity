@@ -1,18 +1,18 @@
-#############################################################################
-# This input script runs the Müller-Plathe viscosity experiment.            #
-# Structure is as follows:                                                  #
-#   * First, some changeworthy parameters are defined.                      #
-#       These are meant to be changed between simulation runs.              #
-#   * Second, filenames are defined for log, dump, and fix files.           #
-#       These are defined first so that everything                          #
-#       after is included in the log files                                  #
-#   * Third, variables are defined.                                         #
-#   * Fourth, the system is set up, without any shear.                      #
-#       This means a free pseudo-hard sphere gas.                           #
-#   * Lastly, the experiment is defined and run.                            #
-#       This step includes equilibration of the gas,                        #
-#       and then the actual Müller-Plathe experiment.                       #
-#############################################################################
+#####################################################################
+# This input script runs the Müller-Plathe viscosity experiment.    #
+# Structure is as follows:                                          #
+#   * First, some changeworthy parameters are defined.              #
+#       These are meant to be changed between simulation runs.      #
+#   * Second, filenames are defined for log, dump, and fix files.   #
+#       These are defined first so that everything                  #
+#       after is included in the log files                          #
+#   * Third, variables are defined.                                 #
+#   * Fourth, the system is set up, without any shear.              #
+#       This means a free pseudo-hard sphere gas.                   #
+#   * Lastly, the experiment is defined and run.                    #
+#       This step includes equilibration of the gas,                #
+#       and then the actual Müller-Plathe experiment.               #
+#####################################################################
 
 
 # When running different simulations, change the 
@@ -42,9 +42,9 @@ variable    LIGHT_NUMBER    equal ${TOTAL_NUMBER}-${HEAVY_NUMBER}
 variable    LIGHT_MASS      equal 1.0   # Name -> MASS
 variable    LIGHT_DIAMETER  equal 1.0   # Name -> SIGMA
 
-### ======================================================================== ###
-###                               Define filenames                           ###
-### ======================================================================== ###
+### ======================================================= ###
+###                     Define filenames                    ###
+### ======================================================= ###
 # Files will have the structure 
 #   log.variable1_value1_value2.lammps
 # For safety, consider swapping the period decimal with a dash.
@@ -65,9 +65,9 @@ log ${LOG_FILE}
 
 
 
-### ======================================================================== ###
-###                               Define variables                           ###
-### ======================================================================== ###
+### ======================================================= ###
+###                     Define variables                    ###
+### ======================================================= ###
 
 ## Numbers
 # System-wide parameters
@@ -160,9 +160,9 @@ dump    DUMP all custom ${DUMP_STEPS} &
 
 
 
-### ======================================================================== ###
-###                               Define system                              ###
-### ======================================================================== ###
+### ======================================================= ###
+###                         Define system                   ###
+### ======================================================= ###
 
 # Define atom style
 atom_style atomic
@@ -198,9 +198,9 @@ timestep    ${DT}
 
 
 
-### ======================================================================== ###
-###                             Run simulation                               ###
-### ======================================================================== ###
+### ======================================================= ###
+###                     Run simulation                      ###
+### ======================================================= ###
 
 # Minimize system energy to remove atom overlaps:
 minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 

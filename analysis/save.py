@@ -30,7 +30,8 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
     parameters = get_system_config(C, pf)
     if np.isscalar(value):
         vals = np.append(parameters, value)
-        vals = np.append(vals, err)
+        if err:
+            vals = np.append(vals, err)
         data[i] = vals
     else:
         l = len(parameters)

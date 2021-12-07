@@ -29,6 +29,7 @@ def get_all_filenames(directory):
 def sort_files(filenames, packing_fractions):
     fix = []
     log = []
+    dump = []
     for pf in packing_fractions:
         for f in filenames:
             extension = get_file_extension(f)
@@ -42,7 +43,9 @@ def sort_files(filenames, packing_fractions):
                         fix.append(f)
                     elif filetype == "log":
                         log.append(f)
-    files = np.array([fix, log], dtype=str)
+                    elif filetype == "dump":
+                        dump.append(f)
+    files = np.array([fix, log, dump], dtype=str)
     files = np.sort(files)
     return files.transpose()
 
@@ -52,12 +55,13 @@ def file_to_csv(filename, filetype):
         This is simply a wrapper of the functions in 
         convert_LAMMPS_output.
     """
+    print("Converting", filename, "of type", filetype)
     if filetype == "fix":
-        print("Converting", filename, "of type", filetype)
         convert.convert_fix_to_csv(filename)
     elif filetype == "log":
-        print("Converting", filename, "of type", filetype)
         convert.convert_log_to_csv(filename)
+    elif filetype == "dump":
+        convert.convert_dump_to_csv(filename)
 
 
 def get_filetype(filename):
@@ -70,6 +74,8 @@ def get_filetype(filename):
             filetype:   string.
     """
     filetype = filename[:3]
+    if filetype == "dum":
+        filetype = "dump"
     return filetype
 
 def get_file_extension(filename):
@@ -103,6 +109,7 @@ def read_filename(filename):
     value_identifiers = ["N", "sigma", "mass", "pf", ".lammps"]
     for name in value_identifiers:
         get_value_from_filename(filename, name, name, next_name)
+    # Return stuff.
     
 
 def get_value_from_filename(filename, value_name, value_key, next_name):

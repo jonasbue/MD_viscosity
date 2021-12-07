@@ -5,6 +5,7 @@
 #############################################################
 
 import numpy as np
+import matplotlib.pyplot as plt
 import logging
 import sys
 
@@ -14,7 +15,9 @@ import muller_plathe
 import eos
 import save
 import utils
+import rdf
 import convert_LAMMPS_output as convert
+import RDF_from_DUMP as dump_to_rdf 
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -31,12 +34,12 @@ def main():
     cut_fraction = 0.4
     per_time=False
 
-    #data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
-    #save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
+    data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
+    save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
     #data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
     #save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
-    data_path_list = ["large_box/varying_sigma"]
-    save_path_list = ["large_box_varying_sigma"]
+    #data_path_list = ["large_box/varying_sigma"]
+    #save_path_list = ["large_box_varying_sigma"]
 
     for path, savename in zip(data_path_list, save_path_list):
         if "convert" in sysargs:
@@ -49,9 +52,11 @@ def main():
         print("Number of packing fractions:", len(packing_list))
         filenames = files.sort_files(filenames, packing_list)
 
-        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
-        save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
-        save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
+        #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
+        #save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
+        #save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
+        #print(filenames)
+        save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
 
 
 def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
@@ -231,5 +236,34 @@ def save_theory(path, filenames, savename, N=50):
     save.save_simulation_data(savename, data, 
         data_name="thorne_SPT, thorne_PY_mix, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS"
     )
+
+
+def save_rdf(path, filenames, savename):
+    rdf_at_contact = np.zeros(len(filenames))
+    pf = np.zeros(len(filenames))
+    columns = len(save.get_system_config())+1
+    data = np.zeros((len(filenames), columns))
+    for i, filename in enumerate(filenames):
+        dump_name = f"{path}/" + filename[2]
+        log.info(f"Loading file\t{dump_name}")
+        log_name = f"{path}/" + filename[1]
+        log.info(f"Loading file\t{log_name}")
+
+        # Compute rdf for all dump files.
+        dump_to_rdf.calcRDF(dump_name, 50, 10, 1, 5, 0.01, particle_types=2)
+
+        # Export a g_sigma for every simulation run.  g_r can be plotted as is,
+        # but that should be done only for one or two system configurations in
+        # the report.
+        rdf_name = dump_name.replace('dump', 'RDF')+'.csv' 
+        g_sigma, g_r, r = rdf.export_RDF_data(rdf_name, savename)
+        rdf_at_contact[i] = g_sigma
+        C = convert.extract_constants_from_log(log_name)
+        save.insert_results_in_array(data, g_sigma, C, i)
+    # TODO: Include theoretical value in saved file 
+    save.save_simulation_data(savename, data, data_name="rdf_at_contact")
+    print(f"Saved to file\t{savename}")
+    if "debug" in sysargs:
+        dump_to_rdf.plotRDF_fromCSV(path=path + "/")
 
 main()
