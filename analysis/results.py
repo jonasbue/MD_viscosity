@@ -34,10 +34,10 @@ def main():
     cut_fraction = 0.4
     per_time=False
 
-    data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
-    save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
-    #data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
-    #save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
+    #data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
+    #save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
+    data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
+    save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
     #data_path_list = ["large_box/varying_sigma"]
     #save_path_list = ["large_box_varying_sigma"]
 
@@ -49,14 +49,14 @@ def main():
         print(path)
         print("Number of files: ", len(filenames))
         packing_list = files.find_all_packing_fractions(path)
-        print("Number of packing fractions:", len(packing_list))
+        #print("Number of packing fractions:", len(packing_list))
+        #print("Number of configurations:", len(filenames)//len(packing_list))
         filenames = files.sort_files(filenames, packing_list)
 
         #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
         #save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
-        #save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
-        #print(filenames)
-        save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
+        save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
+        #save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
 
 
 def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
@@ -160,13 +160,29 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
 def save_theory(path, filenames, savename, N=50):
     """ This function is now obsolete. """
     pf_experiment = files.find_all_packing_fractions(path)
-    data_shape = (len(filenames)*N, 16)
-    data = np.zeros(data_shape)
-    pf = np.linspace(0,0.5,N)
-    included_masses = np.empty(0)
-    included_sigmas = np.empty(0)
-    included_numbers = np.empty(0)
+
+    skipped = 0
+    included = 0
+    # First, because I can't figure it out: 
+    # Count the number of entries to save.
     for (i, f) in enumerate(filenames):
+        if files.get_packing_from_filename(f[0]) != pf_experiment[0]:
+            skipped += 1
+            continue
+        included += 1
+
+    #print("Included:", included)
+    #print("Skipped:", skipped)
+    data_shape = (N*included, 19)
+    data = np.zeros(data_shape)
+
+    pf = np.linspace(0,0.5,N)
+    i = -1
+    for f in filenames:
+        if files.get_packing_from_filename(f[0]) != pf_experiment[0]:
+            continue
+        else:
+            i += 1
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
@@ -180,68 +196,69 @@ def save_theory(path, filenames, savename, N=50):
         mass_list = np.array([C["MASS_L"], C["MASS_H"]])
         x = N_list/np.sum(N_list)
 
-        # Check if the configuration has already been included,
-        # since filenames contains multiple packing fractions.
-        if (
-            N_list[1] not in included_numbers
-            or mass_list[1] not in included_masses
-            or sigma_list[1] not in included_sigmas
-        ):
-            included_numbers = np.append(included_numbers, N_list[1])
-            included_masses = np.append(included_masses, mass_list[1])
-            included_sigmas = np.append(included_sigmas, sigma_list[1])
+        thorne_vals_SPT = np.zeros(N)
+        thorne_vals_PY = np.zeros(N)
+        thorne_vals_BMCSL = np.zeros(N)
+        enskog_vals_1 = np.zeros(N)
+        enskog_vals_2 = np.zeros(N)
+        SPT_vals = np.zeros(N)
+        PY_vals = np.zeros(N)
+        CS_vals = np.zeros(N)
+        BMCSL_vals = np.zeros(N)
+        rdf_SPT = np.zeros(N)
+        rdf_PY = np.zeros(N)
+        rdf_BMCSL = np.zeros(N)
 
-            thorne_vals_SPT = np.zeros(N)
-            thorne_vals_PY = np.zeros(N)
-            thorne_vals_BMCSL = np.zeros(N)
-            enskog_vals_1 = np.zeros(N)
-            enskog_vals_2 = np.zeros(N)
-            SPT_vals = np.zeros(N)
-            PY_vals = np.zeros(N)
-            CS_vals = np.zeros(N)
-            BMCSL_vals = np.zeros(N)
-            for j in range(N):
-                thorne_vals_SPT[j] = viscosity.thorne(
-                    pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_SPT)
-                thorne_vals_PY[j] = viscosity.thorne(
-                    pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_PY_mix)
-                thorne_vals_BMCSL[j] = viscosity.thorne(
-                    pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_BMCSL)
-                enskog_vals_1[j] = viscosity.enskog(
-                    pf[j], sigma_list[0], T, mass_list[0])
-                enskog_vals_2[j] = viscosity.enskog(
-                    pf[j], sigma_list[1], T, mass_list[1])
-                rho = 6*pf[j]/np.pi/np.sum(x*np.diag(sigma_list)**3)
-                sigma = viscosity.get_sigma(sigma_list)
-                SPT_vals[j] = eos.Z_SPT(sigma, x, rho)
-                PY_vals[j] = eos.Z_PY(sigma, x, rho)
-                CS_vals[j] = eos.Z_CS(pf[j])
-                BMCSL_vals[j] = eos.Z_CS(pf[j])
-                # rdf_SPT = ...
-                # rdf_PY = ...
-                vals = np.array([
-                    thorne_vals_SPT[j], 
-                    thorne_vals_PY[j], 
-                    thorne_vals_BMCSL[j], 
-                    enskog_vals_1[j], 
-                    enskog_vals_2[j], 
-                    SPT_vals[j], 
-                    PY_vals[j], 
-                    CS_vals[j],
-                    BMCSL_vals[j]
-                ])
-
-                save.insert_results_in_array(data, vals, C, i*N+j, pf=pf[j])
+        for j in range(N):
+            thorne_vals_SPT[j] = viscosity.thorne(
+                pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_SPT)
+            thorne_vals_PY[j] = viscosity.thorne(
+                pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_PY_mix)
+            thorne_vals_BMCSL[j] = viscosity.thorne(
+                pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_BMCSL)
+            enskog_vals_1[j] = viscosity.enskog(
+                pf[j], sigma_list[0], T, mass_list[0])
+            enskog_vals_2[j] = viscosity.enskog(
+                pf[j], sigma_list[1], T, mass_list[1])
+            rho = 6*pf[j]/np.pi/np.sum(x*np.diag(sigma_list)**3)
+            sigma = viscosity.get_sigma(sigma_list)
+            SPT_vals[j] = eos.Z_SPT(sigma, x, rho)
+            PY_vals[j] = eos.Z_PY(sigma, x, rho)
+            BMCSL_vals[j] = eos.Z_BMCSL(sigma, x, rho)
+            CS_vals[j] = eos.Z_CS(pf[j])
+            # TODO: Fix indices. Probably separate file?
+            rdf_SPT[j] = eos.rdf_SPT(sigma, x, rho, 0, 0)
+            rdf_PY[j] = eos.rdf_PY_mix(sigma, x, rho, 0, 0)
+            rdf_BMCSL[j] = eos.rdf_BMCSL(sigma, x, rho, 0, 0)
+            vals = np.array([
+                thorne_vals_SPT[j], 
+                thorne_vals_PY[j], 
+                thorne_vals_BMCSL[j], 
+                enskog_vals_1[j], 
+                enskog_vals_2[j], 
+                SPT_vals[j], 
+                PY_vals[j], 
+                CS_vals[j],
+                BMCSL_vals[j],
+                rdf_SPT[j],
+                rdf_PY[j],
+                rdf_BMCSL[j],
+            ])
+            #print(i*N+j)
+            data = save.insert_results_in_array(data, vals, C, i*N+j, pf=pf[j])
+            #print(data[i*N+j,0:2])
 
     save.save_simulation_data(savename, data, 
-        data_name="thorne_SPT, thorne_PY_mix, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS"
+            data_name="thorne_SPT, thorne_PY_mix, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS, SPT_RDF_ii, PY_RDF_ii, BMCSL_RDF_ii"
     )
 
 
 def save_rdf(path, filenames, savename):
     rdf_at_contact = np.zeros(len(filenames))
+    rdf_list = [eos.rdf_PY_mix, eos.rdf_SPT, eos.rdf_BMCSL]
+    theoretical = np.zeros((len(filenames), 3))
     pf = np.zeros(len(filenames))
-    columns = len(save.get_system_config())+1
+    columns = len(save.get_system_config())+2+len(rdf_list)
     data = np.zeros((len(filenames), columns))
     for i, filename in enumerate(filenames):
         dump_name = f"{path}/" + filename[2]
@@ -257,11 +274,31 @@ def save_rdf(path, filenames, savename):
         # the report.
         rdf_name = dump_name.replace('dump', 'RDF')+'.csv' 
         g_sigma, g_r, r = rdf.export_RDF_data(rdf_name, savename)
+        # TODO: Estimate error
+        err = 0
         rdf_at_contact[i] = g_sigma
-        C = convert.extract_constants_from_log(log_name)
-        save.insert_results_in_array(data, g_sigma, C, i)
-    # TODO: Include theoretical value in saved file 
-    save.save_simulation_data(savename, data, data_name="rdf_at_contact")
+
+        # Compute theoretical RDF at contact:
+        C           = convert.extract_constants_from_log(log_name)
+        pf          = C["PF"]
+        T           = C["TEMP"]
+        N_list      = np.array([C["N_L"], C["N_H"]])
+        sigma_list  = np.array([C["SIGMA_L"], C["SIGMA_H"]])
+        mass_list   = np.array([C["MASS_L"], C["MASS_H"]])
+        sigma       = viscosity.get_sigma(sigma_list)
+        x           = N_list/np.sum(N_list)
+        rho         = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+
+        rdf_values = np.zeros(2+len(rdf_list))
+        rdf_values[0] = g_sigma
+        rdf_values[-1] = err
+        for j, Xi in enumerate(rdf_list):
+            g = Xi(sigma, x, rho, 0, 0)
+            rdf_values[1+j] = g
+            theoretical[i, j] = g
+        
+        save.insert_results_in_array(data, rdf_values, C, i)
+    save.save_simulation_data(savename, data, data_name="rdf_measured, rdf_PY_mix, rdf_SPT, rdf_BMCSL, error")
     print(f"Saved to file\t{savename}")
     if "debug" in sysargs:
         dump_to_rdf.plotRDF_fromCSV(path=path + "/")

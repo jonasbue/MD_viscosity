@@ -45,7 +45,10 @@ def sort_files(filenames, packing_fractions):
                         log.append(f)
                     elif filetype == "dump":
                         dump.append(f)
-    files = np.array([fix, log, dump], dtype=str)
+    if len(dump):
+        files = np.array([fix, log, dump], dtype=str)
+    else:
+        files = np.array([fix, log], dtype=str)
     files = np.sort(files)
     return files.transpose()
 
