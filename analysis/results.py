@@ -18,6 +18,7 @@ import utils
 import rdf
 import convert_LAMMPS_output as convert
 import RDF_from_DUMP as dump_to_rdf 
+import block_average
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -36,10 +37,10 @@ def main():
 
     #data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
     #save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
-    data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
-    save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
-    #data_path_list = ["large_box/varying_sigma"]
-    #save_path_list = ["large_box_varying_sigma"]
+    #data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
+    #save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
+    data_path_list = ["large_box/varying_sigma"]
+    save_path_list = ["large_box_varying_sigma"]
 
     for path, savename in zip(data_path_list, save_path_list):
         if "convert" in sysargs:
@@ -54,8 +55,8 @@ def main():
         filenames = files.sort_files(filenames, packing_list)
 
         #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
-        #save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
-        save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
+        save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
+        #save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
         #save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
 
 
@@ -128,14 +129,17 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
                 /C["THERMO_OUTPUT"]
             )
         cut = int(eq_steps*cut_fraction)
-        p = np.mean(pvt[variable_list.index("p")][cut:eq_steps])
-        T = np.mean(pvt[variable_list.index("T")][cut:eq_steps])
+        p = np.array(pvt[variable_list.index("p")][cut:eq_steps])
+        T = np.array(pvt[variable_list.index("T")][cut:eq_steps])
 
         N_list = np.array([C["N_L"], C["N_H"]])
         sigma_list = np.array([C["SIGMA_L"], C["SIGMA_H"]])
         x = N_list/np.sum(N_list)
         rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
         Z = eos.Z_measured_mix(p, rho, T)
+        std = block_average.get_block_average(Z)
+        Z = np.mean(Z)
+        print(f"Z = {Z:.3f} +/- {std:.5f}")
 
         mix_eos_vals = np.zeros(len(mix_eos_list))
         one_eos_vals = np.zeros(len(one_eos_list))
@@ -144,7 +148,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         for (j, eq) in enumerate(one_eos_list):
             one_eos_vals[j] = eq(C["PF"])
             
-        err = 0.0 # TODO: Compute this
+        err = std 
         values = np.array([Z, err])
         values = np.append(values, mix_eos_vals)
         values = np.append(values, one_eos_vals)

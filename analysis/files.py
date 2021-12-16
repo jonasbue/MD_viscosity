@@ -48,6 +48,7 @@ def sort_files(filenames, packing_fractions):
     if len(dump):
         files = np.array([fix, log, dump], dtype=str)
     else:
+        assert len(fix) == len(log), "A file is missing!"
         files = np.array([fix, log], dtype=str)
     files = np.sort(files)
     return files.transpose()
