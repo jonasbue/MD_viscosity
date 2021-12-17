@@ -225,14 +225,14 @@ def plot_Z(p, V, N, T, pf):
         "o", label=f"$\\xi$ = {pf}"
     )                          
 
-def plot_velocity_profile_from_file(fix_name):
+def plot_velocity_profile_from_file(fix_name, packing=None):
     vx, z = regression.get_velocity_profile(fix_name)
     vxl, vxu, zl, zu = regression.isolate_slabs(vx, z)
     lreg = regression.velocity_profile_regression(vxl, zl)
     ureg = regression.velocity_profile_regression(vxu, zu)
 
-    plot_velocity_profile(vxl[::6], zl[::6])
-    plot_velocity_profile(vxu[::6], zu[::6])
+    plot_velocity_profile(vxl[::6], zl[::6], packing)
+    plot_velocity_profile(vxu[::6], zu[::6], packing)
     plot_velocity_regression(lreg, zl, slab="Lower")
     plot_velocity_regression_error(lreg, zl)
     plot_velocity_regression(ureg, zu, slab="Upper")

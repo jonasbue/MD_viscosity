@@ -12,7 +12,7 @@
 
 import numpy as np
 import convert_LAMMPS_output as convert
-import viscosity
+#import viscosity
 
 
 def Z_measured(p, V, N, T, k=1):

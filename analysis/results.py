@@ -33,14 +33,16 @@ if "debug" in sysargs:
 def main():
     N = 2
     cut_fraction = 0.4
-    per_time=False
+    per_time=True
 
     #data_path_list = ["data/varying_fraction", "data/varying_mass", "data/varying_sigma"]
     #save_path_list = ["varying_fraction", "varying_mass", "varying_sigma"]
     #data_path_list = ["large_box/varying_mass", "large_box/varying_fraction", "large_box/varying_sigma"]
     #save_path_list = ["large_box_varying_mass", "large_box_varying_fraction", "large_box_varying_sigma"]
-    data_path_list = ["large_box/varying_sigma"]
-    save_path_list = ["large_box_varying_sigma"]
+    #data_path_list = ["large_box/varying_mass", "large_box/varying_sigma"]
+    #save_path_list = ["large_box_varying_mass", "large_box_varying_sigma"]
+    data_path_list = ["small_box"]
+    save_path_list = ["small_box_varying_mass"]
 
     for path, savename in zip(data_path_list, save_path_list):
         if "convert" in sysargs:
@@ -55,9 +57,9 @@ def main():
         filenames = files.sort_files(filenames, packing_list)
 
         #save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time)
-        save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
+        #save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
         #save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
-        #save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
+        save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
 
 
 def save_viscosity(cut_fraction, path, filenames, savename, per_time=False):
@@ -114,6 +116,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
     data = np.zeros((len(filenames), columns))
     data_name = "Z, error"
     for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="arrow")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
@@ -139,7 +142,6 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         Z = eos.Z_measured_mix(p, rho, T)
         std = block_average.get_block_average(Z)
         Z = np.mean(Z)
-        print(f"Z = {Z:.3f} +/- {std:.5f}")
 
         mix_eos_vals = np.zeros(len(mix_eos_list))
         one_eos_vals = np.zeros(len(one_eos_list))
@@ -230,6 +232,7 @@ def save_theory(path, filenames, savename, N=50):
             PY_vals[j] = eos.Z_PY(sigma, x, rho)
             BMCSL_vals[j] = eos.Z_BMCSL(sigma, x, rho)
             CS_vals[j] = eos.Z_CS(pf[j])
+
             # TODO: Fix indices. Probably separate file?
             rdf_SPT[j] = eos.rdf_SPT(sigma, x, rho, 0, 0)
             rdf_PY[j] = eos.rdf_PY_mix(sigma, x, rho, 0, 0)
@@ -242,15 +245,13 @@ def save_theory(path, filenames, savename, N=50):
                 enskog_vals_2[j], 
                 SPT_vals[j], 
                 PY_vals[j], 
-                CS_vals[j],
                 BMCSL_vals[j],
+                CS_vals[j],
                 rdf_SPT[j],
                 rdf_PY[j],
                 rdf_BMCSL[j],
             ])
-            #print(i*N+j)
             data = save.insert_results_in_array(data, vals, C, i*N+j, pf=pf[j])
-            #print(data[i*N+j,0:2])
 
     save.save_simulation_data(savename, data, 
             data_name="thorne_SPT, thorne_PY_mix, thorne_BMCSL, enskog_1, enskog_2, SPT_EoS, PY_EoS, BMCSL_EoS, CS_EoS, SPT_RDF_ii, PY_RDF_ii, BMCSL_RDF_ii"
@@ -271,15 +272,15 @@ def save_rdf(path, filenames, savename):
         log.info(f"Loading file\t{log_name}")
 
         # Compute rdf for all dump files.
-        dump_to_rdf.calcRDF(dump_name, 50, 10, 1, 5, 0.01, particle_types=2)
+        dump_to_rdf.calcRDF(dump_name, 1, 100, 1, 5, 0.015, particle_types=2)
 
         # Export a g_sigma for every simulation run.  g_r can be plotted as is,
         # but that should be done only for one or two system configurations in
         # the report.
         rdf_name = dump_name.replace('dump', 'RDF')+'.csv' 
-        g_sigma, g_r, r = rdf.export_RDF_data(rdf_name, savename)
+        g_sigma, g_r, r, std = rdf.export_RDF_data(rdf_name, savename)
         # TODO: Estimate error
-        err = 0
+        err = std
         rdf_at_contact[i] = g_sigma
 
         # Compute theoretical RDF at contact:

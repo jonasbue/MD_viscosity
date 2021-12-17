@@ -93,7 +93,7 @@ def regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper):
     lower_reg = velocity_profile_regression(vx_lower, z_lower)
     upper_reg = velocity_profile_regression(vx_upper, z_upper)
     dv = utils.get_avg(lower_reg.slope, upper_reg.slope)
-    std_err = utils.get_avg(lower_reg.stderr, upper_reg.slope)
+    std_err = np.sqrt(utils.get_avg(lower_reg.stderr**2, upper_reg.std_err**2)=
     return dv, std_err
 
 

@@ -214,7 +214,7 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
     # Uses bin_edges to calculate distance and volume of bins
     r, V_bin = binningVolume(bin_edges) 
     
-    # The following creates a list 
+    # The following creates a list of
     # time stamps to be averaged over
     # Stores 1D np.array of recorded time steps in dump
     time_steps = np.unique(dump_as_df['time_step'].values) 
@@ -242,14 +242,17 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
                 #   - different types (k == 0)
                 #   - the same type (k > 0)
                 p = N
-                if k == 0:
+                # This computes the RDF from all to all particles:
+                if k == 0: 
                     coor = extractCoordinates(dump_as_df, step) 
+                # This computes the RDF for particle 1:
                 elif k == 1:
                     p = N//2
                     coor = extractCoordinates(
                         dump_as_df.loc[dump_as_df['id'] < p],
                         step
                     ) 
+                # This computes the RDF for particle 2:
                 elif k == 2:
                     p = N//2
                     coor = extractCoordinates(
@@ -263,6 +266,7 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
             g_avg[j] = g_r
         # Appends result to g_all
         g_all = np.mean(g_avg, axis=0)
+        std = np.std(g_avg, axis=0)
     
     # The following code creates DataFrame and stores as csv for plotting.
     # Generates csv file name from dump name
@@ -270,17 +274,23 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
     # Generates col_names for pandas
     # TODO: add ij, ii, jj to file.
     col_names   = [f"g{i}" for i in np.arange(1,freq+1)] 
+    std_names   = [f"err{i}" for i in np.arange(1,freq+1)] 
     if particle_types == 2:
         col_names   = ([f"g{i}_ii" for i in np.arange(1,freq+1)] 
                     + [f"g{i}_jj" for i in np.arange(1,freq+1)]
                     + [f"g{i}_ij" for i in np.arange(1,freq+1)]
                 )
+        std_names = ([f"err{i}_ii" for i in np.arange(1,freq+1)]
+                    + [f"err{i}_jj" for i in np.arange(1,freq+1)]
+                    + [f"err{i}_ij" for i in np.arange(1,freq+1)]
+                )
     # Transposing because of how 
     # pandas handles lists of arrays
     g_all = pd.DataFrame(g_all, columns=col_names)
+    std = pd.DataFrame(std, columns=std_names)
     r = pd.DataFrame(r, columns=["r"])
-    plotting_csv = pd.concat([r, g_all], axis=1)
-    # Saves CSV-file
+    plotting_csv = pd.concat([r, g_all, std], axis=1)
+    # Saves CSV-file og g(r) for this system:
     plotting_csv.to_csv(file_name, index=False) 
     
     # Creates a simple plot of g in g_all

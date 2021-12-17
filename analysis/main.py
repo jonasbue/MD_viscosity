@@ -122,7 +122,9 @@ def plot_viscosity(
         # Note: Cut fraction must be low for this plot to be useful
         if "plot-profiles" in sysargs:
             # Plot velocity profiles and regressions of them
-            plotting.plot_velocity_profile_from_file(fix_name)
+            if C["MASS_H"] >= 500.0 and C["PF"] > 0.3:
+                plotting.plot_velocity_profile_from_file(fix_name, packing=C["PF"])
+        continue
         if plot_vs_time:
             t = np.linspace(C["RUN_TIME"]*cut_fraction, C["RUN_TIME"], len(eta))
             plt.plot(t, eta, label="Viscosity")
