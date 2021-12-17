@@ -10,5 +10,7 @@ large_data/*
 large_box/*
 data_old/*
 berendsen_data/*
+old_small_box/*
+small_box/*
 
 *.png
