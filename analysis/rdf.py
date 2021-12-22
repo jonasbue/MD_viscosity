@@ -14,10 +14,16 @@ def export_RDF_data(rdf_name, savename):
     """
 
     data = pd.read_csv(rdf_name)
-    g_r = np.array(data["g1_ii"])       # Array of rdf measured at different r
-    std = np.array(data["err1_ii"])
-    r = np.array(data["r"])             # Array of r
-    g_sigma = np.amax(g_r)              # Value of rdf measured at sigma
-    g_sigma_index = np.argmax(g_r)      # Index of g_sigma
+    g_r = np.array(data["g1"])      # Array of rdf measured at different r
+    std = np.array(data["err1"])
+    r = np.array(data["r"])         # Array of r
+    g_sigma = np.amax(g_r)          # Value of rdf measured at sigma
+    g_sigma_index = np.argmax(g_r)  # Index of g_sigma
     std = std[g_sigma_index]
     return g_sigma, g_r, r, std
+
+def show_an_rdf(rdf_name):
+    data = pd.read_csv(rdf_name)
+    g_r = np.array(data["g1"])      # Array of rdf measured at different r
+    std = np.array(data["err1"])
+    r = np.array(data["r"])         # Array of r

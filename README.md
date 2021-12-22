@@ -22,8 +22,9 @@ $ lmp -in filename
 $ ovito dump.lammps
 
 TODO:
-- Clean up save functions. 
-  * They should save measured values along with theoretical 
-    values, so the division can be done in pgfplots.
-- Clean up figures
-  * It should be easy to make a new for loop.
+- RDF at two different times
+- RDF at contact for large sigma
+- Correct results text
+- Correct discussion
+- Write inroduction
+- Write method

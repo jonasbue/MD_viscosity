@@ -54,6 +54,13 @@ def isolate_slabs(vx, z):
         upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
         z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
         z_upper = np.where(z>=z_mid, z, np.nan).reshape(z.shape)
+
+        ## Trim off the edges, because they can cause finite size error
+        #z_min = np.nanmin(z)
+        #lower_half = np.where(z>=z_min*1.1, vx, np.nan).reshape(vx.shape)
+        #upper_half = np.where(z<=z_max*0.9, vx, np.nan).reshape(vx.shape)
+        #z_lower = np.where(z>=z_min*1.1, z, np.nan).reshape(z.shape)
+        #z_upper = np.where(z<=z_max*0.95, z, np.nan).reshape(z.shape)
         
         lower_half = utils.remove_nans(lower_half)
         upper_half = utils.remove_nans(upper_half)
@@ -93,8 +100,10 @@ def regression_for_single_time(vx_lower, vx_upper, z_lower, z_upper):
     lower_reg = velocity_profile_regression(vx_lower, z_lower)
     upper_reg = velocity_profile_regression(vx_upper, z_upper)
     dv = utils.get_avg(lower_reg.slope, upper_reg.slope)
-    std_err = np.sqrt(utils.get_avg(lower_reg.stderr**2, upper_reg.std_err**2)=
-    return dv, std_err
+    v_err_lower = np.abs(find_uncertainty(lower_reg.stderr, vx_lower))
+    v_err_upper = np.abs(find_uncertainty(upper_reg.stderr, vx_upper))
+    error = np.sqrt(v_err_lower**2 + v_err_upper**2)/2
+    return dv, error
 
 
 def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
@@ -114,12 +123,12 @@ def regression_for_each_time(vx_lower, vx_upper, z_lower, z_upper, t):
     return dv, std_err
 
 
-def find_uncertainty(std_err, eta, conf=95):
+def find_uncertainty(std_err, value, conf=95):
     """ Returns the uncertainty in the slope estimation,
         as a confidence interval of percentage conf.
         Input:
             reg:    sc.LinregressInstance. Linear regression object.
-            eta:    measured viscosity.
+            value:  some numerical quantity. Velocity in MP experiment.
             conf:   desired confidence.
         Output:
             err:    error bound of the slope.
@@ -127,6 +136,6 @@ def find_uncertainty(std_err, eta, conf=95):
     t = stats.t
     tinv = lambda p, df: abs(t.ppf(p/2, df))
 
-    ts = tinv(1-conf/100, len(eta))
+    ts = tinv(1-conf/100, len(value))
     err = ts * std_err
     return err

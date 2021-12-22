@@ -266,7 +266,7 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
             g_avg[j] = g_r
         # Appends result to g_all
         g_all = np.mean(g_avg, axis=0)
-        std = np.std(g_avg, axis=0)
+        std = np.std(g_avg, axis=0)/np.sqrt(len(g_avg[:,0]))
     
     # The following code creates DataFrame and stores as csv for plotting.
     # Generates csv file name from dump name

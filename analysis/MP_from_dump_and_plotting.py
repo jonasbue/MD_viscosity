@@ -13,6 +13,7 @@ import numpy as np
 from scipy.stats import t as t_test
 from scipy.stats import stats
 import itertools
+import save
 
 import convert_LAMMPS_output as convert
 
@@ -75,7 +76,7 @@ def CreateMeanBins(data_frame, bin_edges, bin_value, bin_column='z', data_column
     return pd.DataFrame([bin_value, vx_mean], index=[bin_column + '_bin', data_column + '_mean']).transpose()
 
 
-def MullerPlathe(path, log_path, n_bins=100, bin_column='z', data_column='vx', measurment_time='VISC_TIME', measurment_fraction=0.5, box_base='BOX_BASE', box_height='BOX_HEIGHT'):
+def MullerPlathe(path, log_path, n_bins=100, bin_column='z', data_column='vx', measurment_time='VISC_TIME', measurment_fraction=0.5, box_base='BOX_BASE', box_height='BOX_HEIGHT', savename_v_profile=""):
     log = pd.read_csv(path + log_path + '.csv')
     dump = pd.read_csv(path + 'dump.' + log_path[4:] + '.csv')
     
@@ -107,24 +108,34 @@ def MullerPlathe(path, log_path, n_bins=100, bin_column='z', data_column='vx', m
     lower_regression = stats.linregress(lower_regress_data[bin_name].values, lower_regress_data[mean_name].values)
     upper_regression = stats.linregress(upper_regress_data[bin_name].values, upper_regress_data[mean_name].values)
     
-    #print(log_path)
-    #plt.scatter(lower_regress_data[bin_name], lower_regress_data[mean_name], label='Data')
-    #plt.plot(lower_regress_data[bin_name], lower_regression.intercept + lower_regression.slope*lower_regress_data[bin_name], 'r', label='Fitted line')
-    #plt.title('Lower regression')
-    #plt.xlabel('z')
-    #plt.ylabel('v_x')
-    #plt.legend()
-    #plt.show()
-    #plt.close()
 
-    #plt.scatter(upper_regress_data[bin_name], upper_regress_data[mean_name], label='Data')
-    #plt.plot(upper_regress_data[bin_name], upper_regression.intercept + upper_regression.slope*upper_regress_data[bin_name], 'r', label='Fitted line')
-    #plt.title('Upper regression')
-    #plt.xlabel('z')
-    #plt.ylabel('v_x')
-    #plt.legend()
-    #plt.show()
-    #plt.close()
+    velocity_profile_array = np.array(lower_regress_data)
+    print(velocity_profile_array.shape)
+    velocity_profile_array = np.concatenate([lower_regress_data, upper_regress_data])
+    print(velocity_profile_array.shape)
+    line_lower = np.array(lower_regression.intercept + lower_regression.slope*lower_regress_data[bin_name])
+    line_upper = np.array(upper_regression.intercept + upper_regression.slope*upper_regress_data[bin_name])
+    line = np.array([line_lower, line_upper]).flatten()
+
+    velocity_profile_array = np.stack((velocity_profile_array[:,0], velocity_profile_array[:,1], line)).T
+    np.savetxt(savename_v_profile, velocity_profile_array, header="z, v, reg", delimiter=", ", comments="")
+    plt.scatter(lower_regress_data[bin_name], lower_regress_data[mean_name], label='Data')
+    plt.plot(lower_regress_data[bin_name], lower_regression.intercept + lower_regression.slope*lower_regress_data[bin_name], 'r', label='Fitted line')
+    plt.title('Lower regression')
+    plt.xlabel('z')
+    plt.ylabel('v_x')
+    plt.legend()
+    plt.show()
+    plt.close()
+
+    plt.scatter(upper_regress_data[bin_name], upper_regress_data[mean_name], label='Data')
+    plt.plot(upper_regress_data[bin_name], upper_regression.intercept + upper_regression.slope*upper_regress_data[bin_name], 'r', label='Fitted line')
+    plt.title('Upper regression')
+    plt.xlabel('z')
+    plt.ylabel('v_x')
+    plt.legend()
+    plt.show()
+    plt.close()
 
     tinv = lambda p, df: abs(t_test.ppf(p/2, df))
     ts_lower = tinv(0.05, len(lower_regression)-2)
