@@ -5,6 +5,16 @@
 #############################################################
 import numpy as np
 
+def add_column_to_file(filename, new_column_data, new_column_name, fmt="%.3e"):
+    """ Takes a (csv) file and a 1D np.array, and appends 
+        the contents of the array as a new column to the file.
+    """
+    # TODO: Test this function
+    df = pd.read_csv(filename)
+    df[new_column_name] = new_column_data
+    # TODO: Add some assertions
+    df.to_csv(filename, float_format=fmt)
+
 def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
     """ Appends resuls of a simulation, and the
         configuration of the system, to a given

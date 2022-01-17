@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import RDF_from_DUMP as dump_to_rdf 
 
-# Given a directory, compute the RDF in the system, during
-# equillibration. 
+# Given a directory, compute the RDF in the system, 
+# as a function of time, during equillibration. 
 
 
 def export_RDF_data(rdf_name, savename):

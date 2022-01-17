@@ -55,7 +55,7 @@ variable M_STR      string mass_${LIGHT_MASS}_${HEAVY_MASS}
 variable PF_STR     string pf_${PACKING}
 variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename template
 
-variable DIR        string data/${DIRECTORY}/               # Directory
+variable DIR        string ../data/${DIRECTORY}/            # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps     # Fix file
