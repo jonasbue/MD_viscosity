@@ -1,0 +1,227 @@
+#####################################################################
+# This input script runs the Müller-Plathe viscosity experiment.    #
+# Structure is as follows:                                          #
+#   * First, some changeworthy parameters are defined.              #
+#       These are meant to be changed between simulation runs.      #
+#   * Second, filenames are defined for log, dump, and fix files.   #
+#       These are defined first so that everything                  #
+#       after is included in the log files                          #
+#   * Third, variables are defined.                                 #
+#   * Fourth, the system is set up, without any shear.              #
+#       This means a free pseudo-hard sphere gas.                   #
+#   * Lastly, the experiment is defined and run.                    #
+#       This step includes equilibration of the gas,                #
+#       and then the actual Müller-Plathe experiment.               #
+#####################################################################
+
+
+# When running different simulations, change the 
+# following values, instead of editing the script below.
+# The values are copied after filename definitions, and are 
+# thus included in the log file under a different name.
+# The variable name used in the script (and log file) 
+# is commented for every value in the list.
+# The log-name can be accessed from python, through function 
+# convert_LAMMPS_output.extract_constants_from_log().
+
+# The following parameters are required on input:
+#   - PACKING:          Volume packing fraction of the system.
+#   - DIRECTORY:        Where to store the output data. 
+#   - HEAVY_FRACTION:   The portion of particles that are heavy/large.
+#   - HEAVY_MASS:       The mass of the heavy particle.
+#   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
+
+variable EQUILLIBRATION_DURATION    equal 2     # Name -> RUN_TIME
+variable SIMULATION_DURATION        equal 4     # Name -> RUN_TIME
+
+variable PARTICLE_NUMBER            equal 1000  # Name -> N
+variable PARTICLE_DIAMETER          equal 1.0   # Name -> SIGMA
+variable PARTICLE_MASS              equal 1.0   # Name -> MASS
+
+### ======================================================= ###
+###                     Define filenames                    ###
+### ======================================================= ###
+# Files will have the structure 
+#   log.variable1_value1_value2.lammps
+# For safety, consider swapping the period decimal with a dash.
+
+variable N_STR      string N_${PARTICLE_NUMBER}
+variable S_STR      string sigma_${PARTICLE_DIAMETER}
+variable M_STR      string mass_${PARTICLE_MASS}
+variable PF_STR     string pf_${PACKING}
+variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename template
+
+variable DIR        string ../data/${DIRECTORY}/            # Directory
+variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
+variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
+variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps     # Fix file
+
+### Write out data to logfile ###
+log ${LOG_FILE}
+
+
+
+### ======================================================= ###
+###                     Define variables                    ###
+### ======================================================= ###
+
+## Numbers
+# System-wide parameters
+variable PF         equal ${PACKING}    # Packing fraction of the system
+variable N          equal 1000          # Number of atoms
+variable TEMP       equal 1.5           # Temperature
+
+variable TDAMP_EQ   equal 100.0         # Damping constant for thermostat 
+variable TDAMP_SIM  equal 10000.0       # determining how quickly the system 
+                                        # relaxes to desired temperature,
+                                        # in equillibration (EQ) and in MP 
+                                        # simulation (SIM).
+
+variable RAND_SEED_P  equal ${SEED_P}   # Seed for position.
+variable RAND_SEED_V  equal ${SEED_V}   # Seed for velocity.
+variable RAND_SEED_T  equal ${SEED_T}   # Seed for thermostat.
+
+# Parameters defining atoms and interactions
+variable ATOM_TYPES equal 1     # Number of atom types 
+variable MASS       equal 1.0   # Particle mass
+variable EPSILON    equal 1.0   # Depth of the Mie potential  
+variable MIE_REP    equal 12    # Repulsive exponent
+variable MIE_ATT    equal 6     # Attractive exponent
+variable SIGMA      equal ${PARTICLE_DIAMETER} 
+
+# Radius at which interaction potential is zero:
+variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
+
+# Length of box
+variable Z_SCALE    equal 3.0   # Ratio LZ/LX, giving the height of the box.
+variable Y_SCALE    equal 1.0   # Ratio LY/LX, giving the depth of the box.
+variable LX         equal ((PI*$N*${SIGMA}^3/(6*${Z_SCALE}*${Y_SCALE}*${PACKING}))^(1/3))/2
+variable LY         equal (${Y_SCALE}*${LX})
+variable LZ         equal (${Z_SCALE}*${LX})
+
+# When minimizing system energy to avoid overlapping particles...
+variable ETOL       equal 1e-4  # Max energy toleranze.
+variable FTOL       equal 0.0   # Max force tolerance.
+variable MAXITER    equal 1e4   # Max number of iterations.
+variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations 
+
+# Simulation and output parameters
+# Length of simulation.
+variable RUN_TIME       equal ${SIMULATION_DURATION}    
+# Time to equillibrate system.
+variable EQUILL_TIME    equal ${EQUILLIBRATION_DURATION}
+
+variable DT             equal 0.001                 # Time step
+variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
+variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
+variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
+variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo output
+
+
+# Müller-Plathe experiment parameters
+variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
+variable SWAP_NUMBER        equal 1     # Number of pairs to swap every time.
+variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER} # Dimensionless number.
+
+# Number of steps between particle swaps.
+# NOTE: Momentum exchange rate must be smaller than (or equal to) THERMO_OUTPUT.
+variable MOMENTUM_EXCHANGE_RATE equal 500
+
+
+# fix/ave sampling definitions
+variable NFREQ      equal 500   # How often an average 
+                                # value is computed.
+variable NREPEAT    equal 1     # Number of values included 
+                                # in the averaging.
+variable NEVERY     equal 1     # Steps between entries in 
+                                # the average computation.
+
+## Strings
+variable POTENTIAL  string "mie/cut"    # Lennard-Jones potential
+variable THERMOSTAT string "temp/csvr"  # CSVR thermostat
+
+# Make a dump of system:
+dump    DUMP all custom ${DUMP_STEPS} & 
+        ${DUMP_FILE} id x y z vx vy vz
+
+
+
+### ======================================================= ###
+###                         Define system                   ###
+### ======================================================= ###
+
+# Define atom style
+atom_style atomic
+
+# Create a box shaped region with sides 2L_{x,y,x} and center in the origin:
+region          REGION block -${LX} ${LX} -${LY} ${LY} -${LZ} ${LZ} units box
+
+create_box      ${ATOM_TYPES} REGION                # Create a box in REGION.
+create_atoms    1 random $N ${RAND_SEED_P} REGION   # Fill the box with atoms.
+mass            1 ${MASS}                           # Give the atoms mass.
+velocity        all create ${TEMP} ${RAND_SEED_V}   # Give the atoms random 
+                                                    # velocities, distributed 
+                                                    # around one temperature.
+
+pair_style  ${POTENTIAL} ${CUTOFF}                          # Define pair 
+                                                            # interactions.
+pair_coeff  * * ${EPSILON} ${SIGMA} ${MIE_REP} ${MIE_ATT}   # Define interaction 
+                                                            # coefficients.
+# Shifts the Mie potensial so that its cutoff is at zero:
+pair_modify shift yes   
+
+# Define timestep
+timestep    ${DT}
+
+
+
+### ======================================================= ###
+###                     Run simulation                      ###
+### ======================================================= ###
+
+# Minimize system energy to remove atom overlaps:
+minimize    ${ETOL} ${FTOL} ${MAXITER} ${MAXEVAL} 
+
+# Fix the system in the microcanonical ensemble
+fix NVE_FIX all nve
+# Fix the temperature with a Berendsen thermostat
+fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP_EQ} ${RAND_SEED_T}
+
+thermo_style    custom step etotal pe ke temp press vol # Write thermodynamic   
+thermo          ${THERMO_OUTPUT}                        # quantities to console 
+                                                        
+
+run ${EQUILL_STEPS}     # Run simulation to equillibrate the system.
+                        # This can be swapped with a save-file of 
+                        # a system in equillibrium, to save time.
+
+# Viscosity measurement setup, as described by Müller-Plathe:
+fix MULLER_PLATHE all viscosity     &
+    ${MOMENTUM_EXCHANGE_RATE}       &
+    x z                             &
+    ${CHUNK_NUMBER}                 &
+    swap ${SWAP_NUMBER}
+
+# Compute chunk velocity. 
+# The chunks do not need to have the same thickness as above.
+compute LAYERS all chunk/atom       &
+    bin/1d                          &
+    z lower ${CHUNK_THICKNESS}      &
+    units reduced
+
+# Calculate average chunk velocity, for later analysis in Python.
+fix VEL_PROFILE_FIX all ave/chunk   & 
+    ${NEVERY}                       &
+    ${NREPEAT}                      &
+    ${NFREQ}                        &
+    LAYERS                          &
+    vx                              &
+    file ${FIX_FILE}
+
+# Write out thermodynamic quantities to console.
+# Importantly, this includes the swapped momentum, named f_MULLER_PLATHE.
+thermo_style    custom step etotal pe ke temp press vol f_MULLER_PLATHE
+thermo          ${THERMO_OUTPUT}        
+
+# Run simulation
+run ${RUN_STEPS}    
