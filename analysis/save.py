@@ -5,7 +5,6 @@
 #############################################################
 import numpy as np
 
-import eos
 import theory
 
 def get_data_name(theory_functions, viscosity_function=None):

@@ -12,12 +12,10 @@ import sys
 import files
 import theory 
 import muller_plathe
-import eos
 import save
 import utils
 import rdf
-import convert_LAMMPS_output as convert
-import RDF_from_DUMP as dump_to_rdf 
+import convert
 import block_average
 
 sysargs = sys.argv

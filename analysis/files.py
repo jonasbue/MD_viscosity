@@ -10,7 +10,7 @@
 
 import numpy as np
 import pandas as pd
-import convert_LAMMPS_output as convert
+import convert
 from os import listdir
 import logging
 import sys

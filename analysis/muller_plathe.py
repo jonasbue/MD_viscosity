@@ -4,7 +4,7 @@
 #########################################################
 
 import numpy as np
-import convert_LAMMPS_output as convert
+import convert
 import theory
 import files
 import tests

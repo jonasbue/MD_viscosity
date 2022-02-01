@@ -8,7 +8,7 @@
 
 import numpy as np
 import sys
-import eos
+import theory
 import utils
 
 

@@ -5,7 +5,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import eos
 import theory
 
 def assert_chunk_number(N_chunks, constants):
