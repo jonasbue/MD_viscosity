@@ -54,13 +54,6 @@ def isolate_slabs(vx, z):
         upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
         z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
         z_upper = np.where(z>=z_mid, z, np.nan).reshape(z.shape)
-
-        ## Trim off the edges, because they can cause finite size error
-        #z_min = np.nanmin(z)
-        #lower_half = np.where(z>=z_min*1.1, vx, np.nan).reshape(vx.shape)
-        #upper_half = np.where(z<=z_max*0.9, vx, np.nan).reshape(vx.shape)
-        #z_lower = np.where(z>=z_min*1.1, z, np.nan).reshape(z.shape)
-        #z_upper = np.where(z<=z_max*0.95, z, np.nan).reshape(z.shape)
         
         lower_half = utils.remove_nans(lower_half)
         upper_half = utils.remove_nans(upper_half)

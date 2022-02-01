@@ -13,6 +13,14 @@ def remove_nans(arr):
 
 
 def status_bar(i, n, l=30, fmt="percent"):
+    """ 
+        Drawa a status bar showing the progress of a loop.  
+        Three styles are possible. Examples are shown for 
+        the simple ones:
+            percent:    50 %
+            arrow:      [===>   ]
+            train:      A train.
+    """
     p = int((i/n)*l)
     r = l-p-int(l/10)
     oo = " O o"

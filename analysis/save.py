@@ -14,8 +14,6 @@ def get_data_name(theory_functions, viscosity_function=None):
         string with the unique name of the theoretical
         functions, to be used as a file header.
     """
-
-    # TODO: Start here.
     function_names = {
         theory.Z_SPT       : "EOS_SPT",
         theory.Z_PY        : "EOS_PY",
@@ -69,6 +67,11 @@ def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
 
 
 def insert_results_in_array(data, value, C, i, err=None, pf=None):
+    """
+        Given a 1 or 2D array of data, inserts 
+        a 0 or 1D value array at index i.
+        Returns the new array.
+    """
     parameters = get_system_config(C, pf)
     if np.isscalar(value):
         vals = np.append(parameters, value)
@@ -83,6 +86,12 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
     return data
 
 def get_system_config(C=None, pf=None):
+    """
+        Given a many particle system, this function creates 
+        an array of its characterizing quantities, such as
+        packing fraction, particle number and mass etc.
+        To be used in datafiles.
+    """
     if C != None:
         number_of_components = C["ATOM_TYPES"]
         if number_of_components == 1:
@@ -108,6 +117,11 @@ def get_system_config(C=None, pf=None):
 
 
 def create_data_array(filenames, theory_functions):
+    """
+        Given a list of filenames, and a list of theoretical
+        functions of interest, this returns an empty array 
+        containing enough space for all quantities.
+    """
     rows = len(filenames)
     columns = (
         len(get_system_config()) 
