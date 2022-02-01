@@ -10,7 +10,7 @@ import logging
 import sys
 
 import files
-import viscosity
+import theory 
 import muller_plathe
 import eos
 import save
@@ -60,7 +60,7 @@ def main():
 
     data_path_list = ["./data/run_test"]
     save_path_list = ["savename"]
-    theoretical_viscosity = viscosity.get_enskog_from_C
+    theoretical_viscosity = theory.enskog
 
     for path, savepath in zip(data_path_list, save_path_list):
         if "convert" in sysargs:
@@ -75,15 +75,15 @@ def main():
             path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
         compute_eos_from_directory(
             path, get_savename("eos"), get_eos_list(), computation_params)
-        save_theory(path, filenames, get_savename("theory"))
-        save_rdf(path, filenames, get_savename=("rdf"))
+        #save_theory(path, filenames, get_savename("theory"))
+        #save_rdf(path, filenames, get_savename=("rdf"))
 
 def get_rdf_list():
-    #return [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
-    return [eos.rdf_PY, eos.rdf_CS]
+    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
+    return [theory.rdf_PY, theory.rdf_CS]
 def get_eos_list():
-    #return [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
-    return [eos.Z_PY, eos.Z_CS]
+    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
+    return [theory.Z_PY, theory.Z_CS]
 
 
 # This function should not be.
@@ -103,7 +103,7 @@ def compute_viscosity_from_directory(
         theoretical_viscosity
     )
 
-    data_name = save.get_data_name(theory_functions) # TODO: Start in this function
+    data_name = save.get_data_name(theory_functions, theoretical_viscosity) # TODO: Start in this function
     save.save_simulation_data(savename, data, data_name=data_name)
 
 def compute_eos_from_directory(
@@ -118,7 +118,6 @@ def compute_eos_from_directory(
         theory_functions,
         computation_params
     )
-    print(data)
     data_name = save.get_data_name(theory_functions) # TODO: Start in this function
     save.save_simulation_data(savename, data, data_name=data_name)
 
@@ -140,9 +139,9 @@ def compute_all_eoss(
 
         Z, C, error = get_eos_from_file(log_name, fix_name, computation_params["cut_fraction"])
 
-        theory = [eos.get_Z_from_C(C, Z) for Z in theory_functions]
+        theoretical_values = [theory.get_Z_from_C(C, Z) for Z in theory_functions]
         values = np.array([Z, error])
-        values = np.append(values, theory)
+        values = np.append(values, theoretical_values)
         save.insert_results_in_array(data, values, C, i)
     print("")
     return data
@@ -166,14 +165,14 @@ def get_eos_from_file(log_name, fix_name, cut_fraction):
     sigma_list = utils.get_component_lists(C, "SIGMA")
     x = N_list/np.sum(N_list)
     rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
-    Z = eos.Z_measured_mix(p, rho, T)
+    Z = theory.Z_measured_mix(p, rho, T)
     std = block_average.get_block_average(Z)
     Z = np.mean(Z)
     return Z, C, std
 
 def save_eos(path, filenames, cut_fraction, number_of_components, savename):
-    mix_eos_list = [eos.Z_SPT, eos.Z_PY, eos.Z_BMCSL]
-    one_eos_list = [eos.Z_CS]
+    mix_eos_list = [theory.Z_SPT, theory.Z_PY, theory.Z_BMCSL]
+    one_eos_list = [theory.Z_CS]
     columns = len(save.get_system_config()) + 2 + len(mix_eos_list) + len(one_eos_list)
     data = np.zeros((len(filenames), columns))
     data_name = "Z, error"
@@ -189,7 +188,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         mix_eos_vals = np.zeros(len(mix_eos_list))
         one_eos_vals = np.zeros(len(one_eos_list))
         for (j, eq) in enumerate(mix_eos_list):
-            mix_eos_vals[j] = eq(viscosity.get_sigma(sigma_list), x, rho)
+            mix_eos_vals[j] = eq(theory.get_sigma(sigma_list), x, rho)
         for (j, eq) in enumerate(one_eos_list):
             one_eos_vals[j] = eq(C["PF"])
             
@@ -259,27 +258,27 @@ def save_theory(path, filenames, savename, N=50):
         rdf_BMCSL = np.zeros(N)
 
         for j in range(N):
-            thorne_vals_SPT[j] = viscosity.thorne(
-                pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_SPT)
-            thorne_vals_PY[j] = viscosity.thorne(
-                pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_PY_mix)
-            thorne_vals_BMCSL[j] = viscosity.thorne(
-                pf[j], x, mass_list, sigma_list, T, rdf=eos.rdf_BMCSL)
-            enskog_vals_1[j] = viscosity.enskog(
+            thorne_vals_SPT[j] = theory.thorne(
+                pf[j], x, mass_list, sigma_list, T, rdf=theory.rdf_SPT)
+            thorne_vals_PY[j] = theory.thorne(
+                pf[j], x, mass_list, sigma_list, T, rdf=theory.rdf_PY_mix)
+            thorne_vals_BMCSL[j] = theory.thorne(
+                pf[j], x, mass_list, sigma_list, T, rdf=theory.rdf_BMCSL)
+            enskog_vals_1[j] = theory.enskog(
                 pf[j], sigma_list[0], T, mass_list[0])
-            enskog_vals_2[j] = viscosity.enskog(
+            enskog_vals_2[j] = theory.enskog(
                 pf[j], sigma_list[1], T, mass_list[1])
             rho = 6*pf[j]/np.pi/np.sum(x*np.diag(sigma_list)**3)
-            sigma = viscosity.get_sigma(sigma_list)
-            SPT_vals[j] = eos.Z_SPT(sigma, x, rho)
-            PY_vals[j] = eos.Z_PY(sigma, x, rho)
-            BMCSL_vals[j] = eos.Z_BMCSL(sigma, x, rho)
-            CS_vals[j] = eos.Z_CS(pf[j])
+            sigma = theory.get_sigma(sigma_list)
+            SPT_vals[j] = theory.Z_SPT(sigma, x, rho)
+            PY_vals[j] = theory.Z_PY(sigma, x, rho)
+            BMCSL_vals[j] = theory.Z_BMCSL(sigma, x, rho)
+            CS_vals[j] = theory.Z_CS(pf[j])
 
             # TODO: Fix indices. Probably separate file?
-            rdf_SPT[j] = eos.rdf_SPT(sigma, x, rho, 0, 0)
-            rdf_PY[j] = eos.rdf_PY_mix(sigma, x, rho, 0, 0)
-            rdf_BMCSL[j] = eos.rdf_BMCSL(sigma, x, rho, 0, 0)
+            rdf_SPT[j] = theory.rdf_SPT(sigma, x, rho, 0, 0)
+            rdf_PY[j] = theory.rdf_PY_mix(sigma, x, rho, 0, 0)
+            rdf_BMCSL[j] = theory.rdf_BMCSL(sigma, x, rho, 0, 0)
             vals = np.array([
                 thorne_vals_SPT[j], 
                 thorne_vals_PY[j], 
@@ -303,7 +302,7 @@ def save_theory(path, filenames, savename, N=50):
 
 def save_rdf(path, filenames, savename):
     rdf_at_contact = np.zeros(len(filenames))
-    rdf_list = [eos.rdf_PY_mix, eos.rdf_SPT, eos.rdf_BMCSL]
+    rdf_list = [theory.rdf_PY_mix, theory.rdf_SPT, theory.rdf_BMCSL]
     theoretical = np.zeros((len(filenames), 3))
     pf = np.zeros(len(filenames))
     columns = len(save.get_system_config())+2+len(rdf_list)
@@ -333,7 +332,7 @@ def save_rdf(path, filenames, savename):
         N_list      = np.array([C["N_L"], C["N_H"]])
         sigma_list  = np.array([C["SIGMA_L"], C["SIGMA_H"]])
         mass_list   = np.array([C["MASS_L"], C["MASS_H"]])
-        sigma       = viscosity.get_sigma(sigma_list)
+        sigma       = theory.get_sigma(sigma_list)
         x           = N_list/np.sum(N_list)
         rho         = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
 

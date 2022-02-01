@@ -12,7 +12,7 @@
 
 import numpy as np
 import convert_LAMMPS_output as convert
-import viscosity
+import theory 
 import utils
 
 

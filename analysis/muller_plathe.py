@@ -5,7 +5,7 @@
 
 import numpy as np
 import convert_LAMMPS_output as convert
-import viscosity
+import theory
 import files
 import tests
 import utils
@@ -50,9 +50,9 @@ def compute_all_viscosities(directory, computation_params, theory_functions, the
             computation_params, 
         )
 
-        theory = [theoretical_viscosity(C, rdf) for rdf in rdf_list]
+        theoretical_value = [theory.get_viscosity_from_C(C, theoretical_viscosity, rdf) for rdf in rdf_list]
         values = np.array([eta, error])
-        values = np.append(values, theory)
+        values = np.append(values, theoretical_value)
         save.insert_results_in_array(data, values, C, i)
     print("")
     return data
@@ -128,7 +128,7 @@ def compute_viscosity(
     t = np.unique(t)
     assert Ptot.shape == np.unique(t).shape, f"Ptot: {Ptot.shape}, t: {t.shape}"
 
-    eta = np.mean(viscosity.get_viscosity(Ptot, A, t, dv))
+    eta = np.mean(theory.get_viscosity(Ptot, A, t, dv))
     err_abs = eta*v_err/np.mean(dv)      # This is the absolute error
     err_rel = v_err/np.mean(dv)          # Relative error
     #print(f"{eta:.5f}, {err_abs:.5f}, {err_rel:.5f}")
@@ -205,7 +205,7 @@ def extract_simulation_variables(log_filename, fix_filename):
     Lx = constants["LX"]
     Ly = constants["LY"]
     Lz = constants["LZ"]
-    A = viscosity.get_area(Lx, Ly)
+    A = theory.get_area(Lx, Ly)
 
     fix_variable_list = ["t_fix", "Nchunks"]
     fix_table = files.load_system(fix_filename)

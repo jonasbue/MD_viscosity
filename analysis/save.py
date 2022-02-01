@@ -6,7 +6,7 @@
 import numpy as np
 
 import eos
-import viscosity
+import theory
 
 def get_data_name(theory_functions, viscosity_function=None):
     """
@@ -15,25 +15,26 @@ def get_data_name(theory_functions, viscosity_function=None):
         string with the unique name of the theoretical
         functions, to be used as a file header.
     """
-    #if viscosity_function != None:
-    #    viscosity_function_names = [f.__name__ for f in viscosity_function_names]
 
     # TODO: Start here.
     function_names = {
-        eos.Z_SPT   : "EOS_SPT",
-        eos.Z_PY    : "EOS_PY",
-        eos.Z_BMCSL : "EOS_BMCSL",
-        eos.Z_CS    : "EOS_CS",
-        eos.rdf_SPT   : "RDF_SPT",
-        eos.rdf_PY    : "RDF_PY",
-        eos.rdf_BMCSL : "RDF_BMCSL",
-        eos.rdf_CS    : "RDF_CS",
-        viscosity.enskog    : "enskog_",
-        viscosity.thorne    : "thorne_",
-        None                : "",
+        theory.Z_SPT       : "EOS_SPT",
+        theory.Z_PY        : "EOS_PY",
+        theory.Z_BMCSL     : "EOS_BMCSL",
+        theory.Z_CS        : "EOS_CS",
+        theory.rdf_SPT     : "RDF_SPT",
+        theory.rdf_PY      : "RDF_PY",
+        theory.rdf_BMCSL   : "RDF_BMCSL",
+        theory.rdf_CS      : "RDF_CS",
+        theory.enskog          : "enskog_",
+        theory.thorne          : "thorne_",
     }
-    data_name = "".join(
-        [f",\t{function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])
+    if viscosity_function:
+        data_name = "".join([f",\t{function_names[viscosity_function]}\
+            {function_names[t]}" for t in theory_functions])
+    else:
+        data_name = "".join(
+            [f",\t{function_names[t]}" for t in theory_functions])
     return data_name
 
 
@@ -78,6 +79,7 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
     else:
         l = len(parameters)
         data[i,:l] = parameters
+        print("val is", value)
         data[i,l:l+len(value)] = value
     return data
 
