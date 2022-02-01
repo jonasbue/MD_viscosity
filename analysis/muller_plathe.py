@@ -10,6 +10,54 @@ import files
 import tests
 import utils
 import regression
+import save
+
+import logging
+import sys
+
+sysargs = sys.argv
+log = logging.getLogger()
+log.addHandler(logging.StreamHandler(sys.stdout))
+if "debug" in sysargs:
+    # logging.Debug is more correct to use, 
+    # but info is cleaner.
+    log.setLevel(logging.INFO)
+
+def compute_all_viscosities(directory, computation_params, theory_functions, theoretical_viscosity):
+    """
+        Performs a viscosity computation on all simulation
+        data in one directory.
+    """
+    cut_fraction = computation_params["cut_fraction"]
+    N = computation_params["particle_types"]
+    per_time = computation_params["per_time"]
+    path = directory
+    filenames = files.get_all_filenames(directory)
+    rdf_list = theory_functions
+    data = save.create_data_array(filenames, rdf_list)
+
+    for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="train")
+        fix_name = f"{path}/" + f[0]
+        log_name = f"{path}/" + f[1]
+        log.info(f"Loading file\t{fix_name}")
+        log.info(f"Loading file\t{log_name}")
+
+        # Compute and plot viscosity for all packing fractions
+        eta, C, error = find_viscosity_from_file(
+            log_name, 
+            fix_name, 
+            computation_params, 
+        )
+
+        theory = [theoretical_viscosity(C, rdf) for rdf in rdf_list]
+        values = np.array([eta, error])
+        values = np.append(values, theory)
+        save.insert_results_in_array(data, values, C, i)
+    print("")
+    return data
+
+
 
 def compute_viscosity(
         vx, z, t, A, Ptot, 
@@ -90,9 +138,7 @@ def compute_viscosity(
 def find_viscosity_from_file(
         log_filename, 
         fix_filename, 
-        cut_fraction, 
-        per_time=True,
-        step=20,
+        computation_params
     ):
     """ Given a log and fix file from a Müller-Plathe simulation, 
         compute the viscosity of the simulated fluid.
@@ -109,8 +155,24 @@ def find_viscosity_from_file(
     """
     # Extract vx and z from fix file.
     vx, z = regression.get_velocity_profile(fix_filename)
+    C, Lz, t, A, Ptot, N_chunks = extract_simulation_variables(log_filename, fix_filename)
+
+    per_time = computation_params["per_time"]
+    step = computation_params["step"]
+    cut_fraction = computation_params["cut_fraction"]
+
+    # Compute viscosity.
+    eta, eta_abs, eta_rel = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time, step=step)
+    return eta, C, eta_abs
 
 
+def extract_simulation_variables(log_filename, fix_filename):
+    """
+        From a log and a fix file from one simulation,
+        extract the variables (time, box dimensions, 
+        total transferred momentum, number of chunks)
+        that are needed to compute the viscosity.
+    """
     # Extract time and momentum transferred from log file.
     variable_list = ["t", "Px"]
     log_table = files.load_system(log_filename)
@@ -156,7 +218,4 @@ def find_viscosity_from_file(
 
     # Check that chunk number is correct.
     tests.assert_chunk_number(N_chunks, constants)
-
-    # Compute viscosity.
-    eta, eta_abs, eta_rel = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time, step=step)
-    return eta, constants, eta_abs
+    return constants, Lz, t, A, Ptot, N_chunks 

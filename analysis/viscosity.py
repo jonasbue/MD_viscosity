@@ -10,6 +10,7 @@
 import numpy as np
 import sys
 import eos
+import utils
 
 
 def enskog(pf, sigma, T, m, k=1.0, rdf=eos.rdf_PY):
@@ -34,13 +35,14 @@ def zero_density_viscosity(m, sigma, T, k):
 def get_enskog_from_C(C, rdf=eos.rdf_PY):
     pf = C["PF"]
     T = C["TEMP"]
-    N_list = np.array([C["N_L"], C["N_H"]])
-    sigma_list = np.array([C["SIGMA_L"], C["SIGMA_H"]])
-    mass_list = np.array([C["MASS_L"], C["MASS_H"]])
+    N_list = utils.get_component_lists(C, "N")
+    sigma_list = utils.get_component_lists(C, "SIGMA")
+    mass_list = utils.get_component_lists(C, "MASS")
     x = N_list/np.sum(N_list)
-    comp1 = enskog(pf, sigma_list[0], T, mass_list[0], rdf=rdf)
-    comp2 = enskog(pf, sigma_list[1], T, mass_list[1], rdf=rdf)
-    return np.array([comp1, comp2])
+    visc = np.zeros(C["ATOM_TYPES"])
+    for i in range(len(visc)):
+        visc[i] = enskog(pf, sigma_list[i], T, mass_list[i], rdf=rdf)
+    return visc
 
 def get_thorne_from_C(C, rdf):
     pf = C["PF"]
@@ -121,12 +123,14 @@ def get_effective_sigma(pf, sigma, x, rho, rdf):
     sigma_eff = get_sigma(sigma_eff_list)
     return sigma_eff
 
+
 def get_rdf(x, sigma, N, rho, rdf=eos.rdf_SPT):
     Xi = np.ones((N,N))
     for i in range(N):
         for j in range(N):
             Xi[i,j] = rdf(sigma, x, rho, i, j)
     return Xi
+
 
 def get_Xi(x, sigma, N, rho):
     """ 

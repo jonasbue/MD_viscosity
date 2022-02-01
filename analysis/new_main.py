@@ -29,77 +29,147 @@ if "debug" in sysargs:
     log.setLevel(logging.INFO)
 
 
+# 1. convert all files in directory
+# 2. compute viscosity and save data, with theoretical values for the same system
+# 3. compute the EOS at equilibrium
+# 4. compute the RDF at equilibrium
+# 5. plot interesting quantities from the data files
+
+# def compute_all_viscosities(directory):
+# def compute_eos_at_equilibrium(directory):
+# def compute_rdf_at_equilibrium(directory):
+# def set_computation_parameters():
+# 
+# convert_all_to_csv(directory):
+# params = set_computation_parameters():
+# data = compute_all_viscosities(directory):
+# save(data)
+# data = compute_eos_at_equilibrium(directory):
+# save(data)
+# data = compute_rdf_at_equilibrium(directory):
+# save(data)
+
 ## Rename to convert_something_something
 def main():
-    N = 1
-    cut_fraction = 0.3
-    step = 20
-    per_time=False
+    computation_params = {
+        "particle_types": 2,
+        "cut_fraction"  : 0.3,
+        "step" 		    : 20,
+        "per_time"		: False,
+    }
 
     data_path_list = ["./data/run_test"]
     save_path_list = ["savename"]
+    theoretical_viscosity = viscosity.get_enskog_from_C
 
-    for path, savename in zip(data_path_list, save_path_list):
+    for path, savepath in zip(data_path_list, save_path_list):
         if "convert" in sysargs:
             files.all_files_to_csv(path)
         save_dir = "./data/processed/"
         filenames = files.get_all_filenames(path)
-        print(path)
-        print("Number of files: ", len(filenames))
-        packing_list = files.find_all_packing_fractions(path)
-        #print("Number of packing fractions:", len(packing_list))
-        #print("Number of configurations:", len(filenames)//len(packing_list))
-        filenames = files.sort_files(filenames, packing_list)
+        # Brief function to wrap the name of the saved files.
+        def get_savename(body):
+            return f"{save_dir}{body}_{savepath}.csv"
 
-        save_viscosity(cut_fraction, path, filenames, savename=f"{save_dir}visc_{savename}.csv", per_time=per_time, step=step)
-        save_eos(path, filenames, cut_fraction, N, savename=f"{save_dir}eos_{savename}.csv")
-        save_theory(path, filenames, savename=f"{save_dir}theory_{savename}.csv")
-        #save_rdf(path, filenames, savename=f"{save_dir}rdf_{savename}.csv")
+        compute_viscosity_from_directory(
+            path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
+        compute_eos_from_directory(
+            path, get_savename("eos"), get_eos_list(), computation_params)
+        save_theory(path, filenames, get_savename("theory"))
+        save_rdf(path, filenames, get_savename=("rdf"))
+
+def get_rdf_list():
+    #return [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
+    return [eos.rdf_PY, eos.rdf_CS]
+def get_eos_list():
+    #return [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
+    return [eos.Z_PY, eos.Z_CS]
 
 
-def save_viscosity(cut_fraction, path, filenames, savename, per_time=False, step=20):
-    rdf_list = [eos.rdf_SPT, eos.rdf_PY_mix, eos.rdf_BMCSL]
-    one_comp_rdf_list = [eos.rdf_CS, eos.rdf_PY]
-    columns = len(save.get_system_config()) + 2 + len(rdf_list) + 2*len(one_comp_rdf_list)
-    data = np.zeros((len(filenames),columns))
-    data_name = "viscosity, error"
+# This function should not be.
+# Have one compute_all, and then one save_data which takes the array.
+def compute_viscosity_from_directory(
+        directory, 
+        savename, 
+        theory_functions, 
+        computation_params,
+        theoretical_viscosity
+    ):
+    # Compute all the viscosities in directory
+    data = muller_plathe.compute_all_viscosities(
+        directory, 
+        computation_params, 
+        theory_functions,
+        theoretical_viscosity
+    )
+
+    data_name = save.get_data_name(theory_functions) # TODO: Start in this function
+    save.save_simulation_data(savename, data, data_name=data_name)
+
+def compute_eos_from_directory(
+        directory, 
+        savename, 
+        theory_functions, 
+        computation_params
+    ):
+    # Compute all the viscosities in directory
+    data = compute_all_eoss(
+        directory, 
+        theory_functions,
+        computation_params
+    )
+    print(data)
+    data_name = save.get_data_name(theory_functions) # TODO: Start in this function
+    save.save_simulation_data(savename, data, data_name=data_name)
+
+def compute_all_eoss(
+        directory, 
+        theory_functions, 
+        computation_params
+    ):
+    path = directory
+    filenames = files.get_all_filenames(directory)
+    eos_list = theory_functions
+    data = save.create_data_array(filenames, eos_list)
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="train")
+        #utils.status_bar(i, len(filenames), fmt="arrow")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
         log.info(f"Loading file\t{log_name}")
 
-        # Compute and plot viscosity for all packing fractions
-        eta, C, error = muller_plathe.find_viscosity_from_file(
-            log_name, fix_name, cut_fraction, per_time, step
-        )
+        Z, C, error = get_eos_from_file(log_name, fix_name, computation_params["cut_fraction"])
 
-        thorne_values = np.zeros(len(rdf_list))
-        enskog_values = np.zeros((len(one_comp_rdf_list),2))
-        #C["SIGMA_H"] = 15.4
-        for (j, rdf) in enumerate(rdf_list):
-            thorne_values[j] = viscosity.get_thorne_from_C(C, rdf)
-        for (j, rdf) in enumerate(one_comp_rdf_list):
-            enskog_values[j] = viscosity.get_enskog_from_C(C, rdf)
-
-        values = np.array([eta])
-        values = np.append(values, error)
-        values = np.append(values, thorne_values)
-        values = np.append(values, enskog_values[:,0])
-        values = np.append(values, enskog_values[:,1])
-
+        theory = [eos.get_Z_from_C(C, Z) for Z in theory_functions]
+        values = np.array([Z, error])
+        values = np.append(values, theory)
         save.insert_results_in_array(data, values, C, i)
-
     print("")
-    data_name += "".join(
-        [f", thorne_{r.__name__[4:]}" for r in rdf_list])
-    data_name += "".join(
-        [f", enskog1_{r.__name__[4:]}" for r in one_comp_rdf_list])
-    data_name += "".join(
-        [f", enskog2_{r.__name__[4:]}" for r in one_comp_rdf_list])
-    save.save_simulation_data(savename, data, data_name=data_name)
+    return data
 
+
+def get_eos_from_file(log_name, fix_name, cut_fraction):
+    variable_list = ["p", "V", "T"]
+    C = convert.extract_constants_from_log(log_name)
+    log_table = files.load_system(log_name)
+    pvt = files.unpack_variables(log_table, log_name, variable_list)
+
+    eq_steps = int(
+            C["EQUILL_STEPS"]
+            /C["THERMO_OUTPUT"]
+        )
+    cut = int(eq_steps*cut_fraction)
+    p = np.array(pvt[variable_list.index("p")][cut:eq_steps])
+    T = np.array(pvt[variable_list.index("T")][cut:eq_steps])
+
+    N_list = utils.get_component_lists(C, "N")
+    sigma_list = utils.get_component_lists(C, "SIGMA")
+    x = N_list/np.sum(N_list)
+    rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
+    Z = eos.Z_measured_mix(p, rho, T)
+    std = block_average.get_block_average(Z)
+    Z = np.mean(Z)
+    return Z, C, std
 
 def save_eos(path, filenames, cut_fraction, number_of_components, savename):
     mix_eos_list = [eos.Z_SPT, eos.Z_PY, eos.Z_BMCSL]
@@ -114,26 +184,7 @@ def save_eos(path, filenames, cut_fraction, number_of_components, savename):
         log.info(f"Loading file\t{fix_name}")
         log.info(f"Loading file\t{log_name}")
 
-        variable_list = ["p", "V", "T"]
-        C = convert.extract_constants_from_log(log_name)
-        log_table = files.load_system(log_name)
-        pvt = files.unpack_variables(log_table, log_name, variable_list)
-
-        eq_steps = int(
-                C["EQUILL_STEPS"]
-                /C["THERMO_OUTPUT"]
-            )
-        cut = int(eq_steps*cut_fraction)
-        p = np.array(pvt[variable_list.index("p")][cut:eq_steps])
-        T = np.array(pvt[variable_list.index("T")][cut:eq_steps])
-
-        N_list = np.array([C["N_L"], C["N_H"]])
-        sigma_list = np.array([C["SIGMA_L"], C["SIGMA_H"]])
-        x = N_list/np.sum(N_list)
-        rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
-        Z = eos.Z_measured_mix(p, rho, T)
-        std = block_average.get_block_average(Z)
-        Z = np.mean(Z)
+        x, rho, Z, std = get_eos_from_file(log_name, fix_name, number_of_components, cut_fraction)
 
         mix_eos_vals = np.zeros(len(mix_eos_list))
         one_eos_vals = np.zeros(len(one_eos_list))
@@ -301,3 +352,4 @@ def save_rdf(path, filenames, savename):
         dump_to_rdf.plotRDF_fromCSV(path=path + "/")
 
 main()
+

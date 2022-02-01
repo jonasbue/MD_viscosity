@@ -33,3 +33,11 @@ tests.py                        | Test functions
 utils.py                        | Utility functions
 viscosity.py                    | Functions to calculate viscosities
 ---------------------------------------------------------------
+
+## Next steps
+
+- Clean up analysis code.
+    - Try to make a Python module, to facilitate usage of the MP analysis code.
+    - Make sure everything is well commented.
+    - Restructure files to make the directory easy to navigate.
+- Then, rewrite the above description.

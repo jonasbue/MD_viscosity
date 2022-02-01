@@ -22,11 +22,31 @@ if "debug" in sys.argv:
 
 
 def get_all_filenames(directory):
+    """ 
+        Returns a list of all files in a directory, 
+        sorted by the packing fraction of the corresponding
+        LAMMPS simulation. 
+        Files that are not of type fix, log or dump are ignored.
+    """
     files = [f for f in listdir(directory)]
+    packing_list = find_all_packing_fractions(directory)
+    files = sort_files(files, packing_list)
     return files
 
 
 def sort_files(filenames, packing_fractions):
+    """
+        Given a list of filenames, returns a list containing
+        only the LAMMPS output files (fix, log, dump), sorted
+        so that files from one simulation are grouped together.
+        Input:
+            filenames:          1D list of filenames
+            packing fractions:  packing fractions of the simulated systems
+        Output:
+            files:              2D list of filenames. Shape is (N, 3), 
+                                so that the three files from simulation 
+                                i are at index [i,:].
+    """
     fix = []
     log = []
     dump = []

@@ -146,9 +146,8 @@ def extract_constants_from_log(log_path):
         dictionary of (string, number)
     """
     variables = {}
-
+    assert log_path.find("log.") != -1, "ERROR: File is not a log file."
     with open(log_path) as log_file:
-
         for row in log_file:
 
             if not row.startswith('variable'):

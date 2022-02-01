@@ -70,3 +70,14 @@ def cut_time(cut_fraction, arr):
         print(f"Cutting the first {cut} values.")
     arr = arr[cut:]
     return arr
+
+
+def get_component_lists(C, keyword):
+    N = C["ATOM_TYPES"]
+    if N == 1:
+        comp_list = np.array([C[f"{keyword}"]])
+    if N == 2:
+        comp_list = np.array([C[f"{keyword}_L"], C[f"{keyword}_H"]])
+    if N > 2:
+        comp_list = np.array([C[f"{keyword}_{i}"] for i in range(1,N+1)])
+    return comp_list

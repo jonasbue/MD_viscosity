@@ -5,6 +5,38 @@
 #############################################################
 import numpy as np
 
+import eos
+import viscosity
+
+def get_data_name(theory_functions, viscosity_function=None):
+    """
+        Given a list of theoretical functions, and
+        optionally a viscosity_function, this returns a
+        string with the unique name of the theoretical
+        functions, to be used as a file header.
+    """
+    #if viscosity_function != None:
+    #    viscosity_function_names = [f.__name__ for f in viscosity_function_names]
+
+    # TODO: Start here.
+    function_names = {
+        eos.Z_SPT   : "EOS_SPT",
+        eos.Z_PY    : "EOS_PY",
+        eos.Z_BMCSL : "EOS_BMCSL",
+        eos.Z_CS    : "EOS_CS",
+        eos.rdf_SPT   : "RDF_SPT",
+        eos.rdf_PY    : "RDF_PY",
+        eos.rdf_BMCSL : "RDF_BMCSL",
+        eos.rdf_CS    : "RDF_CS",
+        viscosity.enskog    : "enskog_",
+        viscosity.thorne    : "thorne_",
+        None                : "",
+    }
+    data_name = "".join(
+        [f",\t{function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])
+    return data_name
+
+
 def add_column_to_file(filename, new_column_data, new_column_name, fmt="%.3e"):
     """ Takes a (csv) file and a 1D np.array, and appends 
         the contents of the array as a new column to the file.
@@ -51,15 +83,35 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
 
 def get_system_config(C=None, pf=None):
     if C != None:
-        N1 = C["N_L"]
-        N2 = C["N_H"]
-        m1 = C["MASS_L"]
-        m2 = C["MASS_H"]
-        sigma1 = C["SIGMA_L"]
-        sigma2 = C["SIGMA_H"]
-        if pf == None:
-            pf = C["PF"]
-        parameters = np.array([pf, N1, N2, m1, m2, sigma1, sigma2])
+        number_of_components = C["ATOM_TYPES"]
+        if number_of_components == 1:
+            N = C["N"]
+            m = C["MASS"]
+            sigma = C["SIGMA"]
+            if pf == None:
+                pf = C["PF"]
+            parameters = np.array([pf, N, m, sigma])
+        elif number_of_components == 2:
+            N1 = C["N_L"]
+            N2 = C["N_H"]
+            m1 = C["MASS_L"]
+            m2 = C["MASS_H"]
+            sigma1 = C["SIGMA_L"]
+            sigma2 = C["SIGMA_H"]
+            if pf == None:
+                pf = C["PF"]
+            parameters = np.array([pf, N1, N2, m1, m2, sigma1, sigma2])
     else:
         parameters = np.zeros(7)
     return parameters
+
+
+def create_data_array(filenames, theory_functions):
+    rows = len(filenames)
+    columns = (
+        len(get_system_config()) 
+        + 2 + len(theory_functions)
+    )
+    data = np.zeros((rows,columns))
+    return data
+
