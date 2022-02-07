@@ -23,7 +23,12 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-def compute_all_viscosities(directory, computation_params, theory_functions, theoretical_viscosity):
+def compute_all_viscosities(
+        directory, 
+        computation_params, 
+        theory_functions, 
+        theoretical_viscosity
+    ):
     """
         Performs a viscosity computation on all simulation
         data in one directory.

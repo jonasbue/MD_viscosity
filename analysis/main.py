@@ -17,6 +17,7 @@ import utils
 import rdf
 import convert
 import block_average
+import eos
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -73,19 +74,22 @@ def main():
             path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
         compute_eos_from_directory(
             path, get_savename("eos"), get_eos_list(), computation_params)
+        compute_rdf_from_directory(
+            path, get_savename("rdf"), get_rdf_list(), computation_params)
         #save_theory(path, filenames, get_savename("theory"))
         #save_rdf(path, filenames, get_savename=("rdf"))
+
 
 def get_rdf_list():
     #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
     return [theory.rdf_PY, theory.rdf_CS]
+
+
 def get_eos_list():
     #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
     return [theory.Z_PY, theory.Z_CS]
 
 
-# This function should not be.
-# Have one compute_all, and then one save_data which takes the array.
 def compute_viscosity_from_directory(
         directory, 
         savename, 
@@ -101,8 +105,12 @@ def compute_viscosity_from_directory(
         theoretical_viscosity
     )
 
-    data_name = save.get_data_name(theory_functions, theoretical_viscosity) # TODO: Start in this function
+    data_name = "viscosity, error"
+    data_name += save.get_data_name(theory_functions, theoretical_viscosity) 
+    print(theory_functions)
+    print(data_name)
     save.save_simulation_data(savename, data, data_name=data_name)
+
 
 def compute_eos_from_directory(
         directory, 
@@ -111,97 +119,81 @@ def compute_eos_from_directory(
         computation_params
     ):
     # Compute all the viscosities in directory
-    data = compute_all_eoss(
+    data = eos.compute_all_eoss(
         directory, 
         theory_functions,
         computation_params
     )
-    data_name = save.get_data_name(theory_functions) # TODO: Start in this function
+    data_name = "Z, error"
+    data_name += save.get_data_name(theory_functions) # TODO: Start in this function
     save.save_simulation_data(savename, data, data_name=data_name)
 
-def compute_all_eoss(
+
+def compute_rdf_from_directory(
         directory, 
+        savename, 
         theory_functions, 
         computation_params
     ):
-    path = directory
-    filenames = files.get_all_filenames(directory)
-    eos_list = theory_functions
-    data = save.create_data_array(filenames, eos_list)
-    for (i, f) in enumerate(filenames):
-        #utils.status_bar(i, len(filenames), fmt="arrow")
-        fix_name = f"{path}/" + f[0]
-        log_name = f"{path}/" + f[1]
-        log.info(f"Loading file\t{fix_name}")
-        log.info(f"Loading file\t{log_name}")
-
-        Z, C, error = get_eos_from_file(log_name, fix_name, computation_params["cut_fraction"])
-
-        theoretical_values = [theory.get_Z_from_C(C, Z) for Z in theory_functions]
-        values = np.array([Z, error])
-        values = np.append(values, theoretical_values)
-        save.insert_results_in_array(data, values, C, i)
-    print("")
-    return data
-
-
-def get_eos_from_file(log_name, fix_name, cut_fraction):
-    variable_list = ["p", "V", "T"]
-    C = convert.extract_constants_from_log(log_name)
-    log_table = files.load_system(log_name)
-    pvt = files.unpack_variables(log_table, log_name, variable_list)
-
-    eq_steps = int(
-            C["EQUILL_STEPS"]
-            /C["THERMO_OUTPUT"]
-        )
-    cut = int(eq_steps*cut_fraction)
-    p = np.array(pvt[variable_list.index("p")][cut:eq_steps])
-    T = np.array(pvt[variable_list.index("T")][cut:eq_steps])
-
-    N_list = utils.get_component_lists(C, "N")
-    sigma_list = utils.get_component_lists(C, "SIGMA")
-    x = N_list/np.sum(N_list)
-    rho = 6*C["PF"]/np.pi/np.sum(x*np.diag(sigma_list)**3)
-    Z = theory.Z_measured_mix(p, rho, T)
-    std = block_average.get_block_average(Z)
-    Z = np.mean(Z)
-    return Z, C, std
-
-def save_eos(path, filenames, cut_fraction, number_of_components, savename):
-    mix_eos_list = [theory.Z_SPT, theory.Z_PY, theory.Z_BMCSL]
-    one_eos_list = [theory.Z_CS]
-    columns = len(save.get_system_config()) + 2 + len(mix_eos_list) + len(one_eos_list)
-    data = np.zeros((len(filenames), columns))
-    data_name = "Z, error"
-    for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="arrow")
-        fix_name = f"{path}/" + f[0]
-        log_name = f"{path}/" + f[1]
-        log.info(f"Loading file\t{fix_name}")
-        log.info(f"Loading file\t{log_name}")
-
-        x, rho, Z, std = get_eos_from_file(log_name, fix_name, number_of_components, cut_fraction)
-
-        mix_eos_vals = np.zeros(len(mix_eos_list))
-        one_eos_vals = np.zeros(len(one_eos_list))
-        for (j, eq) in enumerate(mix_eos_list):
-            mix_eos_vals[j] = eq(theory.get_sigma(sigma_list), x, rho)
-        for (j, eq) in enumerate(one_eos_list):
-            one_eos_vals[j] = eq(C["PF"])
-            
-        err = std 
-        values = np.array([Z, err])
-        values = np.append(values, mix_eos_vals)
-        values = np.append(values, one_eos_vals)
-
-        save.insert_results_in_array(data, values, C, i)
-    data_name += "".join(
-        [f", Z_{r.__name__[2:]}" for r in mix_eos_list])
-    data_name += "".join(
-        [f", Z_{r.__name__[2:]}" for r in one_eos_list])
+    # Compute all the viscosities in directory
+    data = rdf.compute_all_rdfs(
+        directory, 
+        theory_functions,
+        computation_params
+    )
+    data_name = "g_sigma, error"
+    data_name += save.get_data_name(theory_functions) # TODO: Start in this function
     save.save_simulation_data(savename, data, data_name=data_name)
 
+
+def save_rdf(path, filenames, savename):
+    rdf_at_contact = np.zeros(len(filenames))
+    rdf_list = [theory.rdf_PY_mix, theory.rdf_SPT, theory.rdf_BMCSL]
+    theoretical = np.zeros((len(filenames), 3))
+    pf = np.zeros(len(filenames))
+    columns = len(save.get_system_config())+2+len(rdf_list)
+    data = np.zeros((len(filenames), columns))
+    for i, filename in enumerate(filenames):
+        dump_name = f"{path}/" + filename[2]
+        print(f"Loading file\t{dump_name}")
+        log_name = f"{path}/" + filename[1]
+        print(f"Loading file\t{log_name}")
+
+        # Compute rdf for all dump files.
+        dump_to_rdf.calcRDF(dump_name, 1, 100, 5, 30, 0.05, only_component_2=True)
+
+        # Export a g_sigma for every simulation run.  g_r can be plotted as is,
+        # but that should be done only for one or two system configurations in
+        # the report.
+        rdf_name = dump_name.replace('dump', 'RDF')+'.csv' 
+        g_sigma, g_r, r, std = rdf.export_RDF_data(rdf_name, savename)
+        err = std
+        rdf_at_contact[i] = g_sigma
+
+        # Compute theoretical RDF at contact:
+        C           = convert.extract_constants_from_log(log_name)
+        pf          = C["PF"]
+        T           = C["TEMP"]
+        N_list      = np.array([C["N_L"], C["N_H"]])
+        sigma_list  = np.array([C["SIGMA_L"], C["SIGMA_H"]])
+        mass_list   = np.array([C["MASS_L"], C["MASS_H"]])
+        sigma       = theory.get_sigma(sigma_list)
+        x           = N_list/np.sum(N_list)
+        rho         = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+
+        rdf_values = np.zeros(2+len(rdf_list))
+        rdf_values[0] = g_sigma
+        rdf_values[-1] = err
+        for j, Xi in enumerate(rdf_list):
+            g = Xi(sigma, x, rho, 0, 0)
+            rdf_values[1+j] = g
+            theoretical[i, j] = g
+        
+        save.insert_results_in_array(data, rdf_values, C, i)
+    save.save_simulation_data(savename, data, data_name="rdf_measured, rdf_PY_mix, rdf_SPT, rdf_BMCSL, error")
+    print(f"Saved to file\t{savename}")
+    if "debug" in sysargs:
+        dump_to_rdf.plotRDF_fromCSV(path=path + "/")
 
 def save_theory(path, filenames, savename, N=50):
     """ This function is now obsolete. """
@@ -350,3 +342,39 @@ def save_rdf(path, filenames, savename):
 
 main()
 
+"""
+def save_eos(path, filenames, cut_fraction, number_of_components, savename):
+    mix_eos_list = [theory.Z_SPT, theory.Z_PY, theory.Z_BMCSL]
+    one_eos_list = [theory.Z_CS]
+    columns = len(save.get_system_config()) + 2 + len(mix_eos_list) + len(one_eos_list)
+    data = np.zeros((len(filenames), columns))
+    data_name = "Z, error"
+    for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="arrow")
+        fix_name = f"{path}/" + f[0]
+        log_name = f"{path}/" + f[1]
+        log.info(f"Loading file\t{fix_name}")
+        log.info(f"Loading file\t{log_name}")
+
+        x, rho, Z, std = get_eos_from_file(log_name, fix_name, number_of_components, cut_fraction)
+
+        mix_eos_vals = np.zeros(len(mix_eos_list))
+        one_eos_vals = np.zeros(len(one_eos_list))
+        for (j, eq) in enumerate(mix_eos_list):
+            mix_eos_vals[j] = eq(theory.get_sigma(sigma_list), x, rho)
+        for (j, eq) in enumerate(one_eos_list):
+            one_eos_vals[j] = eq(C["PF"])
+            
+        err = std 
+        values = np.array([Z, err])
+        values = np.append(values, mix_eos_vals)
+        values = np.append(values, one_eos_vals)
+
+        save.insert_results_in_array(data, values, C, i)
+    data_name += "".join(
+        [f", Z_{r.__name__[2:]}" for r in mix_eos_list])
+    data_name += "".join(
+        [f", Z_{r.__name__[2:]}" for r in one_eos_list])
+    save.save_simulation_data(savename, data, data_name=data_name)
+
+"""

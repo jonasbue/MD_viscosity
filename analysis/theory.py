@@ -12,6 +12,24 @@ import theory
 import utils
 
 
+def enskog_2sigma(pf, sigma_1, T, m, rdf, k=1.0, sigma_2=1.0):
+    """
+        To allow the same framework for this as the other visc functions,
+        sigma_2=1.0 => sigma_1 == sigma_2.
+
+    """
+    V_excl = 2*np.pi*(sigma_1**3)/3
+    eta_0 = zero_density_viscosity(m, sigma_2, T, k)
+    rho = 6*pf/np.pi
+    g = rdf(pf) # should use sigma_2
+    eta = eta_0 * (
+        1/g 
+        + 0.8 * V_excl * rho
+        + 0.776 * V_excl**2 * rho**2 * g
+    )
+    return eta
+
+
 def enskog(pf, sigma, T, m, rdf, k=1.0):
     """ Returns the theoretical value of the 
         viscosity for a given packing fraction.
@@ -368,13 +386,27 @@ def Z_BMCSL(sigma, x, rho):
 ## Radial distribution functions                            ##
 ##############################################################
 
-def rdf_CS(pf):
+def get_rdf_from_C(C, g, i=1, j=1):
+    pf = C["PF"]
+    T = C["TEMP"]
+    N_list = utils.get_component_lists(C, "N")
+    sigma_list = utils.get_component_lists(C, "SIGMA")
+    mass_list = utils.get_component_lists(C, "MASS")
+    x = N_list/np.sum(N_list)
+    rdf = np.zeros(C["ATOM_TYPES"])
+    for k in range(len(rdf)):
+        rdf[k] = g(pf, sigma_list[k], T, mass_list[k], i, j)
+    return rdf
+
+
+
+def rdf_CS(pf, *args):
     xi = pf
     #return (1-xi/2)/(1-xi)**2
     return 1/(1-xi) + 3/2*xi/(1-xi)**2 + 1/2*xi**2/(1-xi)**3
 
 
-def rdf_PY(pf):
+def rdf_PY(pf, *args):
     """ Returns the thoretical radial distribution 
         function, as given in Pousaneh and de Wijn's paper.
 
@@ -383,7 +415,7 @@ def rdf_PY(pf):
     return (1+xi/2)/(1-xi)**2
 
 
-def rdf_SPT_one(pf):
+def rdf_SPT_one(pf, *args):
     xi = pf
     return 1/(1-xi) + 3/2*xi/(1-xi)**2 + 3/4*xi**2/(1-xi)**3
 

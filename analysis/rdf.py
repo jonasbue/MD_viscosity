@@ -1,18 +1,71 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# This script analyses the RDF of a system simulated 
+# in LAMMPS, working from LAMMPS dump files.
 
-# This script was created by Christopher.
+# Most of this script was created by Christopher.
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import sys
+import logging
 
-### Wrapper function created by me. ###
+import files
+import save
+import utils
+import convert
+import theory
+
+sysargs = sys.argv
+log = logging.getLogger()
+log.addHandler(logging.StreamHandler(sys.stdout))
+if "debug" in sysargs:
+    # logging.Debug is more correct to use, 
+    # but info is cleaner.
+    log.setLevel(logging.INFO)
+
+### Wrapper function created by Jonas. ###
+
+def compute_all_rdfs(
+        directory, 
+        theory_functions, 
+        computation_params
+    ):
+    path = directory
+    filenames = files.get_all_filenames(directory)
+    rdf_list = theory_functions
+    data = save.create_data_array(filenames, rdf_list)
+    for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="arrow")
+        dump_name = f"{path}/" + f[2]
+        log_name = f"{path}/" + f[1]
+        log.info(f"Loading file\t{dump_name}")
+        log.info(f"Loading file\t{log_name}")
+
+        C = convert.extract_constants_from_log(log_name)
+        rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name)
+
+        theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
+        values = np.array([g_sigma, error])
+        values = np.append(values, theoretical_values)
+        save.insert_results_in_array(data, values, C, i)
+    print("")
+    return data
+
+
+def get_rdf_from_dump(dump_name, log_name, interaction_number=1):
+    # This saves the result to a file, with the same name 
+    # the original dump file, with "dump" exchanged for "rdf".
+    calcRDF(dump_name, 1, 100, 2, 50, 0.05)
+    rdf_name = dump_name.replace("dump", "rdf") + ".csv"
+    g_sigma, g_r, r, std = export_rdf(rdf_name, interaction_number)
+    return g_r, r, g_sigma, std
+
+
 
 # Given a directory, compute the RDF in the system, 
 # as a function of time, during equillibration. 
-def export_RDF_data(rdf_name, savename):
+def export_rdf(rdf_name, interaction_number=1):
     """
         Takes a directory with RDF files and creates a csv for use in pgfplots.
         The output data gile contains g(sigma) for all rdfs in the directory.
@@ -20,13 +73,16 @@ def export_RDF_data(rdf_name, savename):
     """
 
     data = pd.read_csv(rdf_name)
-    g_r = np.array(data["g1"])      # Array of rdf measured at different r
-    std = np.array(data["err1"])
+    # Array of rdf measured at different r
+    g_r = np.array(data[f"g{interaction_number}"])   
+    std = np.array(data[f"err{interaction_number}"])
+
     r = np.array(data["r"])         # Array of r
     g_sigma = np.amax(g_r)          # Value of rdf measured at sigma
     g_sigma_index = np.argmax(g_r)  # Index of g_sigma
     std = std[g_sigma_index]
     return g_sigma, g_r, r, std
+
 
 def show_an_rdf(rdf_name):
     data = pd.read_csv(rdf_name)
@@ -259,13 +315,13 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
 
     # The following calculates time average RDF g_avg at
     # time steps in samples and stores in numpy array g_all
-    g_all = np.zeros((len(r), 1+particle_types)) # Empty list for appending averages
+    g_all = np.zeros((len(r), particle_types)) # Empty list for appending averages
     for (i, sample) in enumerate(samples):
         # Empty list for appending g_r at recorded time_steps
-        g_avg = np.zeros((len(sample), len(r), 1+particle_types))
+        g_avg = np.zeros((len(sample), len(r), freq))
         for (j, step) in enumerate(sample):
-            g_r = np.zeros((len(r), 1+particle_types))
-            for k in range(particle_types+1):
+            g_r = np.zeros((len(r), particle_types))
+            for k in range(particle_types):
                 # Extracts coordinates for given time step
                 # Compute rdf between particles of 
                 #   - different types (k == 0)
@@ -299,17 +355,17 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
     
     # The following code creates DataFrame and stores as csv for plotting.
     # Generates csv file name from dump name
-    file_name = file.replace('dump', 'RDF')+'.csv' 
+    file_name = file.replace('dump', 'rdf')+'.csv' 
     # Generates col_names for pandas
     # TODO: add ij, ii, jj to file.
     col_names   = [f"g{i}" for i in np.arange(1,freq+1)] 
     std_names   = [f"err{i}" for i in np.arange(1,freq+1)] 
     if particle_types == 2:
-        col_names   = ([f"g{i}_ii" for i in np.arange(1,freq+1)] 
+        col_names = ( [f"g{i}_ii" for i in np.arange(1,freq+1)] 
                     + [f"g{i}_jj" for i in np.arange(1,freq+1)]
                     + [f"g{i}_ij" for i in np.arange(1,freq+1)]
                 )
-        std_names = ([f"err{i}_ii" for i in np.arange(1,freq+1)]
+        std_names = ( [f"err{i}_ii" for i in np.arange(1,freq+1)]
                     + [f"err{i}_jj" for i in np.arange(1,freq+1)]
                     + [f"err{i}_ij" for i in np.arange(1,freq+1)]
                 )

@@ -27,11 +27,10 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.thorne          : "thorne_",
     }
     if viscosity_function:
-        data_name = "".join([f",\t{function_names[viscosity_function]}\
-            {function_names[t]}" for t in theory_functions])
+        data_name = "".join([f", {function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])
     else:
         data_name = "".join(
-            [f",\t{function_names[t]}" for t in theory_functions])
+            [f", {function_names[t]}" for t in theory_functions])
     return data_name
 
 
@@ -81,7 +80,6 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
     else:
         l = len(parameters)
         data[i,:l] = parameters
-        print("val is", value)
         data[i,l:l+len(value)] = value
     return data
 
