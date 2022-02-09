@@ -18,12 +18,12 @@ def get_velocity_profile(fix_filename):
             vx: np.array of velocity components for different time steps.
             z:  np.array of z-coordinates in the same time steps.
     """
-    log_table = files.load_system(fix_filename)
+    data = files.load_system(fix_filename)
     zvx = files.unpack_variables(
-        log_table, fix_filename, ["z", "vx"]
+        data, fix_filename, ["z", "vx"]
     )
-    z = zvx[0]
     vx = zvx[1]
+    z = zvx[0]
     return vx, z
 
 

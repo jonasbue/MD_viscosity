@@ -31,8 +31,8 @@
 #   - HEAVY_MASS:       The mass of the heavy particle.
 #   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
 
-variable EQUILLIBRATION_DURATION    equal 2     # Name -> RUN_TIME
-variable SIMULATION_DURATION        equal 4     # Name -> RUN_TIME
+variable EQUILLIBRATION_DURATION    equal 11    # Name -> RUN_TIME
+variable SIMULATION_DURATION        equal 22    # Name -> RUN_TIME
 
 variable PARTICLE_NUMBER            equal 1000  # Name -> N
 variable PARTICLE_DIAMETER          equal 1.0   # Name -> SIGMA

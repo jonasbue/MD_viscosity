@@ -27,6 +27,8 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
+data_path_list = ["./data/heavy_low_exchange_rate"]
+save_path_list = ["heavy"]
 
 # 1. convert all files in directory
 # 2. compute viscosity and save data, with theoretical values for the same system
@@ -53,12 +55,10 @@ def main():
     computation_params = {
         "particle_types": 2,
         "cut_fraction"  : 0.3,
-        "step" 		    : 20,
+        "step" 		    : 1,
         "per_time"		: False,
     }
 
-    data_path_list = ["./data/run_test"]
-    save_path_list = ["savename"]
     theoretical_viscosity = theory.enskog
 
     for path, savepath in zip(data_path_list, save_path_list):
@@ -107,8 +107,6 @@ def compute_viscosity_from_directory(
 
     data_name = "viscosity, error"
     data_name += save.get_data_name(theory_functions, theoretical_viscosity) 
-    print(theory_functions)
-    print(data_name)
     save.save_simulation_data(savename, data, data_name=data_name)
 
 

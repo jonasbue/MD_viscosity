@@ -34,7 +34,8 @@ def compute_all_rdfs(
     path = directory
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
-    data = save.create_data_array(filenames, rdf_list)
+    N = computation_params["particle_types"]
+    data = save.create_data_array(filenames, rdf_list, N)
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="arrow")
         dump_name = f"{path}/" + f[2]
@@ -43,6 +44,12 @@ def compute_all_rdfs(
         log.info(f"Loading file\t{log_name}")
 
         C = convert.extract_constants_from_log(log_name)
+        if C["N"] > 1000:
+            print(
+                "WARNING: Too many atoms. "\
+                "Skipping this file, to avoid extreme run times."
+            )
+            continue
         rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name)
 
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]

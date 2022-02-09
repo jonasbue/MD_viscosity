@@ -39,7 +39,7 @@ def compute_all_viscosities(
     path = directory
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
-    data = save.create_data_array(filenames, rdf_list)
+    data = save.create_data_array(filenames, rdf_list, N)
 
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="train")
@@ -61,7 +61,6 @@ def compute_all_viscosities(
         save.insert_results_in_array(data, values, C, i)
     print("")
     return data
-
 
 
 def compute_viscosity(
@@ -108,14 +107,13 @@ def compute_viscosity(
         Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
     else:
         # Remove early values. They are not useful.
-        #print(z)
         t = utils.cut_time(cut_fraction, t)     # These arrays contain the
         z = utils.cut_time(cut_fraction, z)     # same values many times, 
         vx = utils.cut_time(cut_fraction, vx)   # corresponding to 
                                                 # different chunks.
 
         # Remove correlated time steps.
-        # This will skip evert [step] time step,
+        # This will skip every [step] time steps,
         # to remove time correlation.
         N = number_of_chunks
         t = t[::step]
@@ -136,7 +134,6 @@ def compute_viscosity(
     eta = np.mean(theory.get_viscosity(Ptot, A, t, dv))
     err_abs = eta*v_err/np.mean(dv)      # This is the absolute error
     err_rel = v_err/np.mean(dv)          # Relative error
-    #print(f"{eta:.5f}, {err_abs:.5f}, {err_rel:.5f}")
     return eta, err_abs, err_rel
 
 

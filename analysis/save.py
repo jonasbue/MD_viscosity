@@ -79,6 +79,11 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
         data[i] = vals
     else:
         l = len(parameters)
+        assert len(value) == len(data[i,l:l+len(value)]), (
+            f"ERROR: value has shape {value.shape} and does not " \
+            f"fit into the remaining columns of data, which has " \
+            f"shape {data[i,l:l+len(value)].shape}"
+        )
         data[i,:l] = parameters
         data[i,l:l+len(value)] = value
     return data
@@ -114,7 +119,7 @@ def get_system_config(C=None, pf=None):
     return parameters
 
 
-def create_data_array(filenames, theory_functions):
+def create_data_array(filenames, theory_functions, number_of_components):
     """
         Given a list of filenames, and a list of theoretical
         functions of interest, this returns an empty array 
@@ -123,7 +128,7 @@ def create_data_array(filenames, theory_functions):
     rows = len(filenames)
     columns = (
         len(get_system_config()) 
-        + 2 + len(theory_functions)
+        + 2 + len(theory_functions)*number_of_components
     )
     data = np.zeros((rows,columns))
     return data

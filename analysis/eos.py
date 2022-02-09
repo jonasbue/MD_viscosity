@@ -27,7 +27,8 @@ def compute_all_eoss(
     path = directory
     filenames = files.get_all_filenames(directory)
     eos_list = theory_functions
-    data = save.create_data_array(filenames, eos_list)
+    N = computation_params["particle_types"]
+    data = save.create_data_array(filenames, eos_list, N)
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="arrow")
         fix_name = f"{path}/" + f[0]

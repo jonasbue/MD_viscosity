@@ -31,9 +31,9 @@
 #   - HEAVY_MASS:       The mass of the heavy particle.
 #   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
 
-variable    EQUILLIBRATION_DURATION     equal 2     # Name -> RUN_TIME
-variable    SIMULATION_DURATION         equal 4     # Name -> RUN_TIME
-variable    TOTAL_NUMBER                equal 6000  # Name -> N
+variable    EQUILLIBRATION_DURATION     equal 1000  # Name -> RUN_TIME
+variable    SIMULATION_DURATION         equal 16000 # Name -> RUN_TIME
+variable    TOTAL_NUMBER                equal 2000  # Name -> N
 
 variable    HEAVY_NUMBER    equal ${TOTAL_NUMBER}*${HEAVY_FRACTION}
 variable    LIGHT_NUMBER    equal ${TOTAL_NUMBER}-${HEAVY_NUMBER}
@@ -55,7 +55,7 @@ variable M_STR      string mass_${LIGHT_MASS}_${HEAVY_MASS}
 variable PF_STR     string pf_${PACKING}
 variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename template
 
-variable DIR        string ../data/${DIRECTORY}/            # Directory
+variable DIR        string ${DIRECTORY}/            # Directory
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps     # Fix file
@@ -130,16 +130,16 @@ variable DT             equal 0.001                 # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
 variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
 variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
-variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo output
+variable THERMO_OUTPUT  equal 2000                  # Timesteps between thermo output
+# Number of steps between particle swaps.
+# NOTE: Momentum exchange rate must be smaller than (or equal to) THERMO_OUTPUT.
+variable MOMENTUM_EXCHANGE_RATE equal 2000
 
 # Müller-Plathe experiment parameters
 variable CHUNK_NUMBER       equal 20    # Number of chunks in MP experiment.
 variable SWAP_NUMBER        equal 1     # Number of pairs to swap every time.
-variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER} # Dimensionless number.
+variable CHUNK_THICKNESS    equal 0.01  # Dimensionless number.
 
-# Number of steps between particle swaps.
-# NOTE: Momentum exchange rate must be smaller than (or equal to) THERMO_OUTPUT.
-variable MOMENTUM_EXCHANGE_RATE equal 500
 
 
 # fix/ave sampling definitions

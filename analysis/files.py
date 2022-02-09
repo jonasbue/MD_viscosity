@@ -214,18 +214,18 @@ def load_system(filename):
         Inputs:
             filename:   name of logfile, string.
         Returns:
-            log_table:  Array of logged values from LAMMPS.
+            data:       Array of logged values from LAMMPS.
                         First index selects the variable,
                         second index selects the timestep.
     """
     log.info(f"loading file: {filename}")
-    log_table = pd.read_csv(
+    data = pd.read_csv(
         filename + ".csv", 
         skiprows=2, 
         delimiter=","
     )
-    log_table = np.array(log_table)
-    return log_table.transpose()
+    data = np.array(data)
+    return data.transpose()
 
 
 def get_variable_indices(header, variables):
