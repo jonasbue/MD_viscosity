@@ -2,8 +2,9 @@
 dir="run_test"
 d="$HOME/Dokumenter/skole/master/MD_viscosity/data/$dir"
 
-for ((x=0.1; x<=0.4; x+=0.1))
+for x in $(export LC_CTYPE=”en_EN.UTF-8″; seq 0.1 0.1 0.4)
 do
+    #x=`echo $x | sed s/,/./`
     for n in 1000
     do
         for m in 1.0
