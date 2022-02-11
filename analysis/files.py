@@ -207,7 +207,7 @@ def find_all_packing_fractions(directory):
     return packing_list
 
 
-def load_system(filename):
+def load_system(filename, skiprows=0):
     """ Loads a LAMMPS logfile, and returns
         thermodynamical variables from it,
         as a numpy array.
@@ -221,7 +221,7 @@ def load_system(filename):
     log.info(f"loading file: {filename}")
     data = pd.read_csv(
         filename + ".csv", 
-        skiprows=2, 
+        skiprows=skiprows, 
         delimiter=","
     )
     data = np.array(data)

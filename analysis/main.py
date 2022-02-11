@@ -27,8 +27,10 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/heavy_low_exchange_rate"]
-save_path_list = ["heavy"]
+data_path_list = ["./data/run_test"]
+save_path_list = ["test"]
+#data_path_list = ["./data/heavy_low_exchange_rate"]
+#save_path_list = ["heavy"]
 
 # 1. convert all files in directory
 # 2. compute viscosity and save data, with theoretical values for the same system
@@ -53,9 +55,9 @@ save_path_list = ["heavy"]
 ## Rename to convert_something_something
 def main():
     computation_params = {
-        "particle_types": 2,
+        "particle_types": 1,
         "cut_fraction"  : 0.3,
-        "step" 		    : 1,
+        "step" 		    : 4,
         "per_time"		: False,
     }
 
@@ -70,8 +72,8 @@ def main():
         def get_savename(body):
             return f"{save_dir}{body}_{savepath}.csv"
 
-        compute_viscosity_from_directory(
-            path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
+        #compute_viscosity_from_directory(
+        #    path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
         compute_eos_from_directory(
             path, get_savename("eos"), get_eos_list(), computation_params)
         compute_rdf_from_directory(

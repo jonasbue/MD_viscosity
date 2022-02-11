@@ -30,9 +30,11 @@
 #   - HEAVY_FRACTION:   The portion of particles that are heavy/large.
 #   - HEAVY_MASS:       The mass of the heavy particle.
 #   - HEAVY_DIAMETER:   The diameter (sigma) of the heavy particle.
+#   - CUT:              The interaction cutoff distance, 
+#                       in terms of the box width (CUT<=0.5)
 
-variable EQUILLIBRATION_DURATION    equal 11    # Name -> RUN_TIME
-variable SIMULATION_DURATION        equal 22    # Name -> RUN_TIME
+variable EQUILLIBRATION_DURATION    equal 2     # Name -> RUN_TIME
+variable SIMULATION_DURATION        equal 0     # Name -> RUN_TIME
 
 variable PARTICLE_NUMBER            equal 1000  # Name -> N
 variable PARTICLE_DIAMETER          equal 1.0   # Name -> SIGMA
@@ -51,7 +53,7 @@ variable M_STR      string mass_${PARTICLE_MASS}
 variable PF_STR     string pf_${PACKING}
 variable FILENAME   string mp_${N_STR}_${S_STR}_${M_STR}_${PF_STR}  # Filename template
 
-variable DIR        string ../data/${DIRECTORY}/            # Directory
+variable DIR        string ${DIRECTORY}/                    # Where the data goes
 variable DUMP_FILE  string ${DIR}dump.${FILENAME}.lammps    # Dump filename
 variable LOG_FILE   string ${DIR}log.${FILENAME}.lammps     # Log filename
 variable FIX_FILE   string ${DIR}fix.${FILENAME}.lammps     # Fix file
@@ -89,15 +91,17 @@ variable MIE_REP    equal 12    # Repulsive exponent
 variable MIE_ATT    equal 6     # Attractive exponent
 variable SIGMA      equal ${PARTICLE_DIAMETER} 
 
-# Radius at which interaction potential is zero:
-variable CUTOFF     equal ${MIE_REP}/${MIE_ATT}*${SIGMA}
-
 # Length of box
 variable Z_SCALE    equal 3.0   # Ratio LZ/LX, giving the height of the box.
-variable Y_SCALE    equal 1.0   # Ratio LY/LX, giving the depth of the box.
-variable LX         equal ((PI*$N*${SIGMA}^3/(6*${Z_SCALE}*${Y_SCALE}*${PACKING}))^(1/3))/2
+variable Y_SCALE    equal 1.0   # Ratio LY/LX, giving the depth of the box.  
+
+variable LX equal ((PI*${N}*${SIGMA}^3/(6*${Z_SCALE}*${Y_SCALE}*${PACKING}))^(1/3))/2
 variable LY         equal (${Y_SCALE}*${LX})
 variable LZ         equal (${Z_SCALE}*${LX})
+
+# Radius at which interaction potential is zero:
+variable CUTOFF     equal ${LX}*${CUT}
+
 
 # When minimizing system energy to avoid overlapping particles...
 variable ETOL       equal 1e-4  # Max energy toleranze.
@@ -107,15 +111,18 @@ variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations
 
 # Simulation and output parameters
 # Length of simulation.
-variable RUN_TIME       equal ${SIMULATION_DURATION}    
+variable RUN_TIME           equal ${SIMULATION_DURATION}    
 # Time to equillibrate system.
-variable EQUILL_TIME    equal ${EQUILLIBRATION_DURATION}
+variable EQUILL_TIME        equal ${EQUILLIBRATION_DURATION}
+# Number of steps between outputs. Should be the same for log and fix, 
+# and must be smaller than or equal to this for momentum exchange.
+variable OUTPUT_FREQUENCY   equal 2000
 
 variable DT             equal 0.001                 # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
 variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
 variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
-variable THERMO_OUTPUT  equal 500                   # Timesteps between thermo output
+variable THERMO_OUTPUT  equal ${OUTPUT_FREQUENCY}   # Timesteps between thermo output
 
 
 # Müller-Plathe experiment parameters
@@ -125,16 +132,16 @@ variable CHUNK_THICKNESS    equal 1/${CHUNK_NUMBER} # Dimensionless number.
 
 # Number of steps between particle swaps.
 # NOTE: Momentum exchange rate must be smaller than (or equal to) THERMO_OUTPUT.
-variable MOMENTUM_EXCHANGE_RATE equal 500
+variable MOMENTUM_EXCHANGE_RATE equal ${OUTPUT_FREQUENCY}
 
 
 # fix/ave sampling definitions
-variable NFREQ      equal 500   # How often an average 
-                                # value is computed.
-variable NREPEAT    equal 1     # Number of values included 
-                                # in the averaging.
-variable NEVERY     equal 1     # Steps between entries in 
-                                # the average computation.
+variable NFREQ      equal ${OUTPUT_FREQUENCY}   # How often an average 
+                                                # value is computed.
+variable NREPEAT    equal 1                     # Number of values included 
+                                                # in the averaging.
+variable NEVERY     equal 1                     # Steps between entries in 
+                                                # the average computation.
 
 ## Strings
 variable POTENTIAL  string "mie/cut"    # Lennard-Jones potential

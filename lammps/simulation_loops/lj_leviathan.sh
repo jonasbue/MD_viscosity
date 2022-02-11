@@ -2,13 +2,13 @@
 dir="run_test"
 d="$HOME/Dokumenter/skole/master/MD_viscosity/data/$dir"
 
-for x in 0.5
+for ((x=0.1; x<=0.4; x+=0.1))
 do
-    for n in 0.5
+    for n in 1000
     do
         for m in 1.0
         do 
-            for s in 1.0
+            for c in 1.0
             do 
                 rp=$RANDOM
                 rv=$RANDOM
@@ -16,13 +16,11 @@ do
 
                 lmp -in lammps/in.mp_lennard-jones  \
                 -var PACKING            $x          \
-                -var HEAVY_FRACTION     $n          \
-                -var HEAVY_MASS         $m          \
-                -var HEAVY_DIAMETER     $s          \
                 -var SEED_P             $rp         \
                 -var SEED_V             $rv         \
                 -var SEED_T             $rt         \
-                -var DIRECTORY $d
+                -var CUT                $c          \
+                -var DIRECTORY          $d
                 
                 echo "# rp = $rp, rv = $rv, rt = $rt" >> $d"/seeds.sh"
             done

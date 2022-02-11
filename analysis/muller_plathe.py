@@ -91,10 +91,12 @@ def compute_viscosity(
         t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
         t, z = utils.make_time_dependent(z, t, number_of_chunks)
 
+        print(z)
         # Remove early values. They are not useful.
         t = utils.cut_time(cut_fraction, t)
         z = utils.cut_time(cut_fraction, z)
         vx = utils.cut_time(cut_fraction, vx)
+        print(z)
 
         vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
         dv, v_err = regression.regression_for_each_time(
@@ -107,20 +109,22 @@ def compute_viscosity(
         Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
     else:
         # Remove early values. They are not useful.
+        N = number_of_chunks
+        T = len(t)
+        print(z.shape)
+        z = np.reshape(z, (T,N))
+        vx = np.reshape(z, (T,N))
+
         t = utils.cut_time(cut_fraction, t)     # These arrays contain the
         z = utils.cut_time(cut_fraction, z)     # same values many times, 
         vx = utils.cut_time(cut_fraction, vx)   # corresponding to 
                                                 # different chunks.
-
         # Remove correlated time steps.
         # This will skip every [step] time steps,
         # to remove time correlation.
-        N = number_of_chunks
         t = t[::step]
-        z = np.array([z[i*step*N:i*step*N+N] for i in range(len(t))])
-        vx = np.array([vx[i*step*N:i*step*N+N] for i in range(len(t))])
-        z = z.flatten()
-        vx = vx.flatten()
+        z = z[::step].flatten()
+        vx = vx[::step].flatten()
 
         vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
         dv, v_err = regression.regression_for_single_time(
@@ -177,7 +181,10 @@ def extract_simulation_variables(log_filename, fix_filename):
     """
     # Extract time and momentum transferred from log file.
     variable_list = ["t", "Px"]
-    log_table = files.load_system(log_filename)
+    # Two steps are used to minimize initial system 
+    # energy. Skip these two. They are NOT skipped 
+    # in the corresponding dump/fix files.
+    log_table = files.load_system(log_filename, skiprows=2)
     log_vals = files.unpack_variables(
         log_table, 
         log_filename, 
