@@ -300,7 +300,6 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
     dim, N = boxData(file) 
     # Loads dump.csv into memory for quick access
     dump_as_df = loadDUMP(file) 
-    print(f"Loaded file {file}")
     # Defines the bin_edge param for the calculation
     bin_edges = binningAlgorithm(r_max, dr) 
     # Uses bin_edges to calculate distance and volume of bins

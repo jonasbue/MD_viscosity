@@ -125,7 +125,7 @@ def compute_eos_from_directory(
         computation_params
     )
     data_name = "Z, error"
-    data_name += save.get_data_name(theory_functions) # TODO: Start in this function
+    data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
 
 
@@ -142,7 +142,7 @@ def compute_rdf_from_directory(
         computation_params
     )
     data_name = "g_sigma, error"
-    data_name += save.get_data_name(theory_functions) # TODO: Start in this function
+    data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
 
 main()

@@ -91,12 +91,10 @@ def compute_viscosity(
         t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
         t, z = utils.make_time_dependent(z, t, number_of_chunks)
 
-        print(z)
         # Remove early values. They are not useful.
         t = utils.cut_time(cut_fraction, t)
         z = utils.cut_time(cut_fraction, z)
         vx = utils.cut_time(cut_fraction, vx)
-        print(z)
 
         vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
         dv, v_err = regression.regression_for_each_time(
@@ -111,7 +109,6 @@ def compute_viscosity(
         # Remove early values. They are not useful.
         N = number_of_chunks
         T = len(t)
-        print(z.shape)
         z = np.reshape(z, (T,N))
         vx = np.reshape(z, (T,N))
 

@@ -61,7 +61,9 @@ def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
         This quantity should be specified in the 
         name of the data file.
     """
+    # TODO: Make a versatile way of writing a function header.
     header = f"pf, N1, N2, m1, m2, sigma1, sigma2, {data_name}"
+    header = f"pf, N, m, sigma, cut, {data_name}"
     np.savetxt(filename, data, header=header, fmt=fmt, delimiter=", ", comments="")
 
 
@@ -88,7 +90,7 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
         data[i,l:l+len(value)] = value
     return data
 
-def get_system_config(C=None, pf=None):
+def get_system_config(C=None, pf=None, number_of_components=None):
     """
         Given a many particle system, this function creates 
         an array of its characterizing quantities, such as
@@ -101,9 +103,10 @@ def get_system_config(C=None, pf=None):
             N = C["N"]
             m = C["MASS"]
             sigma = C["SIGMA"]
+            cut = C["CUTOFF"]
             if pf == None:
                 pf = C["PF"]
-            parameters = np.array([pf, N, m, sigma])
+            parameters = np.array([pf, N, m, sigma, cut])
         elif number_of_components == 2:
             N1 = C["N_L"]
             N2 = C["N_H"]
@@ -115,7 +118,12 @@ def get_system_config(C=None, pf=None):
                 pf = C["PF"]
             parameters = np.array([pf, N1, N2, m1, m2, sigma1, sigma2])
     else:
-        parameters = np.zeros(7)
+        if number_of_components == 1:
+            # NOTE: This should be 4 normally.
+            # TODO: Make versatile functionality here, based on required config.
+            parameters = np.zeros(5)
+        elif number_of_components == 2:
+            parameters = np.zeros(7)
     return parameters
 
 
@@ -127,7 +135,7 @@ def create_data_array(filenames, theory_functions, number_of_components):
     """
     rows = len(filenames)
     columns = (
-        len(get_system_config()) 
+        len(get_system_config(number_of_components=number_of_components))
         + 2 + len(theory_functions)*number_of_components
     )
     data = np.zeros((rows,columns))

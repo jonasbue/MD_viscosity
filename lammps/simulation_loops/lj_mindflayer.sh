@@ -1,6 +1,6 @@
-#!/bin/zsh
+#!/bin/bash
 dir="run_test"
-d="$HOME/Dokumenter/skole/master/MD_viscosity/data/$dir"
+#d="$HOME/project/simulation/data/$dir"
 
 for x in $(export LC_CTYPE=”en_EN.UTF-8″; seq 0.1 0.1 0.4)
 do
