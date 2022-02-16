@@ -27,8 +27,8 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/run_test"]
-save_path_list = ["test"]
+data_path_list = ["./data/cutoff"]
+save_path_list = ["cut"]
 #data_path_list = ["./data/heavy_low_exchange_rate"]
 #save_path_list = ["heavy"]
 

@@ -150,6 +150,7 @@ def get_value_from_filename(filename, value_name, value_key, next_name):
         value_name = (value_name+"L", value_name+"H")
     return value, value_name
 
+
 def get_packing_from_filename(filename):
     start = "pf_"
     end = ".lammps"
