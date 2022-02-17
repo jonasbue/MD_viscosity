@@ -1,11 +1,12 @@
 #!/bin/bash
 dir="run_test"
-#d="$HOME/Dokumenter/project/simulation/data/$dir"
-for x in 0.1 0.2 0.3
+d="$HOME/project/data/$dir"
+
+for x in 0.1 
 do
     for n in 0.5
     do
-        for m in 1.0 1.5 2.0
+        for m in 1.0 
         do 
             for s in 1.0
             do 
@@ -14,8 +15,8 @@ do
                 rh=$RANDOM
                 rt=$RANDOM
 
-		        mpirun                              \
-                    -np  4 ~/lammps/build/lmp       \
+		        mpirun                                          \
+                    -np  4 /home/christopher/lammps/build/lmp   \
                     -in  in.mp_binary               \
                     -var PACKING            $x      \
                     -var HEAVY_FRACTION     $n      \
@@ -27,10 +28,11 @@ do
                     -var SEED_T             $rt     \
                     -var DIRECTORY $dir
 
-                echo "# rv = $rv, rl = $rl, rh = $rh, rt = $rt" >> $d"/seeds.sh"
+                echo "# x = $x, n = $n, m = $m, s= $s, rv = $rv, rl = $rl, rh = $rh, rt = $rt" >> $d"/seeds.sh"
             done
         done
     done
 done
 
 cp "$(readlink -f $0)" $d
+cp "in.mp_binary" $d

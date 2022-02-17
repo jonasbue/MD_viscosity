@@ -1,33 +1,30 @@
 #!/bin/bash
 dir="run_test"
-#d="$HOME/project/simulation/data/$dir"
+d="$HOME/project/data/$dir"
 
-for x in $(export LC_CTYPE=”en_EN.UTF-8″; seq 0.1 0.1 0.4)
+for x in 0.1 
 do
-    #x=`echo $x | sed s/,/./`
-    for n in 1000
+    for T in 1.5
     do
-        for m in 1.0
-        do 
-            # Cutoff in units of sigma
-            for c in 2.0 2.5 3.0 3.5
-            do 
-                rp=$RANDOM
-                rv=$RANDOM
-                rt=$RANDOM
+        rv=$RANDOM
+        rl=$RANDOM
+        rh=$RANDOM
+        rt=$RANDOM
 
-                lmp -in lammps/in.mp_lennard-jones  \
-                -var PACKING            $x          \
-                -var SEED_P             $rp         \
-                -var SEED_V             $rv         \
-                -var SEED_T             $rt         \
-                -var CUT                $c          \
-                -var DIRECTORY          $d
-                
-                echo "# rp = $rp, rv = $rv, rt = $rt" >> $d"/seeds.sh"
-            done
-        done
+        mpirun                                          \
+            -np  4 /home/christopher/lammps/build/lmp   \
+            -in  in.mp_binary               \
+            -var PACKING            $x      \
+            -var TEMPERATURE        $T      \
+            -var SEED_V             $rv     \
+            -var SEED_L             $rl     \
+            -var SEED_H             $rh     \
+            -var SEED_T             $rt     \
+            -var DIRECTORY $dir
+
+        echo "# x = $x, T = $T, rv = $rv, rl = $rl, rh = $rh, rt = $rt" >> $d"/seeds.sh"
     done
 done
 
 cp "$(readlink -f $0)" $d
+cp "in.mp_binary" $d
