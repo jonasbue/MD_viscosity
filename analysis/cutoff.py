@@ -30,16 +30,17 @@ def cutoff_error(path, filename):
     # The best Z estimate is the one corresponding to the highest cut.
     # This should be the last value, but a more robust approach is possible.
     assert cut[-1,-1] == np.amax(cut), f"{cut[-1,-1]} is not {np.amax(cut)}"
-    best_Z = Z[:,-1]
+    best_Z = Z[-1,:]
     # Compute the difference (norm) between best_Z and the other values.
-    diff = np.sum(np.sqrt(np.abs(Z**2 - best_Z**2))/Z**2,axis=0)
-    print(diff)
+    diff = (Z**2 - best_Z[np.newaxis,:]**2)/Z**2
+    diff = np.sum(np.sqrt(np.abs(diff)),axis=1)
 
+    # Plot results, using matplotlib or the more esoteric termplotlib.
     fig = tpl.figure()
     fig.plot(cut[:,0], diff)
     fig.show()
-    #plt.plot(cut, diff, "o")
-    #plt.show()
+    plt.plot(cut[:,0], diff, "o")
+    plt.show()
 
 
 
