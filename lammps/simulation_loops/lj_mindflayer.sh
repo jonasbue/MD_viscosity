@@ -1,30 +1,36 @@
 #!/bin/bash
-dir="run_test"
-d="$HOME/project/data/$dir"
+dir="$HOME/project/data"
+savepath="$dir/run_test"
+scriptpath="$dir"
+script="in.mp_lennard-jones"
 
+# Packing fraction
 for x in 0.1 
 do
+    # Reduced temperature
     for T in 1.5
     do
-        rv=$RANDOM
-        rl=$RANDOM
-        rh=$RANDOM
-        rt=$RANDOM
+        # Particle diamteter
+        for s in 1.5
+        do
+            rp=$RANDOM  # Seed for positions
+            rv=$RANDOM  # Seed for velocities
+            rt=$RANDOM  # Seed for thermostat
 
-        mpirun                                          \
-            -np  4 /home/christopher/lammps/build/lmp   \
-            -in  in.mp_binary               \
-            -var PACKING            $x      \
-            -var TEMPERATURE        $T      \
-            -var SEED_V             $rv     \
-            -var SEED_L             $rl     \
-            -var SEED_H             $rh     \
-            -var SEED_T             $rt     \
-            -var DIRECTORY $dir
+            mpirun                                          \
+                -np  4 /home/christopher/lammps/build/lmp   \
+                -in  $scriptpath/$script                    \
+                -var PACKING        $x                      \
+                -var TEMPERATURE    $T                      \
+                -var DIAMETER       $s                      \
+                -var SEED_P         $rp                     \
+                -var SEED_V         $rv                     \
+                -var SEED_T         $rt                     \
+                -var DIRECTORY      $savepath
 
-        echo "# x = $x, T = $T, rv = $rv, rl = $rl, rh = $rh, rt = $rt" >> $d"/seeds.sh"
+        echo "# x = $x, T = $T, s = $s, rv = $rv, rl = $rl, rh = $rh, rt = $rt" >> $d"/seeds.sh"
     done
 done
 
-cp "$(readlink -f $0)" $d
-cp "in.mp_binary" $d
+cp "$(readlink -f $0)" $savepath
+cp $scriptpath/$script $savepath

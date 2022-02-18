@@ -33,10 +33,10 @@
 #   - CUT:              The interaction cutoff distance, 
 #                       in terms of the box width (CUT<=0.5)
 
-variable EQUILLIBRATION_DURATION    equal 1000  # Name -> RUN_TIME
-variable SIMULATION_DURATION        equal 4000  # Name -> RUN_TIME
+variable EQUILLIBRATION_DURATION    equal 8000  # Name -> RUN_TIME
+variable SIMULATION_DURATION        equal 1000  # Name -> RUN_TIME
 
-variable PARTICLE_NUMBER            equal 4000          # Name -> N
+variable PARTICLE_NUMBER            equal 3000          # Name -> N
 variable PARTICLE_MASS              equal 1.0           # Name -> MASS
 variable PARTICLE_DIAMETER          equal ${DIAMETER}   # Name -> SIGMA
 
@@ -105,7 +105,7 @@ variable LY         equal (${Y_SCALE}*${LX})
 variable LZ         equal (${Z_SCALE}*${LX})
 
 # Radius at which interaction potential is zero:
-variable CUTOFF     equal 4.5*${SIGMA}
+variable CUTOFF     equal ${CUT}
 
 
 # When minimizing system energy to avoid overlapping particles...
