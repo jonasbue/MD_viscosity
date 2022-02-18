@@ -33,13 +33,17 @@ def cutoff_error(path, filename):
     best_Z = Z[-1,:]
     # Compute the difference (norm) between best_Z and the other values.
     diff = (Z**2 - best_Z[np.newaxis,:]**2)/Z**2
-    diff = np.sum(np.sqrt(np.abs(diff)),axis=1)
+    diff = np.sum(np.abs(diff),axis=1)
+    diff = np.sqrt(diff)
 
     # Plot results, using matplotlib or the more esoteric termplotlib.
     fig = tpl.figure()
     fig.plot(cut[:,0], diff)
     fig.show()
     plt.plot(cut[:,0], diff, "o")
+    plt.show()
+    plt.plot(pf, Z, "o")
+    plt.plot(pf[-1,:], Z[-1,:], "-")
     plt.show()
 
 
