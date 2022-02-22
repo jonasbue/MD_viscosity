@@ -76,8 +76,8 @@ def main():
         #    path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
         compute_eos_from_directory(
             path, get_savename("eos"), get_eos_list(), computation_params)
-        compute_rdf_from_directory(
-            path, get_savename("rdf"), get_rdf_list(), computation_params)
+        #compute_rdf_from_directory(
+        #    path, get_savename("rdf"), get_rdf_list(), computation_params)
         #save_theory(path, filenames, get_savename("theory"))
         #save_rdf(path, filenames, get_savename=("rdf"))
 

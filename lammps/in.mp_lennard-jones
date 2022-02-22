@@ -36,7 +36,7 @@
 variable EQUILLIBRATION_DURATION    equal 1000  # Name -> RUN_TIME
 variable SIMULATION_DURATION        equal 4000  # Name -> RUN_TIME
 
-variable PARTICLE_NUMBER            equal 4000          # Name -> N
+variable PARTICLE_NUMBER            equal ${PARTICLES}  # Name -> N
 variable PARTICLE_MASS              equal 1.0           # Name -> MASS
 variable PARTICLE_DIAMETER          equal ${DIAMETER}   # Name -> SIGMA
 
@@ -126,7 +126,7 @@ variable OUTPUT_FREQUENCY   equal 500
 variable DT             equal 0.001                 # Time step
 variable RUN_STEPS      equal ${RUN_TIME}/${DT}     # Number of time steps.
 variable EQUILL_STEPS   equal ${EQUILL_TIME}/${DT}  # Number of time steps.
-variable DUMP_STEPS     equal 10000                 # Timesteps between every dump
+variable DUMP_STEPS     equal 20000                 # Timesteps between every dump
 variable THERMO_OUTPUT  equal ${OUTPUT_FREQUENCY}   # Timesteps between thermo output
 
 

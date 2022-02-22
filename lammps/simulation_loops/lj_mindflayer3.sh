@@ -4,9 +4,9 @@ savepath="$dir/lj_data/"
 scriptpath="$dir/lammps_scripts"
 script="in.mp_lennard-jones"
 
-n=3000
+n=6000
 # Packing fraction
-for x in $(seq 0.2 0.1 0.5)
+for x in $(seq 0.025 0.025 0.1)
 do
     # Reduced temperature
     for T in $(seq 0.5 0.5 2.0)
@@ -19,7 +19,7 @@ do
             rt=$RANDOM  # Seed for thermostat
 
             mpirun                                          \
-                -np  6 /home/christopher/lammps/build/lmp   \
+                -np  4 /home/christopher/lammps/build/lmp   \
                 -in  $scriptpath/$script                    \
                 -var PARTICLES      $n                      \
                 -var PACKING        $x                      \
