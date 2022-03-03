@@ -27,40 +27,24 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/cutoff"]
-save_path_list = ["cut"]
-#data_path_list = ["./data/heavy_low_exchange_rate"]
-#save_path_list = ["heavy"]
+data_path_list = ["./data/lj"]
+save_path_list = ["lj"]
+
+computation_params = {
+    "particle_types": 1,
+    "cut_fraction"  : 0.3,
+    "step" 		    : 10,
+    "per_time"		: False,
+}
 
 # 1. convert all files in directory
-# 2. compute viscosity and save data, with theoretical values for the same system
+# 2. compute viscosity and save data, along with theoretical values 
 # 3. compute the EOS at equilibrium
 # 4. compute the RDF at equilibrium
 # 5. plot interesting quantities from the data files
 
-# def compute_all_viscosities(directory):
-# def compute_eos_at_equilibrium(directory):
-# def compute_rdf_at_equilibrium(directory):
-# def set_computation_parameters():
-# 
-# convert_all_to_csv(directory):
-# params = set_computation_parameters():
-# data = compute_all_viscosities(directory):
-# save(data)
-# data = compute_eos_at_equilibrium(directory):
-# save(data)
-# data = compute_rdf_at_equilibrium(directory):
-# save(data)
-
 ## Rename to convert_something_something
 def main():
-    computation_params = {
-        "particle_types": 1,
-        "cut_fraction"  : 0.3,
-        "step" 		    : 4,
-        "per_time"		: False,
-    }
-
     theoretical_viscosity = theory.enskog
 
     for path, savepath in zip(data_path_list, save_path_list):
@@ -72,12 +56,18 @@ def main():
         def get_savename(body):
             return f"{save_dir}{body}_{savepath}.csv"
 
-        #compute_viscosity_from_directory(
-        #    path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
-        compute_eos_from_directory(
-            path, get_savename("eos"), get_eos_list(), computation_params)
-        #compute_rdf_from_directory(
-        #    path, get_savename("rdf"), get_rdf_list(), computation_params)
+        if "viscosity" in sysargs:
+            compute_viscosity_from_directory(
+                path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
+        if "eos" in sysargs:
+            compute_eos_from_directory(
+                path, get_savename("eos"), get_eos_list(), computation_params)
+        if "rdf" in sysargs:
+            compute_rdf_from_directory(
+                path, get_savename("rdf"), get_rdf_list(), computation_params)
+        # To make nice plots, it is convenient to save a separate 
+        # file of theoretical values, with denser data points than 
+        # the numerical data. TODO: Cleanup.
         #save_theory(path, filenames, get_savename("theory"))
         #save_rdf(path, filenames, get_savename=("rdf"))
 

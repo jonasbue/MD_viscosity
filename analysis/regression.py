@@ -47,7 +47,6 @@ def isolate_slabs(vx, z):
         # If vx and z contain values from multiple times,
         # we need to read the arrays.
         # This method does not work for 1D-arrays.
-        print(z)
         z_max = np.nanmax(z)
         z_mid = z_max/2
 

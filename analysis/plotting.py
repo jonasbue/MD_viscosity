@@ -12,6 +12,7 @@ import pandas as pd
 #import viscosity
 #import eos
 import files
+import save
 import sys
 
 # Increase font size in plots
@@ -29,16 +30,37 @@ for arg in sys.argv:
         path = arg[arg.index("-")+1:]
 
 path = "data/processed/"
-filenames = ["eos_cut.csv"]
 
-def plot_result(path, filename, x_name, y_name, pltstr="-"):
+def plot_result(path, filename, x_name, y_name, theory_name, pltstr="-"):
     #files.get_all_filenames(path)
     data = pd.read_csv(path+filename, delimiter=", ")
-    plt.plot(data[x_name], data[y_name], pltstr)
+    x = np.array(data[x_name])
+    y = np.zeros_like(x)
+    t = np.zeros_like(x)
+    system_config = np.array([np.nan, 3.000e+03, 1.000e+00, 1.500e+00, 3.000e+00, 6.750e+00])
+    for i in range(len(data)):
+        row = data.iloc[i]
+        C = row[:len(system_config)].to_numpy()
+        if C[1] == system_config[1] and C[3] == system_config[3]:
+            x[i] = row[x_name]
+            y[i] = row[y_name]
+            t[i] = row[theory_name]
+    plt.plot(x, y, pltstr, label=f"{y_name}, N = {C[1]}, T = {C[4]}")
+    #plt.plot(x, t, "x", label=theory_name)
+    plt.legend()
+    #plt.plot(x, t, "x")
+    plt.plot(x, np.zeros_like(x), ":"), 
     plt.show()
     
-for filename in filenames:
-    plot_result(path, filename, "pf", "Z", pltstr="o")
+if "eos" in sys.argv:
+    filenames = ["eos_lj.csv"] 
+    for filename in filenames:
+        plot_result(path, filename, "pf", "Z", "EOS_CS", pltstr="o")
+if "visc" in sys.argv:
+    filenames = ["visc_lj.csv"]
+    for filename in filenames:
+        plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", pltstr="ko")
+    #plot_result(path, filename, "pf", "T", pltstr="o", rowsarg="T", rowsval=1.0)
 
 
 

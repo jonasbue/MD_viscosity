@@ -63,7 +63,7 @@ def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
     """
     # TODO: Make a versatile way of writing a function header.
     header = f"pf, N1, N2, m1, m2, sigma1, sigma2, {data_name}"
-    header = f"pf, N, m, sigma, cut, {data_name}"
+    header = f"pf, N, m, T, sigma, cut, {data_name}"
     np.savetxt(filename, data, header=header, fmt=fmt, delimiter=", ", comments="")
 
 
@@ -102,28 +102,30 @@ def get_system_config(C=None, pf=None, number_of_components=None):
         if number_of_components == 1:
             N = C["N"]
             m = C["MASS"]
+            T = C["TEMP"]
             sigma = C["SIGMA"]
             cut = C["CUTOFF"]
             if pf == None:
                 pf = C["PF"]
-            parameters = np.array([pf, N, m, sigma, cut])
+            parameters = np.array([pf, N, m, T, sigma, cut])
         elif number_of_components == 2:
             N1 = C["N_L"]
             N2 = C["N_H"]
             m1 = C["MASS_L"]
             m2 = C["MASS_H"]
+            T  = C["TEMP"]
             sigma1 = C["SIGMA_L"]
             sigma2 = C["SIGMA_H"]
             if pf == None:
                 pf = C["PF"]
-            parameters = np.array([pf, N1, N2, m1, m2, sigma1, sigma2])
+            parameters = np.array([pf, N1, N2, m1, m2, T, sigma1, sigma2])
     else:
         if number_of_components == 1:
             # NOTE: This should be 4 normally.
             # TODO: Make versatile functionality here, based on required config.
-            parameters = np.zeros(5)
+            parameters = np.zeros(6)
         elif number_of_components == 2:
-            parameters = np.zeros(7)
+            parameters = np.zeros(8)
     return parameters
 
 
