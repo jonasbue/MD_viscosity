@@ -24,21 +24,24 @@ def assert_chunk_number(N_chunks, constants):
 
 def test_eos():
     pf = np.linspace(0.01, 0.5)
-    sigma = np.array([1,1])
-    sigma = viscosity.get_sigma(sigma)
-    x = np.array([0.5, 0.5])
+    sigma = np.array([1.0])
+    sigma = theory.get_sigma(sigma)
+    x = np.array([1.0])
     rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
     #plt.title("CS EoS")
     #plt.legend()
     #plt.show()
 
-    plt.plot(pf, eos.Z_CS(pf), label="CS EoS")
-    plt.plot(pf, eos.Z_SPT(sigma, x, rho), label="SPT EoS")
-    plt.plot(pf, eos.Z_PY(sigma, x, rho), label="PY EoS")
-    plt.plot(pf, eos.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
+    plt.plot(pf, theory.Z_CS(sigma, x, rho), label="CS EoS")
+    plt.plot(pf, theory.Z_SPT(sigma, x, rho), label="SPT EoS")
+    plt.plot(pf, theory.Z_PY(sigma, x, rho), label="PY EoS")
+    plt.plot(pf, theory.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
+    plt.plot(pf, theory.Z_LJ(sigma, x, rho, temp=1.0), label="LJ EoS", linestyle=":")
     plt.title("Mixture EoS")
     plt.legend()
     plt.show()
+
+test_eos()
 
 
 def test_thorne():

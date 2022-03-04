@@ -382,6 +382,67 @@ def Z_BMCSL(sigma, x, rho):
     )
     return Z
 
+
+# TODO: Start here
+def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS):
+    gamma = 1.92907278  # Damping parameter. Adjustable.
+                        # Value from table 3.
+
+    # Coefficients of the EOS, from table 3.
+    # The indices are weirdly defined in the original paper:
+    #   i in {0,-1,-2,-4}; j in [2..6].
+    # To use this array, call C[abs(i),j]. 
+    # If a NAN is used, the program should notice, and return an error.
+
+    # One possible alteration is to use C[abs(i),j-2], 
+    # but this does not provide a check of the indices.
+    C_ij = np.array([
+        [0, 0,  2.015,      -28.1788,   28.283,     -10.424,    0],         # i,0
+        [0, 0,  -19.5837,   75.623,     -120.7059,  93.927,     -27.3774],  # i,-1
+        [0, 0,  29.347,     -112.3536,  170.649,    -123.06669, 34.4229],   # i,-2
+        [0, 0,  0,          0,          0,          0,          0],         # i,-3
+        [0, 0,  -13.37,     65.3806,    -115.0923,  88.9197,    -25.6210],  # i,-4
+    ])
+    C_d_hBH = np.array([
+        1.08014,    # 0
+        0.00069,    # 1
+        -0.06392,   # ln
+        0.01112,    # -2
+        -0.07638,   # -1
+    ])
+    C_delta_B2 = np.array([
+        0.0246,     # 0
+        -0.5854,    # -7
+        0.4310,     # -6
+        0.8736,     # -5
+        -4.137,     # -4
+        2.9062,     # -3
+        -7.0218,    # -2
+        0,          # -1
+    ])
+
+    #delta_B cmes from eq. 29 with the coefficients from above
+    def f(T):
+        a = 0
+        for i in range(-7,1): # 1 is not included.
+            a += C_delta_B2[i]*T**(i/2)
+        return a + C_d_hBH[2]*np.log(T)
+
+    delta_B = f(temp)
+    a = Z_HS(sigma, x, rho) 
+    b = rho*(1-2*gamma*rho**2)*np.exp(-gamma*rho**2)*delta_B
+
+    # Change the unused values to zero. That leaves them out of the sum.
+    ### This loop is untested.
+    c = 0
+    # FIX this
+    for i in range(len(C_ij[:,0])):
+        for j in range(len(C_ij[0,:])):
+            c += j*C_ij[i,j]*temp**(i/2-1)*rho**j 
+    Z = a + b + c
+    return Z
+
+
 ##############################################################
 ## Radial distribution functions                            ##
 ##############################################################
