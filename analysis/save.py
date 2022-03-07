@@ -15,16 +15,17 @@ def get_data_name(theory_functions, viscosity_function=None):
         functions, to be used as a file header.
     """
     function_names = {
-        theory.Z_SPT       : "EOS_SPT",
-        theory.Z_PY        : "EOS_PY",
-        theory.Z_BMCSL     : "EOS_BMCSL",
-        theory.Z_CS        : "EOS_CS",
-        theory.rdf_SPT     : "RDF_SPT",
-        theory.rdf_PY      : "RDF_PY",
-        theory.rdf_BMCSL   : "RDF_BMCSL",
-        theory.rdf_CS      : "RDF_CS",
-        theory.enskog          : "enskog_",
-        theory.thorne          : "thorne_",
+        theory.Z_SPT        : "EOS_SPT",
+        theory.Z_PY         : "EOS_PY",
+        theory.Z_BMCSL      : "EOS_BMCSL",
+        theory.Z_CS         : "EOS_CS",
+        theory.Z_LJ         : "EOS_LJ",
+        theory.rdf_SPT      : "RDF_SPT",
+        theory.rdf_PY       : "RDF_PY",
+        theory.rdf_BMCSL    : "RDF_BMCSL",
+        theory.rdf_CS       : "RDF_CS",
+        theory.enskog       : "enskog_",
+        theory.thorne       : "thorne_",
     }
     if viscosity_function:
         data_name = "".join([f", {function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])

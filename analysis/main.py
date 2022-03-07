@@ -79,7 +79,7 @@ def get_rdf_list():
 
 def get_eos_list():
     #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
-    return [theory.Z_PY, theory.Z_CS]
+    return [theory.Z_PY, theory.Z_CS, theory.Z_LJ]
 
 
 def compute_viscosity_from_directory(

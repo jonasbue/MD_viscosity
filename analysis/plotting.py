@@ -37,6 +37,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, pltstr="-"):
     x = np.array(data[x_name])
     y = np.zeros_like(x)
     t = np.zeros_like(x)
+    # These values are:         pf      N           m           T       sigma       cutoff
     system_config = np.array([np.nan, 3.000e+03, 1.000e+00, 1.500e+00, 3.000e+00, 6.750e+00])
     for i in range(len(data)):
         row = data.iloc[i]
@@ -46,7 +47,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, pltstr="-"):
             y[i] = row[y_name]
             t[i] = row[theory_name]
     plt.plot(x, y, pltstr, label=f"{y_name}, N = {C[1]}, T = {C[4]}")
-    #plt.plot(x, t, "x", label=theory_name)
+    plt.plot(x, t, "x", label=theory_name)
     plt.legend()
     #plt.plot(x, t, "x")
     plt.plot(x, np.zeros_like(x), ":"), 
@@ -55,7 +56,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, pltstr="-"):
 if "eos" in sys.argv:
     filenames = ["eos_lj.csv"] 
     for filename in filenames:
-        plot_result(path, filename, "pf", "Z", "EOS_CS", pltstr="o")
+        plot_result(path, filename, "pf", "Z", "EOS_LJ", pltstr="o")
 if "visc" in sys.argv:
     filenames = ["visc_lj.csv"]
     for filename in filenames:

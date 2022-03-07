@@ -41,7 +41,7 @@ def test_eos():
     plt.legend()
     plt.show()
 
-test_eos()
+#test_eos()
 
 
 def test_thorne():

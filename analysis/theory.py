@@ -302,7 +302,7 @@ def get_Z_from_C(C, eos):
     x = N_list/np.sum(N_list)
     sigma = get_sigma(sigma_list)
     rho = pf_to_rho(sigma, x, pf)
-    Z = eos(sigma, x, rho)
+    Z = eos(sigma, x, rho, temp=T)
     return Z
 
 
@@ -323,7 +323,7 @@ def rho_to_pf(sigma, x, rho):
     pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
     return pf
 
-def Z_CS(sigma, x, rho):
+def Z_CS(sigma, x, rho, **kwargs):
     """ Returns expected compressibility factor
         based on the Carnahan-Starling EoS,
         for a given packing fraction n.
@@ -336,7 +336,7 @@ def Z_CS(sigma, x, rho):
     return (1 + pf + pf**2 - pf**3) / (1 - pf)**3
 
 
-def Z_SPT(sigma, x, rho):
+def Z_SPT(sigma, x, rho, **kwargs):
     """ Returns expected compressibility factor
         based on the SPT EoS,
         for a given packing fraction n.
@@ -354,7 +354,7 @@ def Z_SPT(sigma, x, rho):
     return Z
 
 
-def Z_PY(sigma, x, rho):
+def Z_PY(sigma, x, rho, **kwargs):
     """ Returns expected compressibility factor
         based on the Persus-Yervick EoS,
         for a given packing fraction n.
@@ -371,7 +371,7 @@ def Z_PY(sigma, x, rho):
     return Z
 
 
-def Z_BMCSL(sigma, x, rho):
+def Z_BMCSL(sigma, x, rho, **kwargs):
     xi = partial_pf(sigma, x, rho)
     Z = (
         1/xi(0) * (
@@ -384,24 +384,19 @@ def Z_BMCSL(sigma, x, rho):
 
 
 # TODO: Start here
-def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS):
-    gamma = 1.92907278  # Damping parameter. Adjustable.
-                        # Value from table 3.
-
+def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     # Coefficients of the EOS, from table 3.
     # The indices are weirdly defined in the original paper:
     #   i in {0,-1,-2,-4}; j in [2..6].
-    # To use this array, call C[abs(i),j]. 
-    # If a NAN is used, the program should notice, and return an error.
+    # These indices are set to zero, giving no contribution to the EOS.
 
-    # One possible alteration is to use C[abs(i),j-2], 
-    # but this does not provide a check of the indices.
     C_ij = np.array([
-        [0, 0,  2.015,      -28.1788,   28.283,     -10.424,    0],         # i,0
-        [0, 0,  -19.5837,   75.623,     -120.7059,  93.927,     -27.3774],  # i,-1
-        [0, 0,  29.347,     -112.3536,  170.649,    -123.06669, 34.4229],   # i,-2
-        [0, 0,  0,          0,          0,          0,          0],         # i,-3
-        [0, 0,  -13.37,     65.3806,    -115.0923,  88.9197,    -25.6210],  # i,-4
+        #0  j=1 j=2         j=3         j=4         j=5         j=6
+        [0, 0,  2.015,      -28.1788,   28.283,     -10.424,    0],         # i=0
+        [0, 0,  -19.5837,   75.623,     -120.7059,  93.927,     -27.3774],  # i=-1
+        [0, 0,  29.347,     -112.3536,  170.649,    -123.06669, 34.4229],   # i=-2
+        [0, 0,  0,          0,          0,          0,          0],         # i=-3
+        [0, 0,  -13.37,     65.3806,    -115.0923,  88.9197,    -25.6210],  # i=-4
     ])
     C_d_hBH = np.array([
         1.08014,    # 0
@@ -420,8 +415,11 @@ def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS):
         -7.0218,    # -2
         0,          # -1
     ])
+    gamma = 1.92907278  # Damping parameter. Adjustable.
+                        # Value from table 3.
 
-    #delta_B cmes from eq. 29 with the coefficients from above
+
+    #delta_B cmes from eq. 29 in the paper, with coefficients from above
     def f(T):
         a = 0
         for i in range(-7,1): # 1 is not included.
@@ -436,8 +434,8 @@ def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS):
     ### This loop is untested.
     c = 0
     # FIX this
-    for i in range(len(C_ij[:,0])):
-        for j in range(len(C_ij[0,:])):
+    for i in range(-4,1):
+        for j in range(0,7):
             c += j*C_ij[i,j]*temp**(i/2-1)*rho**j 
     Z = a + b + c
     return Z
