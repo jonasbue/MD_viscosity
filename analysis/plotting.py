@@ -34,33 +34,44 @@ path = "data/processed/"
 def plot_result(path, filename, x_name, y_name, theory_name, pltstr="-"):
     #files.get_all_filenames(path)
     data = pd.read_csv(path+filename, delimiter=", ")
-    x = np.array(data[x_name])
+    x = np.zeros_like(data[x_name])
     y = np.zeros_like(x)
     t = np.zeros_like(x)
-    # These values are:         pf      N           m           T       sigma       cutoff
-    system_config = np.array([np.nan, 3.000e+03, 1.000e+00, 1.500e+00, 3.000e+00, 6.750e+00])
+    # These values are:         pf      N       m       T       sigma   cutoff
+    system_config = np.array([np.nan, 3.0e+3, 1.0e+0, 1.5e+0, 1.0e+00, 6.75e+0])
+    # Iterate through all simulations, and save those 
+    # that match the criteria provided in system_config.
     for i in range(len(data)):
         row = data.iloc[i]
         C = row[:len(system_config)].to_numpy()
-        if C[1] == system_config[1] and C[3] == system_config[3]:
+        conf = C[1:-1] == system_config[1:-1]
+        if conf.all():
             x[i] = row[x_name]
             y[i] = row[y_name]
             t[i] = row[theory_name]
-    plt.plot(x, y, pltstr, label=f"{y_name}, N = {C[1]}, T = {C[4]}")
-    plt.plot(x, t, "x", label=theory_name)
+    # Remove unused space in the arrays.
+    x = np.trim_zeros(x)
+    y = np.trim_zeros(y)
+    t = np.trim_zeros(t)
+    n = len(np.unique(x))
+    if len(y) != n or len(t) != n:
+        "WARNING: Some simulations overlap in parameter space."
+    plt.title(f"N = {system_config[1]}, T = {system_config[3]}, $\sigma$ = {system_config[4]}")
+    plt.plot(x, y, pltstr, label=f"{y_name}")
+    plt.plot(x, t, "kx:", label=theory_name)
     plt.legend()
     #plt.plot(x, t, "x")
-    plt.plot(x, np.zeros_like(x), ":"), 
+    #plt.plot(x, np.zeros_like(x), ":"), 
     plt.show()
     
 if "eos" in sys.argv:
     filenames = ["eos_lj.csv"] 
     for filename in filenames:
-        plot_result(path, filename, "pf", "Z", "EOS_LJ", pltstr="o")
+        plot_result(path, filename, "pf", "Z", "EOS_LJ", pltstr="o-")
 if "visc" in sys.argv:
     filenames = ["visc_lj.csv"]
     for filename in filenames:
-        plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", pltstr="ko")
+        plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", pltstr="k-")
     #plot_result(path, filename, "pf", "T", pltstr="o", rowsarg="T", rowsval=1.0)
 
 
