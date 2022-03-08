@@ -239,6 +239,7 @@ def get_variable_indices(header, variables):
                             pressure:       "p"
                             volume:         "V"
                             temperature:    "T"
+                            ...
         Returns:
             indices:    np array containing indices of the
                         variables in the same order as they
