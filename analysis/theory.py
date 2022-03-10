@@ -8,7 +8,6 @@
 
 import numpy as np
 import sys
-import theory
 import utils
 
 
@@ -62,6 +61,24 @@ def get_viscosity_from_C(C, viscosity, rdf):
     return visc
 
 def get_thorne_from_C(C, rdf):
+    """ Takes a system configuration and an RDF function,
+        and computes the Thorne viscosity of the system.
+        Input:
+            C:      Configuration of the system. Dict.
+                    Can be obtained from a LAMMPS log file.
+                    C must contain the following:
+                        PF:         Packing fraction 
+                        TEMP:       Temperature
+                        N_L:        Number of particle 1
+                        N_H:        Number of particle 2
+                        SIGMA_L:    Diameter of particle 1
+                        SIGMA_H:    Diameter of particle 2
+                        MASS_L:     Mass of particle 1
+                        MASS_H:     Mass of particle
+            rdf:    Either of the rdf functions from this script.
+        Output:
+            thorne: Viscosity of system. Float.
+    """
     pf = C["PF"]
     T = C["TEMP"]
     N_list = np.array([C["N_L"], C["N_H"]])
@@ -383,13 +400,26 @@ def Z_BMCSL(sigma, x, rho, **kwargs):
     return Z
 
 
-# TODO: Start here
 def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Kolafa et al. 
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+        
     # Coefficients of the EOS, from table 3.
-    # The indices are weirdly defined in the original paper:
+    # The indices are defined as follows in the original paper:
     #   i in {0,-1,-2,-4}; j in [2..6].
     # These indices are set to zero, giving no contribution to the EOS.
-
     C_ij = np.array([
         #0  j=1 j=2         j=3         j=4         j=5         j=6
         [0, 0,  2.015,      -28.1788,   28.283,     -10.424,    0],         # i=0
@@ -418,7 +448,6 @@ def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     gamma = 1.92907278  # Damping parameter. Adjustable.
                         # Value from table 3.
 
-
     #delta_B cmes from eq. 29 in the paper, with coefficients from above
     def f(T):
         a = 0
@@ -430,8 +459,6 @@ def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     a = Z_HS(sigma, x, rho) 
     b = rho*(1-2*gamma*rho**2)*np.exp(-gamma*rho**2)*delta_B
 
-    # Change the unused values to zero. That leaves them out of the sum.
-    ### This loop is untested.
     c = 0
     # FIX this
     for i in range(-4,1):
