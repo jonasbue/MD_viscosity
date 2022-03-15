@@ -14,6 +14,8 @@ import pandas as pd
 import files
 import save
 import sys
+import units
+import theory
 
 # Increase font size in plots
 font = {
@@ -37,8 +39,8 @@ def plot_result(path, filename, x_name, y_name, theory_name, *args, pltstr="-"):
     x = np.zeros_like(data[x_name])
     y = np.zeros_like(x)
     t = np.zeros_like(x)
-    variable_names = [          "pf",   "N",    "m",    "T",    "sigma", "cutoff"]
-    system_config = np.array([2.0e-1, 3.0e+3, 1.0e+0, 1.5e+0, 1.0e+00, 6.75e+0])
+    variable_names = [          "pf",   "N",    "m",    "T", "sigma", "cutoff"]
+    system_config = np.array([2.0e-1, 3.0e+3, 1.0e+0, 0.5e+0, 1.0e+00, 6.75e+0])
     # Iterate through all simulations, and save those 
     # that match the criteria provided in system_config.
     x_index = variable_names.index(x_name)
@@ -62,7 +64,19 @@ def plot_result(path, filename, x_name, y_name, theory_name, *args, pltstr="-"):
     t = np.trim_zeros(t)
     n = len(np.unique(x))
     if len(y) != n or len(t) != n:
-        "WARNING: Some simulations overlap in parameter space."
+        print("WARNING: Some simulations overlap in parameter space.")
+
+    sigma = system_config[4]
+    m = system_config[2]
+    epsilon = 1.0
+    T = system_config[3]
+    N = system_config[1]
+    lj_units = units.make_unit_dict(0, 0, T, 0, system_config[0])
+    sigma_Ar = 188e-12
+    m_Ar = 39.95*1.66e-27
+    epsilon_Ar = 120*1.38e-23
+    real_conf = units.lj_to_real_units(sigma_Ar, m_Ar, epsilon_Ar, lj_units)
+    print(real_conf)
     plt.title(f"N = {system_config[1]}, T = {system_config[3]}, $\sigma$ = {system_config[4]}")
     plt.plot(x, y, pltstr, label=f"{y_name}")
     plt.plot(x, t, "kx", label=theory_name)
