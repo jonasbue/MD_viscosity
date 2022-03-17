@@ -19,7 +19,7 @@ import theory
 
 # Increase font size in plots
 font = {
-    "size"  : "22",
+    "size"  : "18",
 }
 plt.rc("font", **font)
 
@@ -35,7 +35,7 @@ path = "data/processed/"
 
 def plot_result(path, filename, x_name, y_name, theory_name, system_config, *args, pltstr="-", norm=True):
     #files.get_all_filenames(path)
-    data = pd.read_csv(path+filename, delimiter=", ")
+    data = pd.read_csv(path+filename, delimiter=", ", engine="python")
     x = np.zeros_like(data[x_name])
     y = np.zeros_like(x)
     t = np.zeros_like(x)
@@ -56,6 +56,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
             x[i] = row[x_name]
             y[i] = row[y_name]
             t[i] = row[theory_name]
+            N, m, T, s, c = C[1], C[2], C[3], C[4], C[5]
     # Remove unused space in the arrays.
     x = np.trim_zeros(x)
     y = np.trim_zeros(y)
@@ -66,12 +67,14 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
     if norm:
         y = y/t
         t = t/t
-    plt.title(f"N = {system_config[1]}, T = {system_config[3]}, $\sigma$ = {system_config[4]}")
-    plt.plot(x, y, pltstr, label=f"{y_name}")
-    plt.plot(x, t, "kx", label=theory_name)
+    plt.title(f"N = {N}, m = {m}, T = {T}, $\sigma$ = {s}")
+    plt.plot(x, y, pltstr, label=f"{y_name}, numerical")
+    plt.plot(x, t, "kx-", label=theory_name+", theoretical")
     plt.legend()
     #plt.plot(x, t, "x")
     #plt.plot(x, np.zeros_like(x), ":"), 
+    savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}.png"
+    plt.savefig(savename)
     plt.show()
     
 
@@ -89,15 +92,17 @@ def plot_vs_literature(system_config, fluid_name, data_path):
     lj_units = units.make_unit_dict(T=T, m=system_config[2], pf=system_config[0])
 
     row = fluid_data[fluid_data["gas"] == fluid_name]
-    sigma_fluid     = row["sigma"].values[0]
+    sigma_fluid     = row["rw"].values[0]*2
     m_fluid         = row["m"].values[0]*u
     epsilon_fluid   = row["epsilon"].values[0]
     real_conf = units.lj_to_real_units(sigma_fluid, m_fluid, epsilon_fluid, lj_units)
+    lj_conf = units.real_to_lj_units(sigma_fluid, m_fluid, epsilon_fluid, real_conf)
 
     # GOAL: 
     # Take a data file for some fluid, with Z, p, T etc. and convert between
     # LJ and SI units.
     print(real_conf)
+    print(lj_conf)
 
 def get_var_names():
     variable_names = ["pf", "N", "m", "T", "sigma", "cutoff"]
@@ -108,14 +113,30 @@ system_config = np.array([2.0e-1, 3.0e+3, 1.0e+0, 1.5e+0, 1.0e+00, 6.75e+0])
 if "eos" in sys.argv:
     filenames = ["eos_lj.csv"] 
     for filename in filenames:
-        plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o", norm=False)
+        plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o-", norm=False)
 if "data" in sys.argv:
     filenames = ["eos_lj.csv"] 
     for filename in filenames:
         #plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "sigma", pltstr="o", norm=False)
-        plot_vs_literature(system_config, "neon", "real_fluids.csv")
+        plot_vs_literature(system_config, "Ar", "real_fluids.csv")
 if "visc" in sys.argv:
     filenames = ["visc_lj.csv"]
     for filename in filenames:
         plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", system_config, "cutoff", pltstr="k-")
     #plot_result(path, filename, "pf", "T", pltstr="o", rowsarg="T", rowsval=1.0)
+if "all" in sys.argv:
+    filenames = ["eos_lj.csv"] 
+    def search_for_configs(filename):
+        filename = f"data/processed/{filename}"
+        configs = pd.read_csv(filename, sep=", ", engine="python")
+        cols = configs.columns[len(system_config):]
+        configs = configs.drop(columns=cols)
+        configs = configs.drop_duplicates(subset=configs.columns[1:len(system_config)-1])
+        print(configs)
+        return configs
+    for filename in filenames:
+        system_configs = search_for_configs(filename)
+        for i in range(len(system_configs.index)):
+            system_config = np.array(system_configs.iloc[i])
+            print(system_config)
+            plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o-", norm=False)
