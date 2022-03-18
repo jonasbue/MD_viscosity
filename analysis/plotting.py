@@ -140,3 +140,8 @@ if "all" in sys.argv:
             system_config = np.array(system_configs.iloc[i])
             print(system_config)
             plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+if "lit" in sys.argv:
+    filename = "data/literature/lj_data.csv"
+    data = pd.read_csv(filename, sep=", ", engine="python")
+    plt.plot(data["rho"], data["Z"], "x")
+    plt.show()

@@ -343,7 +343,7 @@ def rho_to_pf(sigma, x, rho):
 def Z_CS(sigma, x, rho, **kwargs):
     """ Returns expected compressibility factor
         based on the Carnahan-Starling EoS,
-        for a given packing fraction n.
+        for a given packing fraction.
         Inputs:
             pf:  packing franction of system, float.
         Returns:
@@ -353,10 +353,23 @@ def Z_CS(sigma, x, rho, **kwargs):
     return (1 + pf + pf**2 - pf**3) / (1 - pf)**3
 
 
+def Z_BN(sigma, x, rho, **kwargs):
+    """ Returns expected compressibility factor
+        based on the Boublik-Nezbeda EoS,
+        for a given packing fraction pf.
+        Inputs:
+            pf:  packing franction of system, float.
+        Returns:
+            Z:  compressibility factor, float.
+    """
+    pf = rho_to_pf(sigma, x, rho)
+    return (1 + pf + pf**2 - 2/3*pf**3*(1+pf)) / (1 - pf)**3
+
+
 def Z_SPT(sigma, x, rho, **kwargs):
     """ Returns expected compressibility factor
         based on the SPT EoS,
-        for a given packing fraction n.
+        for a given packing fraction.
         Inputs:
         Returns:
             Z:  compressibility factor, float.
@@ -400,7 +413,7 @@ def Z_BMCSL(sigma, x, rho, **kwargs):
     return Z
 
 
-def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
+def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
         using the EOS of Kolafa et al. 
         Input:
