@@ -1,16 +1,11 @@
 log.*.lammps
 log.lammps
 dump.*.lammps
-*.csv
 *.profile
 
 analysis/__pycache__/*
 data/*
-large_data/*
-large_box/*
-data_old/*
-berendsen_data/*
-old_small_box/*
-small_box/*
+!data/processed/
+!data/literature/
 
 *.png
