@@ -118,7 +118,7 @@ def get_var_names():
 
 #variable_names = [         "pf",   "N",    "m",    "T", "sigma", "cutoff"]
 system_config = np.array([2.0e-1, 3.0e+3, 1.0e+0, 1.5e+0, 1.0e+00, 6.75e+0])
-lit_filename = "data/literature/lj_data.csv"
+lit_filename = "data/literature/thol_2016.csv"
 if "eos" in sys.argv:
     filenames = ["eos_lj.csv"] 
     for filename in filenames:
