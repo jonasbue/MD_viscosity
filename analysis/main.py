@@ -27,8 +27,8 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/lj"]
-save_path_list = ["lj"]
+data_path_list = ["./data/lj/small"]
+save_path_list = ["lj_small"]
 
 computation_params = {
     "particle_types": 1,
@@ -70,16 +70,6 @@ def main():
         # the numerical data. TODO: Cleanup.
         #save_theory(path, filenames, get_savename("theory"))
         #save_rdf(path, filenames, get_savename=("rdf"))
-
-
-def get_rdf_list():
-    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
-    return [theory.rdf_PY, theory.rdf_CS]
-
-
-def get_eos_list():
-    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
-    return [theory.Z_PY, theory.Z_CS, theory.Z_LJ]
 
 
 def compute_viscosity_from_directory(
@@ -134,5 +124,14 @@ def compute_rdf_from_directory(
     data_name = "g_sigma, error"
     data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
+
+def get_rdf_list():
+    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
+    return [theory.rdf_PY, theory.rdf_CS, theory.rdf_LJ]
+
+
+def get_eos_list():
+    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
+    return [theory.Z_PY, theory.Z_CS, theory.Z_LJ]
 
 main()

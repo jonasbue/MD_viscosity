@@ -6,15 +6,22 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
 import os
 import sys
 import logging
+
+import numba as nb
+from numba import njit
+from numba.np.ufunc import parallel
+from numba import prange
 
 import files
 import save
 import utils
 import convert
 import theory
+import rdfpy
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -36,8 +43,13 @@ def compute_all_rdfs(
     rdf_list = theory_functions
     N = computation_params["particle_types"]
     data = save.create_data_array(filenames, rdf_list, N)
+    cut = 5
+    freq = 2
+    every = 100
+    repeat = 1
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="arrow")
+        #print(f)
+        utils.status_bar(i, len(filenames), fmt="percent")
         dump_name = f"{path}/" + f[2]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{dump_name}")
@@ -46,11 +58,19 @@ def compute_all_rdfs(
         C = convert.extract_constants_from_log(log_name)
         if C["N"] > 1000:
             print(
-                "WARNING: Too many atoms. "\
-                "Skipping this file, to avoid extreme run times."
+                "WARNING: More than 1000 atoms. "\
+                #"Skipping this file, to avoid extreme run times."
+                "This may take a very long time to run."
             )
-            continue
-        rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name)
+            
+        r_max=cut*C["SIGMA"]
+        #rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
+        rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat)
+        rdf, std = rdf_average(rdf)
+        g_sigma = np.amax(rdf)
+        i = np.where(rdf == g_sigma)[0][0]
+        print(i)
+        error = std[i]
 
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         values = np.array([g_sigma, error])
@@ -60,10 +80,43 @@ def compute_all_rdfs(
     return data
 
 
-def get_rdf_from_dump(dump_name, log_name, interaction_number=1):
+def fast_rdf(dump_name, log_name, freq, every, repeat):
+    # The following loads dump file and calculates all common parameters
+    # Extracts box dimensions and N from dump file
+    dim, N = boxData(dump_name) 
+    log_table = files.load_system(log_name)
+    C = convert.extract_constants_from_log(log_name)
+    # Loads dump.csv into memory for quick access
+    dump_as_df = loadDUMP(dump_name) 
+
+    # Stores 1D np.array of recorded time steps in dump
+    time_steps = np.unique(dump_as_df['time_step'].values) 
+    # Divides time_steps array according to freq argument
+    samples = np.split(time_steps[time_steps.size%freq::], freq) 
+    # Selects time_steps based on every and repeat argument
+    samples = [sample[(sample.size-1)%every::every][-repeat::] for sample in samples] 
+    dr = 0.2
+    cut =0.9
+    N_r = int(C["LX"]*cut//dr) + 10
+    N_t = len(time_steps)
+    rdf_of_t = np.zeros((N_t, N_r))
+    radii = np.zeros(N_r)
+    for i in range(N_t):
+        particle_positions = extractCoordinates(dump_as_df, time_steps[i])
+        g_r, radii = rdfpy.rdf(particle_positions, dr, rho = 6*C["PF"]/np.pi, rcutoff=cut, progress=True)
+        rdf_of_t[i,:len(radii)] = g_r
+    return rdf_of_t, radii, time_steps
+
+
+def rdf_average(rdf):
+    return np.mean(rdf, axis=0), np.std(rdf, axis=0)
+
+
+
+def get_rdf_from_dump(dump_name, log_name, r_max, interaction_number=1):
     # This saves the result to a file, with the same name 
     # the original dump file, with "dump" exchanged for "rdf".
-    calcRDF(dump_name, 1, 100, 2, 50, 0.05)
+    calcRDF(dump_name, 1, 100, 2, r_max, 0.05)
     rdf_name = dump_name.replace("dump", "rdf") + ".csv"
     g_sigma, g_r, r, std = export_rdf(rdf_name, interaction_number)
     return g_r, r, g_sigma, std
@@ -182,7 +235,8 @@ def extractCoordinates(dump_as_df, time_step):
     return coor
 
 
-def calcPeriodicDistance(coor, dim):
+#@njit
+def calcPeriodicDistance(coor, dim, r_max=np.inf):
     """
     Calculates the periodic inter-particle distances in the
     fluid from numpy coordinate array (coor) and box
@@ -202,15 +256,44 @@ def calcPeriodicDistance(coor, dim):
         periodic_dist = array([dist_1, dist_2, dist_3, ..., dist_n])
     """
     # Creates 3D numpy array of all absolute distance vectors
-    diff_vec = np.array([np.subtract.outer(particle, particle) for particle in coor.T]).T 
+    diff_vec = np.array([subtract_outer_optimized(particle) for particle in coor.T]).T 
+    #diff_vec = np.array([np.subtract.outer(particle, particle) for particle in coor.T]).T 
+    # This distorts the shape. Fix.
+    #print(diff_vec.shape)
     # Accounts for periodic boundary conditions.
     periodic_diff_vec = np.remainder(diff_vec + dim/2.0, dim) - dim/2.0 
     # Calculates all periodic distances.
     periodic_dist = np.linalg.norm(periodic_diff_vec, axis=2) 
+    # Remove distances longer than r_max. This has no effect on speed.
+    #periodic_dist = periodic_dist[(np.abs(periodic_dist) < r_max)]
     # Removes self-pairings
     periodic_dist = periodic_dist[np.nonzero(periodic_dist)] 
-    
     return periodic_dist
+
+@njit
+def subtract_outer_optimized(arr):
+    block_size=1024 # Divide the array into blocks of size 1024, to simplify 
+    A = np.zeros(arr.shape[0])
+    arr_length = arr.shape[0]//block_size
+    for ii in nb.prange(arr_length):
+        for jj in range(arr_length):
+            for i in range(block_size):
+                tmp = A[ii*block_size+i]
+                for j in range(block_size):
+                    tmp += arr[ii*block_size+i] - arr[jj*block_size+j]
+                A[ii*block_size+i] = tmp
+    for i in nb.prange(arr.shape[0]):
+        tmp = A[i]
+        for j in range(arr_length*block_size, arr.shape[0]):
+            tmp += arr[i] - arr[j]
+        A[i] = tmp
+    for i in nb.prange(arr_length*block_size, arr.shape[0]):        
+        tmp = A[i]
+        for j in range(arr.shape[0]):
+            tmp += arr[i] - arr[j]
+        A[i] = tmp
+    return A
+
 
 def binningVolume(bin_edges):
     """
@@ -249,10 +332,10 @@ def binningAlgorithm(r_max, dr):
     """
     N_bins = np.ceil(r_max/dr)          # Number of bins rounded up to nearest int
     bin_edges = np.arange(N_bins+1)*dr  # N_bins+1 gives upper binning edge
-    
     return bin_edges
 
 
+@njit
 def RDFAtTimestep(dist, bin_edges, V_bin, dim, N):
     """
     Calculates g(r) (g_r) for given set of distance
