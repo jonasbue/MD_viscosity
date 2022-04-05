@@ -559,3 +559,68 @@ def rdf_BMCSL(sigma, x, rho, i, j):
         * ((sigma[i,i] * sigma[j,j]) / (sigma[i,i] + sigma[j,j]))**2
     )
     return g_ij
+
+
+def rdf_LJ(pf, T=1.0, *args):
+    """ 
+        Gives the RDF (at contact) for a one-component Lennard-Jones fluid,
+        as given by Morsali et al. r = 1 gives the RDF at contact.
+    """
+    rho = 6*pf/np.pi
+    # Coefficients for the parameters. First index (horizontal) is the 
+    # coefficient number, 
+    #   q1, q2, q3, q4, q5, q6, q7, q8, q9, rmsd,
+    # and the second index (vertical) is the parameter
+    #   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    #   a, b, c, d, g, h, k, l, m, n, s
+    q = np.array([
+        [9.24792, -2.64281, 0.133386, -1.35932, 1.25338, 0.45602, -0.326422, 0.045708, -0.0287681, 0.02],   # a
+        [-8.33289, 2.1714, 1.00063, 0, 0, 0, 0, 0, 0, 0.002],                                               # b
+        [-0.0677912, -1.39505, 0.512625, 36.9323, -36.8061, 21.7353, -7.76671, 1.36342, 0, 0.0345],         # c
+        [-26.1615, 27.4846, 1.68124, 6.74296, 0, 0, 0, 0, 0, 0.0106],                                       # d
+        [0.663161, -0.243089, 1.24749, -2.059, 0.04261, 1.65041, -0.343652, -0.037698, 0.008899, 0.0048],   # g
+        [0.0325039, -1.28792, 2.5487, 0, 0, 0, 0, 0, 0, 0.0015],                                            # h
+        [16.4821, -0.300612, 0.0937844, -61.744, 145.285, -168.087, 98.2181, -23.0583, 0, 0.0074],          # k
+        [-6.7293, -59.5002, 10.2466, -0.43596, 0, 0, 0, 0, 0, 0.008],                                       # l
+        [1.25225, -1.0179, 0.358564, -0.18533, 0.0482119, 1.27592, -1.78785, 0.634741, 0, 0.0392],          # s
+        [-5.668, -3.62671, 0.680654, 0.294481, 0.186395, -0.286954, 0, 0, 0, 0.0096],                       # m
+        [6.01325, 3.84098, 0.60793, 0, 0, 0, 0, 0, 0, 0.002],                                               # n
+    ])
+    # There is one unique(ish) equation P_ji for every coefficient a, b, c ...
+    # While the paper gives an expression for g(r), only the equations
+    # that give g(sigma) are included here.
+    # a
+    #P = ( q[1,i] 
+    #    + q[2,i]*exp(-q[3,i]*T) 
+    #    + q[4,i]*np.exp(-q[5,i]) 
+    #    + q[6,i]/rho 
+    #    + q[7,i]/rho**2 
+    #    + q[8,i*T]/rho**3
+    #)
+    s = ( 
+            ( q[8,0] 
+            + q[8,1]*rho
+            + q[8,2]/T
+            + q[8,3]/T**2
+            + q[8,4]/T**3
+        ) / (
+            q[8,5]
+            + q[8,6]*rho
+            + q[8,7]*rho**2
+        )
+    )
+    m = ( q[9,0] 
+        + q[9,1]*np.exp(-q[9,3]*T) 
+        + q[9,2]/T
+        + q[9,4]*rho 
+        + q[9,5]*rho**2 
+    )
+    n = ( q[10,0] 
+        + q[10,1]*np.exp(-q[10,2]*T) 
+    )
+    g = s*np.exp(-(m+n)**4) # r == 1 == sigma
+    #g = ( 1 
+    #    + r**(-2) * np.exp(-(a*r+b)) * sin(c*r+d)
+    #    + r**(-2) * np.exp(-(g*r+h)) * cos(k*r+l)
+    #)
+    return g

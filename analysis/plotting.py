@@ -48,6 +48,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
     indices = [variable_names.index(el) for el in args]
     indices.append(x_index)
     var_indices = np.delete(np.arange(len(system_config)), indices)
+    N, m, T, s, c = 0, 0, 0, 0, 0
     for i in range(len(data)):
         row = data.iloc[i]
         C = row[:len(system_config)].to_numpy()
@@ -55,8 +56,11 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         if conf.all():
             x[i] = row[x_name]
             y[i] = row[y_name]
-            t[i] = row[theory_name]
-            N, m, T, s, c = C[1], C[2], C[3], C[4], C[5]
+            if theory_name:
+                t[i] = row[theory_name]
+            else:
+                t[i] = np.ones_like(x[i])
+            N, m, T, s, c = int(C[1]), C[2], C[3], C[4], C[5]
     # Remove unused space in the arrays.
     x = np.trim_zeros(x)
     y = np.trim_zeros(y)
@@ -69,7 +73,8 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         t = t/t
     plt.title(f"N = {N}, m = {m}, T = {T}, $\sigma$ = {s}")
     plt.plot(x, y, pltstr, label=f"{y_name}, numerical")
-    plt.plot(x, t, "kx-", label=theory_name+", theoretical")
+    if theory_name:
+        plt.plot(x, t, "kx", label=theory_name+", theoretical")
     #plt.legend()
     #plt.plot(x, t, "x")
     #plt.plot(x, np.zeros_like(x), ":"), 
@@ -116,48 +121,68 @@ def get_var_names():
     variable_names = ["pf", "N", "m", "T", "sigma", "cutoff"]
     return variable_names
 
+
+def search_for_configs(filename):
+    filename = f"data/processed/{filename}"
+    configs = pd.read_csv(filename, sep=", ", engine="python")
+    cols = configs.columns[len(system_config):]
+    configs = configs.drop(columns=cols)
+    configs = configs.drop_duplicates(subset=configs.columns[1:len(system_config)-1])
+    return configs
+
+
 #variable_names = [         "pf",   "N",    "m",    "T", "sigma", "cutoff"]
-system_config = np.array([2.0e-1, 3.0e+3, 1.0e+0, 1.5e+0, 1.0e+00, 6.75e+0])
+system_config = np.array([4.0e-1, 3.0e+3, 1.0e+0, 1.5e+00, 1.0e+00, 6.75e+0])
 lit_filename = "data/literature/thol_2016.csv"
+# These can all be done by one single function
 if "eos" in sys.argv:
-    filenames = ["eos_lj.csv"] 
-    for filename in filenames:
-        plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o-", norm=False)
-        plt.legend()
-        plt.show()
-if "data" in sys.argv:
-    filenames = ["eos_lj.csv"] 
-    for filename in filenames:
-        #plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "sigma", pltstr="o", norm=False)
-        plot_vs_literature(system_config, "Ar", "real_fluids.csv")
-        plt.legend()
-        plt.show()
-if "visc" in sys.argv:
-    filenames = ["visc_lj.csv"]
-    for filename in filenames:
-        plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", system_config, "cutoff", pltstr="k-")
-        plt.legend()
-        plt.show()
-    #plot_result(path, filename, "pf", "T", pltstr="o", rowsarg="T", rowsval=1.0)
-if "lit" in sys.argv:
-    plot_literature_results(lit_filename, system_config)
-    plt.legend()
-    plt.show()
-if "all" in sys.argv:
-    filenames = ["eos_lj.csv"] 
-    def search_for_configs(filename):
-        filename = f"data/processed/{filename}"
-        configs = pd.read_csv(filename, sep=", ", engine="python")
-        cols = configs.columns[len(system_config):]
-        configs = configs.drop(columns=cols)
-        configs = configs.drop_duplicates(subset=configs.columns[1:len(system_config)-1])
-        print(configs)
-        return configs
+    filenames = ["eos_lj_small.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
             plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o-", norm=False)
             plot_literature_results(lit_filename, system_config)
+            plt.legend()
+            plt.show()
+if "rdf" in sys.argv:
+    filenames = ["rdf_lj_small.csv"] 
+    for filename in filenames:
+        system_configs = search_for_configs(filename)
+        for i in range(len(system_configs.index)):
+            system_config = np.array(system_configs.iloc[i])
+            plot_result(path, filename, "pf", "g_sigma", "RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            #plot_literature_results(lit_filename, system_config)
+            plt.legend()
+            plt.show()
+if "visc" in sys.argv:
+    filenames = ["visc_lj_small.csv"] 
+    for filename in filenames:
+        system_configs = search_for_configs(filename)
+        for i in range(len(system_configs.index)):
+            system_config = np.array(system_configs.iloc[i])
+            plot_result(path, filename, "pf", "viscosity", "enskog_RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            #plot_literature_results(lit_filename, system_config)
+            plt.legend()
+            plt.show()
+if "lit" in sys.argv:
+    plot_literature_results(lit_filename, system_config)
+    plt.legend()
+    plt.show()
+if "data" in sys.argv:
+    filenames = ["eos_lj_small.csv"] 
+    for filename in filenames:
+        #plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "sigma", pltstr="o", norm=False)
+        plot_vs_literature(system_config, "Ar", "real_fluids.csv")
+        plt.legend()
+        plt.show()
+if "all" in sys.argv:
+    filenames = ["visc_lj_small.csv"] 
+    for filename in filenames:
+        system_configs = search_for_configs(filename)
+        for i in range(len(system_configs.index)):
+            system_config = np.array(system_configs.iloc[i])
+            plot_result(path, filename, "pf", "viscosity", "enskog_RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            #plot_literature_results(lit_filename, system_config)
             plt.legend()
             plt.show()

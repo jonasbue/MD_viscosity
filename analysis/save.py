@@ -24,6 +24,7 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.rdf_PY       : "RDF_PY",
         theory.rdf_BMCSL    : "RDF_BMCSL",
         theory.rdf_CS       : "RDF_CS",
+        theory.rdf_LJ       : "RDF_LJ",
         theory.enskog       : "enskog_",
         theory.thorne       : "thorne_",
     }
@@ -44,6 +45,7 @@ def add_column_to_file(filename, new_column_data, new_column_name, fmt="%.3e"):
     df[new_column_name] = new_column_data
     # TODO: Add some assertions
     df.to_csv(filename, float_format=fmt)
+
 
 def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
     """ Appends resuls of a simulation, and the
@@ -90,6 +92,7 @@ def insert_results_in_array(data, value, C, i, err=None, pf=None):
         data[i,:l] = parameters
         data[i,l:l+len(value)] = value
     return data
+
 
 def get_system_config(C=None, pf=None, number_of_components=None):
     """
@@ -143,4 +146,3 @@ def create_data_array(filenames, theory_functions, number_of_components):
     )
     data = np.zeros((rows,columns))
     return data
-
