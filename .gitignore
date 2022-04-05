@@ -7,5 +7,6 @@ analysis/__pycache__/*
 data/*
 !data/processed/
 !data/literature/
+analysis/rdfpy/
 
 *.png
