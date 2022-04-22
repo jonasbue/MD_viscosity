@@ -23,15 +23,14 @@ def paralell_hist_loop(radii_and_indices, kdtree, particles, mins, maxs, N_radii
         
         # normalize
         n_valid = len(valid_particles)
-        shell_vol = (4/3)*np.pi*((r+dr)**3 - r**3) if d == 3 else np.pi*((r+dr)**2 - r**2)
-        #if not g_r_partial[r_idx] / n_valid*shell_vol*rho:
-        #print(g_r_partial[r_idx])
-        #print(g_r_partial[r_idx] / n_valid*shell_vol*rho )
-        #print(n_valid, shell_vol, rho)
         if n_valid == 0:
-            g_r_partial = 0
-        else:
-            g_r_partial[r_idx] = g_r_partial[r_idx] / n_valid*shell_vol*rho
+            err_msg = "ERROR: With no valid particles, g must, \
+            by definition be zero"
+            assert g_r_partial[r_idx] == 0, err_msg
+            n_valid += 1
+        shell_vol = (4/3)*np.pi*((r+dr)**3 - r**3) if d == 3 else np.pi*((r+dr)**2 - r**2)
+        g_r_partial[r_idx] /= n_valid*shell_vol*rho
+        #g_r_partial[r_idx] /= shell_vol*rho
     
     return g_r_partial
 

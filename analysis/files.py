@@ -34,7 +34,7 @@ def get_all_filenames(directory):
     return files
 
 
-def sort_files(filenames, packing_fractions):
+def sort_files(filenames, packing_fractions, rdf=False):
     """
         Given a list of filenames, returns a list containing
         only the LAMMPS output files (fix, log, dump), sorted
@@ -50,23 +50,30 @@ def sort_files(filenames, packing_fractions):
     fix = []
     log = []
     dump = []
+    rdf = []
     for pf in packing_fractions:
         for f in filenames:
             extension = get_file_extension(f)
             if extension[-3:] != ".sh" and f[:3] != "in.":
-                if (
-                        get_packing_from_filename(f) == pf 
-                        and extension != ".csv"
-                    ):
+                if get_packing_from_filename(f) == pf:
                     filetype = get_filetype(f)
-                    if filetype == "fix":
-                        fix.append(f)
-                    elif filetype == "log":
-                        log.append(f)
-                    elif filetype == "dump":
-                        dump.append(f)
+                    if extension != ".csv":
+                        if filetype == "fix":
+                            fix.append(f)
+                        elif filetype == "log":
+                            log.append(f)
+                        elif filetype == "dump":
+                            dump.append(f)
+                    # RDF files will always have a .csv extension. 
+                    # They are mainly used for plotting.
+                    elif filetype == "rdf":
+                        rdf.append(f)
     if len(dump):
-        files = np.array([fix, log, dump], dtype=str)
+        if rdf:
+            assert len(rdf) == len(fix), f"ERROR. There are {len(rdf)} rdf files, while there are {len(fix)} fix files."
+            files = np.array([fix, log, dump, rdf], dtype=str)
+        else:
+            files = np.array([fix, log, dump], dtype=str)
     else:
         assert len(fix) == len(log), "A file is missing!"
         files = np.array([fix, log], dtype=str)
@@ -98,9 +105,15 @@ def get_filetype(filename):
             filetype:   string.
     """
     filetype = filename[:3]
+    # Exceptions:
     if filetype == "dum":
         filetype = "dump"
+    if filetype == "in.":
+        filetype = "script"
+    if filetype == "see":
+        filetype = "seeds"
     return filetype
+
 
 def get_file_extension(filename):
     """ Returns the file extension of a file.
@@ -116,6 +129,7 @@ def get_file_extension(filename):
     extension = filename[-4:]
     return extension
 
+
 def all_files_to_csv(directory):
     """ Converts all files in a directory to csv,
         provided that there is a method for the
@@ -130,25 +144,27 @@ def all_files_to_csv(directory):
 
 def read_filename(filename):
     vals = {}
-    value_identifiers = ["N", "sigma", "mass", "pf", ".lammps"]
-    for name in value_identifiers:
-        get_value_from_filename(filename, name, name, next_name)
-    # Return stuff.
+    # Dangerous syntax: These values may change between use-cases:
+    value_identifiers = ["N", "sigma", "temp", "pf", ".lammps"]
+    for (i, name)  in enumerate(value_identifiers[:-1]):
+        next_name = value_identifiers[i+1]
+        val, val_name = get_value_from_filename(filename, name, next_name, value_identifiers[-1])
+        vals[name] = val
+    return vals
     
 
-def get_value_from_filename(filename, value_name, value_key, next_name):
-    value_index = filename.find(value_name) + len(value_name)
+def get_value_from_filename(filename, value_name, next_name, end_name):
+    name_index = filename.find(value_name)
+    value_index = name_index + len(value_name)
     next_index = filename.find(next_name)
-    sub_index = filename.find("_", start=value_index)
-    if sub_index+1 == next_index:
-        value = float(filename[value_index:next_index])
+    sub_index = filename.find("_", value_index + 1)
+    if sub_index == next_index:
+        value = float(filename[value_index:next_index].strip("_"))
     else:
-        value = (
-                    float(filename[value_index:sub_index]), 
-                    float(filename[value_index+sub_index:next_index])
-                )
-        value_name = (value_name+"L", value_name+"H")
-    return value, value_name
+        value = float(filename[value_index:next_index].strip("_"))
+        #value_name = (value_name+"L", value_name+"H")
+        value_name = filename[name_index:value_index].strip("_"), 
+    return (value, value_name)
 
 
 def get_packing_from_filename(filename):

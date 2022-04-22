@@ -36,41 +36,43 @@ if "debug" in sysargs:
 def compute_all_rdfs(
         directory, 
         theory_functions, 
-        computation_params
+        computation_params,
+        cut=0.9,
+        dr=0.05
     ):
     path = directory
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
     N = computation_params["particle_types"]
     data = save.create_data_array(filenames, rdf_list, N)
-    cut = 5
     freq = 2
     every = 100
     repeat = 1
     for (i, f) in enumerate(filenames):
-        #print(f)
         utils.status_bar(i, len(filenames), fmt="percent")
         dump_name = f"{path}/" + f[2]
         log_name = f"{path}/" + f[1]
+        savename = dump_name.replace("dump", "rdf") + ".csv"
         log.info(f"Loading file\t{dump_name}")
         log.info(f"Loading file\t{log_name}")
 
         C = convert.extract_constants_from_log(log_name)
-        if C["N"] > 1000:
-            print(
-                "WARNING: More than 1000 atoms. "\
-                #"Skipping this file, to avoid extreme run times."
-                "This may take a very long time to run."
-            )
             
         r_max=cut*C["SIGMA"]
-        #rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
-        rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat)
+        rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
+        #rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr)
         rdf, std = rdf_average(rdf)
+        # Trim zeros at the end, and drop corresponding values of rdf.
+        r = np.trim_zeros(r, trim="b")
+        rdf = rdf[:len(r)]
+        save_data = np.zeros((len(rdf),2))
+        save_data[:len(r),0] = r
+        save_data[:len(rdf),1] = rdf
+        np.savetxt(savename, save_data, delimiter=", ", header="r, g", comments="")
+        log.info(f"Saved to file\t{savename}")
         g_sigma = np.amax(rdf)
-        i = np.where(rdf == g_sigma)[0][0]
-        print(i)
-        error = std[i]
+        j = np.where(rdf == g_sigma)[0][0]
+        error = std[j]
 
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         values = np.array([g_sigma, error])
@@ -80,7 +82,7 @@ def compute_all_rdfs(
     return data
 
 
-def fast_rdf(dump_name, log_name, freq, every, repeat):
+def fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr):
     # The following loads dump file and calculates all common parameters
     # Extracts box dimensions and N from dump file
     dim, N = boxData(dump_name) 
@@ -95,9 +97,8 @@ def fast_rdf(dump_name, log_name, freq, every, repeat):
     samples = np.split(time_steps[time_steps.size%freq::], freq) 
     # Selects time_steps based on every and repeat argument
     samples = [sample[(sample.size-1)%every::every][-repeat::] for sample in samples] 
-    dr = 0.2
-    cut =0.9
-    N_r = int(C["LX"]*cut//dr) + 10
+    N_r = int(C["LX"]*cut//dr) + 10 # The +10 is to avoid crashes. 
+                                    # Trailing zeros are removed later.
     N_t = len(time_steps)
     rdf_of_t = np.zeros((N_t, N_r))
     radii = np.zeros(N_r)
@@ -235,7 +236,6 @@ def extractCoordinates(dump_as_df, time_step):
     return coor
 
 
-#@njit
 def calcPeriodicDistance(coor, dim, r_max=np.inf):
     """
     Calculates the periodic inter-particle distances in the
@@ -256,10 +256,8 @@ def calcPeriodicDistance(coor, dim, r_max=np.inf):
         periodic_dist = array([dist_1, dist_2, dist_3, ..., dist_n])
     """
     # Creates 3D numpy array of all absolute distance vectors
-    diff_vec = np.array([subtract_outer_optimized(particle) for particle in coor.T]).T 
+    diff_vec = np.array([np.subtract.outer(particle, particle) for particle in coor.T]).T 
     #diff_vec = np.array([np.subtract.outer(particle, particle) for particle in coor.T]).T 
-    # This distorts the shape. Fix.
-    #print(diff_vec.shape)
     # Accounts for periodic boundary conditions.
     periodic_diff_vec = np.remainder(diff_vec + dim/2.0, dim) - dim/2.0 
     # Calculates all periodic distances.
@@ -270,7 +268,56 @@ def calcPeriodicDistance(coor, dim, r_max=np.inf):
     periodic_dist = periodic_dist[np.nonzero(periodic_dist)] 
     return periodic_dist
 
-@njit
+
+def calcPeriodicDistanceOptimized(coor, dim, r_max=np.inf):
+    """
+    Calculates the periodic inter-particle distances in the
+    fluid from numpy coordinate array (coor) and box
+    dimensions (dim). Returns a numpy array with all
+    distances.
+    
+    Arguments:
+        coor = array([[x1, y1, z1], 
+                      [x2, y2, z2],
+                      [x3, y3, z3],
+                      ...,
+                      [xn, yn, zn]])
+    
+        dim = array([Lx, Ly, Lz])dim = array([Lx, Ly, Lz]) (box dimensions)
+        
+    Returns:
+        periodic_dist = array([dist_1, dist_2, dist_3, ..., dist_n])
+    """
+    # Creates 3D numpy array of all absolute distance vectors
+    # TODO: Optimization: Create three 1D arrays instead, 
+    # and perform most of the computation in 1D.
+
+    # This does not seem to solve the issue, so code is unfinished.
+    # Create arrays for each coordinate axis
+    x, y, z = coor[0], coor[1], coor[2]
+    diff_vec = np.zeros_like(coor)
+    ignored_indices = np.arange(len(x))
+    for i in range(3):
+        c = coor[i][ignored_indices]                        # Coordinates in 1D
+        diff = np.array([c - c[j] for j in range(len(c))])  # Distances
+        diff = np.remainder(diff + dim/2.0, dim) - dim/2.0  # Periodic BCs
+        # Ignore particles that are further away than r_max. 
+        # These are ignored in all dimensions.
+        ignored_indices = np.delete(ignored_indices, np.where(diff > r_max))
+         
+
+    diff_vec = np.array([np.subtract.outer(particle, particle) for particle in coor.T]).T 
+    # Accounts for periodic boundary conditions.
+    periodic_diff_vec = np.remainder(diff_vec + dim/2.0, dim) - dim/2.0 
+    # Calculates all periodic distances.
+    periodic_dist = np.linalg.norm(periodic_diff_vec, axis=2) 
+    # Remove distances longer than r_max. This has no effect on speed.
+    #periodic_dist = periodic_dist[(np.abs(periodic_dist) < r_max)]
+    # Removes self-pairings
+    periodic_dist = periodic_dist[np.nonzero(periodic_dist)] 
+    return periodic_dist
+
+
 def subtract_outer_optimized(arr):
     block_size=1024 # Divide the array into blocks of size 1024, to simplify 
     A = np.zeros(arr.shape[0])
@@ -335,7 +382,6 @@ def binningAlgorithm(r_max, dr):
     return bin_edges
 
 
-@njit
 def RDFAtTimestep(dist, bin_edges, V_bin, dim, N):
     """
     Calculates g(r) (g_r) for given set of distance

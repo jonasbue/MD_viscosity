@@ -27,7 +27,7 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/lj/small"]
+data_path_list = ["./data/lj_small/"]
 save_path_list = ["lj_small"]
 
 computation_params = {
@@ -119,7 +119,9 @@ def compute_rdf_from_directory(
     data = rdf.compute_all_rdfs(
         directory, 
         theory_functions,
-        computation_params
+        computation_params,
+        cut=0.9,
+        dr=0.04
     )
     data_name = "g_sigma, error"
     data_name += save.get_data_name(theory_functions) 
