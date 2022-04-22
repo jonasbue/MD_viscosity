@@ -106,8 +106,6 @@ def plot_vs_literature(system_config, fluid_name, data_path):
     # GOAL: 
     # Take a data file for some fluid, with Z, p, T etc. and convert between
     # LJ and SI units.
-    print(real_conf)
-    print(lj_conf)
 
 
 def plot_literature_results(filename, system_config):
@@ -146,7 +144,7 @@ if "eos" in sys.argv:
             plt.legend()
             plt.show()
 if "rdf" in sys.argv:
-    filenames = ["rdf_lj_small.csv"] 
+    filenames = ["rdf_lj.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
@@ -186,3 +184,19 @@ if "all" in sys.argv:
             #plot_literature_results(lit_filename, system_config)
             plt.legend()
             plt.show()
+if "rdf-of-r" in sys.argv:
+    path = "data/lj/"
+    filenames = files.get_all_filenames(path)[:,3]
+    for filename in filenames:
+        f = path+filename
+        system_info = files.read_filename(path+f)
+        data = pd.read_csv(f, delimiter=", ", engine="python")
+        r = np.array(data["r"])
+        rdf = np.array(data["g"])
+        #err = np.array(data["err1"])
+        plt.plot(r, rdf)
+        plt.legend("$g(r)$")
+        plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}")
+        savename = f"figures/rdf/{filename[:-4]}.png"
+        plt.savefig(savename)
+        plt.close()
