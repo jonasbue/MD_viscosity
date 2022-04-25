@@ -60,6 +60,9 @@ def compute_all_rdfs(
             
         r_max=cut*C["SIGMA"]
         rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
+        # fast_rdf uses the rdfpy library. It is parallellized and
+        # memory-efficient, but does not give RDFs that approach one
+        # at long distances (known issue).
         #rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr)
         rdf, std = rdf_average(rdf)
         # Trim zeros at the end, and drop corresponding values of rdf.
