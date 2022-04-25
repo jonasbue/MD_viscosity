@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -524,56 +524,55 @@ def calcRDF(file, every, repeat, freq, r_max, dr, particle_types=1):
     # Nothing to return. Data saved as CSV
     return 
 
-
-def plotRDF_fromCSV(path='./', file_name='RDF', plot_name=None, fig_size=(10,6), fnt_size=15, legend_keys=['xi', 'L', 'A', 'Ealign']):#, color_scheme=None):
-    """
-    Plotting function for g_r CSV files.  
-    Will iterate through contents of
-    directory and plot all RDF.csv files
-    
-    Arguments:
-        path = string (Defaults current directory if not specified)
-        file_name = string (Defaults to 'RDF' if not specified)
-        plot_name = string (Defaults to plot_name = file_name if not specified)
-        fig_size = tuple (int, int) (Size of plotting bok. Defaults to (15, 10))
-        fnt_size = int (font size of chart)
-        legend_keys = list [param1, param2, ...] (List of keys to include in legend)
-        color_scheme = dict (Defaults to None. format: {filename: fmt})
-        
-    Returns:
-        Void
-    """
-    legend_list = []
-    
-    plt.figure(figsize=fig_size)
-    # Uses file_name if plot_name not given
-    plt.title((lambda a, b: b if b is not None else a) (file_name, plot_name), fontsize=fnt_size*1.5) 
-    plt.ylabel('g(r)', fontsize=fnt_size*1.2)
-    plt.xlabel('r', fontsize=fnt_size*1.2)
-    plt.xticks(np.arange(0,10,0.5), fontsize=fnt_size)
-    plt.yticks(np.arange(0,10,1), fontsize=fnt_size)
-    
-    files = sorted([file for file in os.listdir(path) if file.startswith('RDF') and file.endswith('.csv')], key=lambda f: (f))
-    for i, file in enumerate(files):
-        if file.startswith('RDF.') and file.endswith('.csv'):
-            file_type = file.split('.')[1].replace('_', ' ').replace(' MP', '')
-            file_param = [var.split('_') for var in '.'.join(file.split('.')[2:-2]).split('--')]
-            leg_param = ',  '.join(pair[0]+': '+pair[1] for pair in file_param if pair[0] in legend_keys).strip(', ')
-            leg = file_type + ':  ' + leg_param
-            legend_list.append(leg)
-            #legend_list.append(file)
-            file = path + file
-            data = pd.read_csv(file)
-            for col in data.columns:
-                if 'g' in col:
-                    plt.plot(data['r'], data[col])#, color_scheme[i])
-    if 'r' in col:
-        plt.xlim((0, round(data['r'].iloc[-1], 2)))
-    plt.legend(legend_list, fontsize=fig_size[0])
-    plt.grid(b=True)
-    plt.savefig(file_name)
-    plt.show()
-    plt.close()
-
-    return
+#def plotRDF_fromCSV(path='./', file_name='RDF', plot_name=None, fig_size=(10,6), fnt_size=15, legend_keys=['xi', 'L', 'A', 'Ealign']):#, color_scheme=None):
+#    """
+#    Plotting function for g_r CSV files.  
+#    Will iterate through contents of
+#    directory and plot all RDF.csv files
+#    
+#    Arguments:
+#        path = string (Defaults current directory if not specified)
+#        file_name = string (Defaults to 'RDF' if not specified)
+#        plot_name = string (Defaults to plot_name = file_name if not specified)
+#        fig_size = tuple (int, int) (Size of plotting bok. Defaults to (15, 10))
+#        fnt_size = int (font size of chart)
+#        legend_keys = list [param1, param2, ...] (List of keys to include in legend)
+#        color_scheme = dict (Defaults to None. format: {filename: fmt})
+#        
+#    Returns:
+#        Void
+#    """
+#    legend_list = []
+#    
+#    plt.figure(figsize=fig_size)
+#    # Uses file_name if plot_name not given
+#    plt.title((lambda a, b: b if b is not None else a) (file_name, plot_name), fontsize=fnt_size*1.5) 
+#    plt.ylabel('g(r)', fontsize=fnt_size*1.2)
+#    plt.xlabel('r', fontsize=fnt_size*1.2)
+#    plt.xticks(np.arange(0,10,0.5), fontsize=fnt_size)
+#    plt.yticks(np.arange(0,10,1), fontsize=fnt_size)
+#    
+#    files = sorted([file for file in os.listdir(path) if file.startswith('RDF') and file.endswith('.csv')], key=lambda f: (f))
+#    for i, file in enumerate(files):
+#        if file.startswith('RDF.') and file.endswith('.csv'):
+#            file_type = file.split('.')[1].replace('_', ' ').replace(' MP', '')
+#            file_param = [var.split('_') for var in '.'.join(file.split('.')[2:-2]).split('--')]
+#            leg_param = ',  '.join(pair[0]+': '+pair[1] for pair in file_param if pair[0] in legend_keys).strip(', ')
+#            leg = file_type + ':  ' + leg_param
+#            legend_list.append(leg)
+#            #legend_list.append(file)
+#            file = path + file
+#            data = pd.read_csv(file)
+#            for col in data.columns:
+#                if 'g' in col:
+#                    plt.plot(data['r'], data[col])#, color_scheme[i])
+#    if 'r' in col:
+#        plt.xlim((0, round(data['r'].iloc[-1], 2)))
+#    plt.legend(legend_list, fontsize=fig_size[0])
+#    plt.grid(b=True)
+#    plt.savefig(file_name)
+#    plt.show()
+#    plt.close()
+#
+#    return
 
