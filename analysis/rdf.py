@@ -59,12 +59,15 @@ def compute_all_rdfs(
         C = convert.extract_constants_from_log(log_name)
             
         r_max=cut*C["SIGMA"]
+        # Note that this gives out g_sigma and error,
+        # and that fast_rdf does not.
         rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
         # fast_rdf uses the rdfpy library. It is parallellized and
         # memory-efficient, but does not give RDFs that approach one
         # at long distances (known issue).
         #rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr)
-        rdf, std = rdf_average(rdf)
+        # For fast_rdf, compute an average over all times
+        #rdf, std = rdf_average(rdf)
         # Trim zeros at the end, and drop corresponding values of rdf.
         r = np.trim_zeros(r, trim="b")
         rdf = rdf[:len(r)]
@@ -75,7 +78,7 @@ def compute_all_rdfs(
         log.info(f"Saved to file\t{savename}")
         g_sigma = np.amax(rdf)
         j = np.where(rdf == g_sigma)[0][0]
-        error = std[j]
+        #error = std[j]
 
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         values = np.array([g_sigma, error])
