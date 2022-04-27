@@ -27,8 +27,8 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/lj_small/"]
-save_path_list = ["lj_small"]
+data_path_list = ["./data/lj"]
+save_path_list = ["lj"]
 
 computation_params = {
     "particle_types": 1,

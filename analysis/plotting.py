@@ -134,7 +134,7 @@ system_config = np.array([4.0e-1, 3.0e+3, 1.0e+0, 1.5e+00, 1.0e+00, 6.75e+0])
 lit_filename = "data/literature/thol_2016.csv"
 # These can all be done by one single function
 if "eos" in sys.argv:
-    filenames = ["eos_lj_small.csv"] 
+    filenames = ["eos_lj.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
@@ -154,7 +154,7 @@ if "rdf" in sys.argv:
             plt.legend()
             plt.show()
 if "visc" in sys.argv:
-    filenames = ["visc_lj_small.csv"] 
+    filenames = ["visc_lj.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
@@ -168,14 +168,14 @@ if "lit" in sys.argv:
     plt.legend()
     plt.show()
 if "data" in sys.argv:
-    filenames = ["eos_lj_small.csv"] 
+    filenames = ["eos_lj.csv"] 
     for filename in filenames:
         #plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "sigma", pltstr="o", norm=False)
         plot_vs_literature(system_config, "Ar", "real_fluids.csv")
         plt.legend()
         plt.show()
 if "all" in sys.argv:
-    filenames = ["visc_lj_small.csv"] 
+    filenames = ["visc_lj.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):

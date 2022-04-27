@@ -58,7 +58,7 @@ def compute_all_rdfs(
 
         C = convert.extract_constants_from_log(log_name)
             
-        r_max=cut*C["SIGMA"]
+        r_max=cut*C["LX"]
         # Note that this gives out g_sigma and error,
         # and that fast_rdf does not.
         rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)

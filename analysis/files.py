@@ -54,9 +54,9 @@ def sort_files(filenames, packing_fractions, rdf=False):
     for pf in packing_fractions:
         for f in filenames:
             extension = get_file_extension(f)
-            if extension[-3:] != ".sh" and f[:3] != "in.":
+            filetype = get_filetype(f)
+            if filetype == "fix" or filetype == "log" or filetype == "dump" or filetype == "rdf":
                 if get_packing_from_filename(f) == pf:
-                    filetype = get_filetype(f)
                     if extension != ".csv":
                         if filetype == "fix":
                             fix.append(f)
@@ -86,7 +86,8 @@ def file_to_csv(filename, filetype):
         This is simply a wrapper of the functions in 
         convert_LAMMPS_output.
     """
-    print("Converting", filename, "of type", filetype)
+    if filetype == "fix" or filetype == "log" or filetype == "dump":
+        print("Converting", filename, "of type", filetype)
     if filetype == "fix":
         convert.convert_fix_to_csv(filename)
     elif filetype == "log":
