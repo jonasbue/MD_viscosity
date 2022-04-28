@@ -159,7 +159,7 @@ if "visc" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "viscosity", "enskog_RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            plot_result(path, filename, "pf", "viscosity", "", system_config, "cutoff", pltstr="o-", norm=False)
             #plot_literature_results(lit_filename, system_config)
             plt.legend()
             plt.show()
@@ -198,5 +198,21 @@ if "rdf-of-r" in sys.argv:
         plt.legend("$g(r)$")
         plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}")
         savename = f"figures/rdf/{filename[:-4]}.png"
+        plt.savefig(savename)
+        plt.close()
+if "vel" in sys.argv:
+    path = "data/lj/"
+    filenames = files.get_all_filenames(path)[:,4]
+    for f in filenames:
+        system_info = files.read_filename(path+f)
+        data = pd.read_csv(path+f, delimiter=", ", engine="python")
+        vx = np.array(data["vx"])
+        z = np.array(data["z"])
+        plt.plot(vx, z)
+        plt.legend("$v_x$")
+        plt.xlabel("$v_x$")
+        plt.ylabel("$z$")
+        plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}")
+        savename = f"figures/vel/{f[:-4]}.png"
         plt.savefig(savename)
         plt.close()

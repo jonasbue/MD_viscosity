@@ -18,6 +18,7 @@ import rdf
 import convert
 import block_average
 import eos
+import regression
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -56,7 +57,7 @@ def main():
         def get_savename(body):
             return f"{save_dir}{body}_{savepath}.csv"
 
-        if "viscosity" in sysargs:
+        if "visc" in sysargs:
             compute_viscosity_from_directory(
                 path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
         if "eos" in sysargs:
@@ -65,6 +66,9 @@ def main():
         if "rdf" in sysargs:
             compute_rdf_from_directory(
                 path, get_savename("rdf"), get_rdf_list(), computation_params)
+        if "vel" in sysargs:
+            compute_velcity_profile_from_directory(
+                path, get_savename("vel"), computation_params)
         # To make nice plots, it is convenient to save a separate 
         # file of theoretical values, with denser data points than 
         # the numerical data. TODO: Cleanup.
@@ -126,6 +130,17 @@ def compute_rdf_from_directory(
     data_name = "g_sigma, error"
     data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
+
+
+def compute_velcity_profile_from_directory(
+        directory, 
+        savename, 
+        computation_params
+    ):
+    # Compute all the viscosities in directory
+    regression.compute_all_velocity_profiles(directory, computation_params)
+    data_name = "z, vx"
+    #save.save_simulation_data(savename, data, data_name=data_name)
 
 def get_rdf_list():
     #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]

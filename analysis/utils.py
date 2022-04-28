@@ -61,8 +61,8 @@ def make_time_dependent(arr, t, number_of_chunks):
     t = np.unique(t)
 
     # Ad hoc: With current data, two values are missing from first timestep.
-    arr = np.insert(arr, 0, np.nan)
-    arr = np.insert(arr, 0, np.nan)
+    #arr = np.insert(arr, 0, np.nan)
+    #arr = np.insert(arr, 0, np.nan)
     arr = np.reshape(arr, (len(t), number_of_chunks))
     return t, arr
 

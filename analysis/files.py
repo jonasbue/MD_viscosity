@@ -51,11 +51,12 @@ def sort_files(filenames, packing_fractions, rdf=False):
     log = []
     dump = []
     rdf = []
+    vel = []
     for pf in packing_fractions:
         for f in filenames:
             extension = get_file_extension(f)
             filetype = get_filetype(f)
-            if filetype == "fix" or filetype == "log" or filetype == "dump" or filetype == "rdf":
+            if filetype in ["fix", "log", "dump", "rdf", "vel"]:
                 if get_packing_from_filename(f) == pf:
                     if extension != ".csv":
                         if filetype == "fix":
@@ -64,14 +65,18 @@ def sort_files(filenames, packing_fractions, rdf=False):
                             log.append(f)
                         elif filetype == "dump":
                             dump.append(f)
-                    # RDF files will always have a .csv extension. 
-                    # They are mainly used for plotting.
+                    # RDF and vel files will always have a .csv extension. 
+                    # They are used for plotting.
                     elif filetype == "rdf":
                         rdf.append(f)
+                    elif filetype == "vel":
+                        vel.append(f)
     if len(dump):
         if rdf:
             assert len(rdf) == len(fix), f"ERROR. There are {len(rdf)} rdf files, while there are {len(fix)} fix files."
             files = np.array([fix, log, dump, rdf], dtype=str)
+            if vel:
+                files = np.array([fix, log, dump, rdf, vel], dtype=str)
         else:
             files = np.array([fix, log, dump], dtype=str)
     else:

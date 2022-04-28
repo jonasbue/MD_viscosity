@@ -8,6 +8,8 @@ import numpy as np
 from scipy import stats
 import files
 import utils
+import save
+import convert
 
 def get_velocity_profile(fix_filename):
     """ From a LAMMPS fix file, extracts the x-velocities and z-coordinates
@@ -25,7 +27,6 @@ def get_velocity_profile(fix_filename):
     vx = zvx[1]
     z = zvx[0]
     return vx, z
-
 
 def isolate_slabs(vx, z):
     """ Given vx and z, returns arrays of velocity
@@ -132,3 +133,41 @@ def find_uncertainty(std_err, value, conf=95):
     ts = tinv(1-conf/100, len(value))
     err = ts * std_err
     return err
+
+
+def compute_all_velocity_profiles(directory, computation_params):
+    cut_fraction = computation_params["cut_fraction"]
+    N = computation_params["particle_types"]
+    per_time = computation_params["per_time"]
+    path = directory
+    filenames = files.get_all_filenames(directory)
+    data = save.create_data_array(filenames, [], N)
+
+    for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="train")
+        fix_name = f"{path}/" + f[0]
+        log_name = f"{path}/" + f[1]
+        savename = fix_name.replace("fix", "vel") + ".csv"
+        vx, z = get_velocity_profile(
+            fix_name
+        )
+        C = convert.extract_constants_from_log(log_name)
+        fix_variable_list = ["t_fix", "Nchunks"]
+        fix_table = files.load_system(fix_name)
+        fix_vals = files.unpack_variables(
+            fix_table, 
+            fix_name, 
+            fix_variable_list
+        )
+        number_of_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
+        t = fix_vals[fix_variable_list.index("t_fix")]
+        t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
+        t = utils.cut_time(cut_fraction, t)
+        vx = utils.cut_time(cut_fraction, vx)
+        z = np.unique(z)
+        vx = np.mean(vx, axis=0)
+        values = np.array([z, vx]).T
+        np.savetxt(savename, values, delimiter=", ", header="z, vx", comments="")
+    print("")
+    return data
+

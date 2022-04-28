@@ -116,9 +116,9 @@ variable MAXEVAL    equal 1e4   # Max number of force/energy evaluations
 
 # Simulation and output parameters
 # Length of simulation.
-variable RUN_TIME           equal ${SIMULATION_DURATION}    
+variable RUN_TIME       equal ${SIMULATION_DURATION}    
 # Time to equillibrate system.
-variable EQUILL_TIME        equal ${EQUILLIBRATION_DURATION}
+variable EQUILL_TIME    equal ${EQUILLIBRATION_DURATION}
 # Number of steps between outputs. Should be the same for log and fix, 
 # and must be smaller than or equal to this for momentum exchange.
 variable OUTPUT_FREQUENCY   equal 500
@@ -199,8 +199,8 @@ fix NVE_FIX all nve
 # Fix the temperature with a Berendsen thermostat
 fix THERMO_FIX all ${THERMOSTAT} ${TEMP} ${TEMP} ${TDAMP_EQ} ${RAND_SEED_T}
 
-thermo_style    custom step etotal pe ke temp press vol # Write thermodynamic   
-thermo          ${THERMO_OUTPUT}                        # quantities to console 
+thermo_style    custom step time etotal pe ke temp press vol    # Write thermodynamic   
+thermo          ${THERMO_OUTPUT}                                # quantities to console 
                                                         
 
 run ${EQUILL_STEPS}     # Run simulation to equillibrate the system.
