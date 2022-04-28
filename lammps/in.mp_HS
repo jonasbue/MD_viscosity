@@ -92,8 +92,8 @@ variable RAND_SEED_T  equal ${SEED_T}   # Seed for thermostat.
 variable ATOM_TYPES equal 1     # Number of atom types 
 variable MASS       equal 1.0   # Particle mass
 variable EPSILON    equal 1.0   # Depth of the Mie potential  
-variable MIE_REP    equal 12    # Repulsive exponent
-variable MIE_ATT    equal 6     # Attractive exponent
+variable MIE_REP    equal 50    # Repulsive exponent
+variable MIE_ATT    equal 49    # Attractive exponent
 variable SIGMA      equal ${PARTICLE_DIAMETER} 
 
 # Length of box
