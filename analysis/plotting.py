@@ -38,8 +38,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
     #files.get_all_filenames(path)
     data = pd.read_csv(path+filename, delimiter=", ", engine="python")
     x = np.zeros_like(data[x_name])
-    y = np.zeros_like(x)
-    t = np.zeros_like(x)
+    y, t, err = np.zeros_like(x), np.zeros_like(x), np.zeros_like(x)
     variable_names = get_var_names()
 
     # Iterate through all simulations, and save those 
@@ -57,23 +56,23 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         if conf.all():
             x[i] = row[x_name]
             y[i] = row[y_name]
+            err[i] = row["error"]
             if theory_name:
                 t[i] = row[theory_name]
             else:
                 t[i] = np.ones_like(x[i])
             N, m, T, s, c = int(C[1]), C[2], C[3], C[4], C[5]
     # Remove unused space in the arrays.
-    x = np.trim_zeros(x)
-    y = np.trim_zeros(y)
-    t = np.trim_zeros(t)
+    x, y, t, err = np.trim_zeros(x), np.trim_zeros(y), np.trim_zeros(t), np.trim_zeros(err)
     n = len(np.unique(x))
     if len(y) != n or len(t) != n:
         print("WARNING: Some simulations overlap in parameter space.")
     if norm:
         y = y/t
         t = t/t
+        err = err/t
     plt.title(f"N = {N}, m = {m}, T = {T}, $\sigma$ = {s}")
-    plt.plot(x, y, pltstr, label=f"{y_name}, numerical")
+    plt.errorbar(x, y, yerr=err, fmt=pltstr, label=f"{y_name}, numerical")
     if theory_name:
         plt.plot(x, t, "kx", label=theory_name+", theoretical")
     #plt.legend()
