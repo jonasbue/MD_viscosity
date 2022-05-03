@@ -95,7 +95,6 @@ def compute_viscosity(
         t = utils.cut_time(cut_fraction, t)
         z = utils.cut_time(cut_fraction, z)
         vx = utils.cut_time(cut_fraction, vx)
-
         vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
         dv, v_err = regression.regression_for_each_time(
                 vx_lower, vx_upper, z_lower, z_upper, t)
@@ -106,12 +105,13 @@ def compute_viscosity(
         v_err = np.sqrt(np.mean(v_err**2))
         Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
     else:
-        # Remove early values. They are not useful.
         N = number_of_chunks
         T = len(t)
         z = np.reshape(z, (T,N))
-        vx = np.reshape(z, (T,N))
+        z = np.reshape(z, (T,N))
+        vx = np.reshape(vx, (T,N))
 
+        # Remove early values. They are not useful.
         t = utils.cut_time(cut_fraction, t)     # These arrays contain the
         z = utils.cut_time(cut_fraction, z)     # same values many times, 
         vx = utils.cut_time(cut_fraction, vx)   # corresponding to 

@@ -143,12 +143,12 @@ variable CHUNK_THICKNESS    equal 0.01  # Dimensionless number.
 
 
 # fix/ave sampling definitions
-variable NFREQ      equal 500   # How often an average 
-                                # value is computed.
-variable NREPEAT    equal 1     # Number of values included 
-                                # in the averaging.
-variable NEVERY     equal 1     # Steps between entries in 
-                                # the average computation.
+variable NFREQ      equal ${THERMO_OUTPUT}  # How often an average 
+                                            # value is computed.
+variable NREPEAT    equal 1                 # Number of values included 
+                                            # in the averaging.
+variable NEVERY     equal 1                 # Steps between entries in 
+                                            # the average computation.
 
 ## Strings
 variable POTENTIAL  string "mie/cut"    # Lennard-Jones potential

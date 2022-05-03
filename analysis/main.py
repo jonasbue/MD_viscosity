@@ -34,7 +34,7 @@ save_path_list = ["lj"]
 computation_params = {
     "particle_types": 1,
     "cut_fraction"  : 0.3,
-    "step" 		    : 10,
+    "step" 		    : 1,
     "per_time"		: False,
 }
 
@@ -138,9 +138,9 @@ def compute_velcity_profile_from_directory(
         computation_params
     ):
     # Compute all the viscosities in directory
-    regression.compute_all_velocity_profiles(directory, computation_params)
+    data = regression.compute_all_velocity_profiles(directory, computation_params)
     data_name = "z, vx"
-    #save.save_simulation_data(savename, data, data_name=data_name)
+    save.save_simulation_data(savename, data, data_name=data_name)
 
 def get_rdf_list():
     #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]

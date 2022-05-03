@@ -32,6 +32,7 @@ for arg in sys.argv:
         path = arg[arg.index("-")+1:]
 
 path = "data/processed/"
+data_name = "lj"
 
 def plot_result(path, filename, x_name, y_name, theory_name, system_config, *args, pltstr="-", norm=True):
     #files.get_all_filenames(path)
@@ -77,7 +78,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         plt.plot(x, t, "kx", label=theory_name+", theoretical")
     #plt.legend()
     #plt.plot(x, t, "x")
-    #plt.plot(x, np.zeros_like(x), ":"), 
+    #plt.plot(x, np.zeros_like(x), "0"), 
     savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}.png"
     plt.savefig(savename)
     #plt.show()
@@ -134,7 +135,7 @@ system_config = np.array([4.0e-1, 3.0e+3, 1.0e+0, 1.5e+00, 1.0e+00, 6.75e+0])
 lit_filename = "data/literature/thol_2016.csv"
 # These can all be done by one single function
 if "eos" in sys.argv:
-    filenames = ["eos_lj.csv"] 
+    filenames = [f"eos_{data_name}.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
@@ -144,7 +145,7 @@ if "eos" in sys.argv:
             plt.legend()
             plt.show()
 if "rdf" in sys.argv:
-    filenames = ["rdf_lj.csv"] 
+    filenames = [f"rdf_{data_name}.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
@@ -154,12 +155,12 @@ if "rdf" in sys.argv:
             plt.legend()
             plt.show()
 if "visc" in sys.argv:
-    filenames = ["visc_lj.csv"] 
+    filenames = [f"visc_{data_name}.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "viscosity", "", system_config, "cutoff", pltstr="o-", norm=False)
+            plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", system_config, "cutoff", pltstr="o-", norm=False)
             #plot_literature_results(lit_filename, system_config)
             plt.legend()
             plt.show()
@@ -168,14 +169,14 @@ if "lit" in sys.argv:
     plt.legend()
     plt.show()
 if "data" in sys.argv:
-    filenames = ["eos_lj.csv"] 
+    filenames = [f"eos_{data_name}.csv"] 
     for filename in filenames:
         #plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "sigma", pltstr="o", norm=False)
         plot_vs_literature(system_config, "Ar", "real_fluids.csv")
         plt.legend()
         plt.show()
 if "all" in sys.argv:
-    filenames = ["visc_lj.csv"] 
+    filenames = [f"visc_{data_name}.csv"] 
     for filename in filenames:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
@@ -185,7 +186,7 @@ if "all" in sys.argv:
             plt.legend()
             plt.show()
 if "rdf-of-r" in sys.argv:
-    path = "data/lj/"
+    path = f"data/{data_name}/"
     filenames = files.get_all_filenames(path)[:,3]
     for filename in filenames:
         f = path+filename
@@ -201,7 +202,7 @@ if "rdf-of-r" in sys.argv:
         plt.savefig(savename)
         plt.close()
 if "vel" in sys.argv:
-    path = "data/lj/"
+    path = f"data/{data_name}/"
     filenames = files.get_all_filenames(path)[:,4]
     for f in filenames:
         system_info = files.read_filename(path+f)
