@@ -14,6 +14,8 @@ import convert
 from os import listdir
 import logging
 import sys
+import theory
+import tests
 
 log = logging.getLogger("__main__." + __name__)
 log.addHandler(logging.StreamHandler(sys.stdout))
@@ -325,3 +327,63 @@ def unpack_variables(log_table, log_filename, variables):
     header = get_header(log_filename)
     indices = get_variable_indices(header, variables)
     return log_table[indices]
+
+
+def extract_simulation_variables(log_filename, fix_filename):
+    """
+        From a log and a fix file from one simulation,
+        extract the variables (time, box dimensions, 
+        total transferred momentum, number of chunks)
+        that are needed to compute the viscosity.
+    """
+    # Extract time and momentum transferred from log file.
+    variable_list = ["t", "Px"]
+    # Two steps are used to minimize initial system 
+    # energy. Skip these two. They are NOT skipped 
+    # in the corresponding dump/fix files.
+    log_table = load_system(log_filename, skiprows=2)
+    log_vals = unpack_variables(
+        log_table, 
+        log_filename, 
+        variable_list
+    )
+
+    # Extract all constants from log file.
+    constants = convert.extract_constants_from_log(log_filename)
+    t0 = constants["EQUILL_TIME"]
+    dt = constants["DT"]
+    eq_steps = constants["EQUILL_STEPS"]
+    sim_steps = constants["RUN_STEPS"]
+    N_measure_eq = int(eq_steps/constants["THERMO_OUTPUT"])
+    N_measure_sim = int(sim_steps/constants["THERMO_OUTPUT"])
+
+    # Have t contain time values instead of 
+    # time steps, and make it start at t=0.
+    t = log_vals[variable_list.index("t")][N_measure_eq+4:]
+    t = t*dt
+    t = t - t0
+
+    # Extract total transferred momentum
+    # The +4 is to remove some extra steps
+    Ptot = log_vals[variable_list.index("Px")][N_measure_eq+4:] 
+
+    # Get cross-section area.
+    Lx = constants["LX"]
+    Ly = constants["LY"]
+    Lz = constants["LZ"]
+    A = theory.get_area(Lx, Ly)
+
+    fix_variable_list = ["t_fix", "Nchunks"]
+    fix_table = load_system(fix_filename)
+    fix_vals = unpack_variables(
+        fix_table, 
+        fix_filename, 
+        fix_variable_list
+    )
+    N_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
+
+    # Check that chunk number is correct.
+    tests.assert_chunk_number(N_chunks, constants)
+    return constants, Lz, t, A, Ptot, N_chunks 
+
+

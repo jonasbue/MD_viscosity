@@ -34,7 +34,7 @@ save_path_list = ["lj"]
 computation_params = {
     "particle_types": 1,
     "cut_fraction"  : 0.3,
-    "step" 		    : 1,
+    "step" 		    : 6,
     "per_time"		: False,
 }
 
@@ -149,6 +149,6 @@ def get_rdf_list():
 
 def get_eos_list():
     #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
-    return [theory.Z_PY, theory.Z_CS, theory.Z_LJ]
+    return [theory.Z_PY, theory.Z_CS, theory.Z_kolafa]
 
 main()

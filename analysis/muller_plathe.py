@@ -87,47 +87,8 @@ def compute_viscosity(
             eta_min:    Estimated minimum value of eta:
                         eta-standard error.
     """
-    if per_time:
-        t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
-        t, z = utils.make_time_dependent(z, t, number_of_chunks)
-
-        # Remove early values. They are not useful.
-        t = utils.cut_time(cut_fraction, t)
-        z = utils.cut_time(cut_fraction, z)
-        vx = utils.cut_time(cut_fraction, vx)
-        vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
-        dv, v_err = regression.regression_for_each_time(
-                vx_lower, vx_upper, z_lower, z_upper, t)
-
-        t = t[::step]
-        dv = dv[::step]
-        v_err = v_err[::step]
-        v_err = np.sqrt(np.mean(v_err**2))
-        Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
-    else:
-        N = number_of_chunks
-        T = len(t)
-        z = np.reshape(z, (T,N))
-        z = np.reshape(z, (T,N))
-        vx = np.reshape(vx, (T,N))
-
-        # Remove early values. They are not useful.
-        t = utils.cut_time(cut_fraction, t)     # These arrays contain the
-        z = utils.cut_time(cut_fraction, z)     # same values many times, 
-        vx = utils.cut_time(cut_fraction, vx)   # corresponding to 
-                                                # different chunks.
-        # Remove correlated time steps.
-        # This will skip every [step] time steps,
-        # to remove time correlation.
-        t = t[::step]
-        z = z[::step].flatten()
-        vx = vx[::step].flatten()
-
-        vx_lower, vx_upper, z_lower, z_upper = regression.isolate_slabs(vx, z)
-        dv, v_err = regression.regression_for_single_time(
-                vx_lower, vx_upper, z_lower, z_upper)
-
-        Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
+    dv, v_err, t, z, vx = regression.get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_time)
+    Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
     # Only unique time steps:
     t = np.unique(t)
     assert Ptot.shape == np.unique(t).shape, f"Ptot: {Ptot.shape}, t: {t.shape}"
@@ -158,7 +119,7 @@ def find_viscosity_from_file(
     """
     # Extract vx and z from fix file.
     vx, z = regression.get_velocity_profile(fix_filename)
-    C, Lz, t, A, Ptot, N_chunks = extract_simulation_variables(log_filename, fix_filename)
+    C, Lz, t, A, Ptot, N_chunks = files.extract_simulation_variables(log_filename, fix_filename)
 
     per_time = computation_params["per_time"]
     step = computation_params["step"]
@@ -169,59 +130,3 @@ def find_viscosity_from_file(
     return eta, C, eta_abs
 
 
-def extract_simulation_variables(log_filename, fix_filename):
-    """
-        From a log and a fix file from one simulation,
-        extract the variables (time, box dimensions, 
-        total transferred momentum, number of chunks)
-        that are needed to compute the viscosity.
-    """
-    # Extract time and momentum transferred from log file.
-    variable_list = ["t", "Px"]
-    # Two steps are used to minimize initial system 
-    # energy. Skip these two. They are NOT skipped 
-    # in the corresponding dump/fix files.
-    log_table = files.load_system(log_filename, skiprows=2)
-    log_vals = files.unpack_variables(
-        log_table, 
-        log_filename, 
-        variable_list
-    )
-
-    # Extract all constants from log file.
-    constants = convert.extract_constants_from_log(log_filename)
-    t0 = constants["EQUILL_TIME"]
-    dt = constants["DT"]
-    eq_steps = constants["EQUILL_STEPS"]
-    sim_steps = constants["RUN_STEPS"]
-    N_measure_eq = int(eq_steps/constants["THERMO_OUTPUT"])
-    N_measure_sim = int(sim_steps/constants["THERMO_OUTPUT"])
-
-    # Have t contain time values instead of 
-    # time steps, and make it start at t=0.
-    t = log_vals[variable_list.index("t")][N_measure_eq+4:]
-    t = t*dt
-    t = t - t0
-
-    # Extract total transferred momentum
-    # The +4 is to remove some extra steps
-    Ptot = log_vals[variable_list.index("Px")][N_measure_eq+4:] 
-
-    # Get cross-section area.
-    Lx = constants["LX"]
-    Ly = constants["LY"]
-    Lz = constants["LZ"]
-    A = theory.get_area(Lx, Ly)
-
-    fix_variable_list = ["t_fix", "Nchunks"]
-    fix_table = files.load_system(fix_filename)
-    fix_vals = files.unpack_variables(
-        fix_table, 
-        fix_filename, 
-        fix_variable_list
-    )
-    N_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
-
-    # Check that chunk number is correct.
-    tests.assert_chunk_number(N_chunks, constants)
-    return constants, Lz, t, A, Ptot, N_chunks 

@@ -19,7 +19,7 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.Z_PY         : "EOS_PY",
         theory.Z_BMCSL      : "EOS_BMCSL",
         theory.Z_CS         : "EOS_CS",
-        theory.Z_LJ         : "EOS_LJ",
+        theory.Z_kolafa     : "EOS_kolafa",
         theory.rdf_SPT      : "RDF_SPT",
         theory.rdf_PY       : "RDF_PY",
         theory.rdf_BMCSL    : "RDF_BMCSL",

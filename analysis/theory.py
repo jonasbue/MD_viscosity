@@ -413,7 +413,7 @@ def Z_BMCSL(sigma, x, rho, **kwargs):
     return Z
 
 
-def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+def Z_kolafa(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
         using the EOS of Kolafa et al. 
         Input:
@@ -479,6 +479,13 @@ def Z_LJ(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
             c += j*C_ij[i,j]*temp**(i/2-1)*rho**j 
     Z = a + b + c
     return Z
+
+# LJ EOSes to implement:
+# Kolafa (done)
+# Gottschalk
+# Thol
+# Mecke
+# Hess
 
 
 ##############################################################

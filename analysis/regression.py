@@ -11,6 +11,47 @@ import utils
 import save
 import convert
 
+def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_time):
+    if per_time:
+        t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
+        t, z = utils.make_time_dependent(z, t, number_of_chunks)
+
+        # Remove early values. They are not useful.
+        t = utils.cut_time(cut_fraction, t)
+        z = utils.cut_time(cut_fraction, z)
+        vx = utils.cut_time(cut_fraction, vx)
+        vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+        dv, v_err = regression_for_each_time(
+                vx_lower, vx_upper, z_lower, z_upper, t)
+
+        t = t[::step]
+        dv = dv[::step]
+        v_err = v_err[::step]
+        v_err = np.sqrt(np.mean(v_err**2))
+    else:
+        N = number_of_chunks
+        T = len(t)
+        z = np.reshape(z, (T,N))
+        vx = np.reshape(vx, (T,N))
+
+        # Remove early values. They are not useful.
+        t = utils.cut_time(cut_fraction, t)     # These arrays contain the
+        z = utils.cut_time(cut_fraction, z)     # same values many times, 
+        vx = utils.cut_time(cut_fraction, vx)   # corresponding to 
+                                                # different chunks.
+        # Remove correlated time steps.
+        # This will skip every [step] time steps,
+        # to remove time correlation.
+        t = t[::step]
+        z = z[::step].flatten()
+        vx = vx[::step].flatten()
+
+        vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+        dv, v_err = regression_for_single_time(
+                vx_lower, vx_upper, z_lower, z_upper)
+    return dv, v_err, t, z, vx
+
+
 def get_velocity_profile(fix_filename):
     """ From a LAMMPS fix file, extracts the x-velocities and z-coordinates
         and returns them as separate np.arrays.
@@ -142,32 +183,43 @@ def compute_all_velocity_profiles(directory, computation_params):
     path = directory
     filenames = files.get_all_filenames(directory)
     data = save.create_data_array(filenames, [], N)
+    step = 1
+    per_time = False
 
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         savename = fix_name.replace("fix", "vel") + ".csv"
-        vx, z = get_velocity_profile(
-            fix_name
-        )
-        C = convert.extract_constants_from_log(log_name)
-        fix_variable_list = ["t_fix", "Nchunks"]
-        fix_table = files.load_system(fix_name)
-        fix_vals = files.unpack_variables(
-            fix_table, 
-            fix_name, 
-            fix_variable_list
-        )
-        number_of_chunks = int(fix_vals[fix_variable_list.index("Nchunks")][0])
-        t = fix_vals[fix_variable_list.index("t_fix")]
+
+        # Get velocity points and perform a regression.
+        # This is done in the same way as in viscosity
+        # computation.
+        vx, z = get_velocity_profile(fix_name)
+        vx_l, vx_u, z_l, z_u = isolate_slabs(vx, z)
+        reg_l = velocity_profile_regression(vx_l, z_l)
+        reg_u = velocity_profile_regression(vx_u, z_u)
+
+        # Save regression lines
+        C, Lz, t, A, Ptot, number_of_chunks = files.extract_simulation_variables(log_name, fix_name)
+        z = np.unique(z)
+        line_l = reg_l.slope*np.where(z <= np.amax(z/2), z, np.nan) + reg_l.intercept
+        line_u = reg_u.slope*np.where(z >= np.amax(z/2), z, np.nan) + reg_u.intercept
+
+        # Create a small set of velocity points, one for each chunk.
         t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
         t = utils.cut_time(cut_fraction, t)
         vx = utils.cut_time(cut_fraction, vx)
-        z = np.unique(z)
         vx = np.mean(vx, axis=0)
-        values = np.array([z, vx]).T
-        np.savetxt(savename, values, delimiter=", ", header="z, vx", comments="")
+
+        # Save the data.
+        # Note that the regression is performed on all velocity points, 
+        # for all chunks and all times. But only the average velocity
+        # for each chunk is plotted. The difference is almost only
+        # a matter of principle. The viscosity is the same either way,
+        # but computation time is slightly (noticably) different.
+        values = np.array([z, vx, line_l, line_u]).T
+        np.savetxt(savename, values, delimiter=", ", header="z, vx, reg_lower, reg_upper", comments="")
     print("")
     return data
 
