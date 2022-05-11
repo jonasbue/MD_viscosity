@@ -9,6 +9,7 @@
 import numpy as np
 import sys
 import utils
+#import tests
 
 
 def enskog_2sigma(pf, sigma_1, T, m, rdf, k=1.0, sigma_2=1.0):
@@ -480,13 +481,288 @@ def Z_kolafa(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     Z = a + b + c
     return Z
 
-# LJ EOSes to implement:
-# Kolafa (done)
-# Gottschalk
-# Thol
-# Mecke
-# Hess
+def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Gottschalk. 
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+        
+    # Parameters for the thermal virial coefficients of the EOS, from table V.
+    B_i = np.array([
+        [1.221844737e-1,	-1.832133004e-2,	-5.737837739e-2,    -1.107146794e-1],
+        [-2.533814785,		-2.221029066e-1,	2.384059560e-1,		3.639967813e-1],
+        [2.321052047,		-2.290140445,		-3.175043752e-1,	-1.722555372e-1],
+        [-2.221116991e1,	2.497587053,		1.411210874e-1,		5.355823913e-2],
+        [6.037723605e1,		-1.491751608,		-4.065269634e-2,	-9.119290154e-3],
+        [-8.614627023e1,	5.194910488e-1,		7.132450669e-3,		6.312327708e-4],
+        [7.947702893e1,		-7.580241786e-2,	-7.501879316e-4,	-6.471729317e-6],
+        [-5.013039389e1,	-9.570910251e-3,	5.000252419e-5,		-6.635662426e-7],
+        [2.179355452e1,		6.444596963e-3,		-2.224242683e-6,    1.145665574e-8],
+        [-6.423839356,		-1.323484892e-3,	6.334525666e-8,		-5.093701999e-10],
+        [1.222200983,		1.400743960e-4,		-1.124571857e-9,	0],
+        [-1.351435025e-1,	-7.861096502e-6,	1.120406875e-11,	0],
+        [6.519707093e-3,	1.749011555e-7,		-4.806632984e-14,	0]
+    ])
+    # Coefficients of the fitted correction parameters of the EOS, from table VI.
+    C_i = np.array([
+        [-3.848657712e3,	1.214533953e4,		5.841998321e4,		-4.717257385e5,		1.411244301e6,		-2.385034755e6,		2.465995272e6,		-1.550792557e6,		5.466032853e5,		-8.300129372e4],
+        [1.940790808e3,		-9.125315944e3,		5.336019753e3,		7.338796875e4,		-2.875424926e5,		5.411774951e5,		-5.990022139e5,		3.971186192e5,		-1.464740110e5,		2.318027845e4],
+        [-6.786775725e2,	3.397150517e3,		-6.39357702e3,		1.526191655e3,		2.109845310e4,		-5.532941146e4,		7.174967760e4,		-5.317159494e4,		2.148725004e4,		-3.684215524e3],
+        [1.592726729e2,		-7.355400823e2,		1.37142001e3,		-1.479809349e3,		9.648092327e2,		2.842688756e2,		-1.763990307e3,		2.096231490e3,		-1.141346457e3,		2.443351261e2],
+        [-2.733389532e1,	1.207984183e2,		-1.843597578e2,		1.033775279e2,		-1.118483146e1,		5.21058649e1,		-1.121805527e2,		7.436426163e1,		-1.333984225e1,		-2.185586771],
+        [3.305728801,		-1.595650007e1,		2.756765411e1,		-1.762232710e1,		-5.953997923,		1.569383441e1,		-7.327702248,		-1.053356075,		1.604683226,		-2.645512917e-1],
+        [-2.396300005e-1,	1.301737514,		-2.765120060,		3.029682621,		-1.736288154,		2.519375463e-1,		3.057812577e-1,		-1.621886602e-1,	1.067758340e-2,		3.982533293e-3],
+        [8.107532579e-3,    -4.828021321e-2,	1.107783436e-1,		-1.382464464e-1,	1.102848617e-1,		-5.923068772e-2,	1.906868401e-2,		-2.542729177e-3,	0,		            0],
+        [-5.209209916e-5,	4.779918832e-4,		-1.100471432e-3,	1.049186458e-3,	    -4.233596547e-4,	5.305829584e-5,		0,		            0,		            0,		            0],
+        [-1.863883724e-6,	4.808860997e-6,		-4.538508711e-6,	1.455012606e-6,	    0,                  0,                  0,                  0,                  0,                  0,],
+        [6.787957968e-9,	-3.433240822e-9,	0,		            0,		            0,                  0,                  0,                  0,                  0,                  0,]
+])
 
+    B_SS = np.array(
+        [3.79107, 3.52751, 2.11494, 0.76953] # B^SS_i
+    )
+    ci = np.array(
+        [1.529031885, 2.795121498, 4.903830267, 5.539252062] # c_i
+    )
+    C_SS = np.array(
+        [2.356773117e3, -3.264039611e3, -7.804186018e4, 4.734725795e6, -1.317864191e6, 2.146863058e6, -2.165267779e6, 1.335386749e6, -4.628739042e5, 6.922915835e4] # C^SS_i
+    )
+    di = np.array(
+        [4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85] # d_i
+    )
+
+    T = temp
+    # B_2 is known excactly:
+    # TODO: B_2
+    # def I(alpha, x):
+
+    # Compute the virial coefficients:
+    # B (thermal virial coefficients) and C (correction virial coefficients)
+    # are almost identically defined. Therefore, call virial_coefficient()
+    # with the corresponding parameter arrays to compute them.
+    def virial_coefficient(i, T, n, A_i, A_SS, ai):
+        # i starts at n, so subtract n in every list index
+        I = i-n
+        # ki is just the number of indices. Affects the precision
+        ki = A_i.shape[0]
+        value = A_SS[I]
+        for k in range(1,ki+1):
+            #   k starts at 1, so subtract 1 in every list
+            K = k-1
+            value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T)-1)**((2*k-1)/4))
+        return (T/4)**(-(i-1)/4) * value
+
+
+    b = 0
+    n = 2
+    def B(i, T):
+        return virial_coefficient(i, T, n+1, B_i, B_SS, ci)
+    # Test-plotting the virial coefficients. Due to the definition
+    # of the virial_coefficient() function, this must be called here.
+    # (2,7) comes only from the fact that B_3-B_6 are given in the paper
+    for i in range(n,7):
+        b += rho**(i-2) * B(i, T)
+
+    c = 0
+    n = 7
+    def C(i, T):
+        return virial_coefficient(i, T, n, C_i, C_SS, di)
+    #tests.test_virial_coefficients(1, C)
+    # C_7,...,C_17 are given in the paper
+    for i in range(n,17):
+        c += rho**(i-2) * C(i, T)
+    Ar_01 = rho * (b + 0*c)
+    Z = 1 + Ar_01
+    return Z
+
+
+def Z_thol(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Thol et al. 
+        Validity range: T in (0.661,9), p<65.
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+
+    # Fitted parameters: n, t, d, l, eta, beta, gamma and epsilon.
+    # Given in Table 2 of the paper.
+    n = np.array([
+        0.52080730e-2,	0.21862520e+1,	-0.21610160e+1,	0.14527000e+1,
+        -0.20417920e+1,	0.18695286e0,	-0.90988445e-1,	-0.49745610e0,
+        0.10901431e0,	-0.80055922e0,	-0.56883900e0,	-0.62086250e0,
+        -0.14667177e+1,	0.18914690e+1,	-0.13837010e0,	-0.38696450e0,
+        0.12657020e0,	0.60578100e0,	0.11791890e+1,	-0.47732679e0,
+        -0.99218575e+1,	-0.57479320e0,	0.37729230e-2
+    ])
+    t = np.array([
+        1.000, 0.320, 0.505, 0.672, 0.843, 0.898, 1.294, 2.590, 
+        1.786, 2.770, 1.786, 1.205, 2.830, 2.548, 4.650, 1.385, 
+        1.460, 1.351, 0.660, 1.496, 1.830, 1.616, 4.970
+    ])
+    d = np.array([
+        4, 1, 1, 2, 2, 3, 5, 2, 2, 3, 1, 1, 1, 1, 2, 3, 3, 2, 1, 2, 3, 1, 1
+    ])
+    l = np.array([
+        0, 0, 0, 0, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ])
+    eta = np.array([
+		0,		0,		0,		0,		0,		0,		
+        0,		0,		0,		0,		0,		0,		
+		2.067,	1.522,	8.820,	1.722,	0.679,	1.883,	
+		3.925,	2.461,	28.20,	0.753,	0.820
+    ])
+    beta = np.array([
+		0,		0,		0,		0,		0,		0,		
+        0,		0,		0,		0,		0,		0,		
+		0.625,	0.638,	3.910,	0.156,	0.157,	0.153,
+		1.160,	1.730,	383.0,	0.112,	0.119
+    ])
+    gamma = np.array([
+		0,		0,		0,		0,		0,		0,		
+        0,		0,		0,		0,		0,		0,		
+		0.710,	0.860,	1.940,	1.480,	1.490,	1.945,
+		3.020,	1.110,	1.170,	1.330,	0.240
+    ])
+    epsilon = np.array([
+		0,		0,		0,		0,		0,		0,		
+        0,		0,		0,		0,		0,		0,		
+		0.2053,	0.4090,	0.6000,	1.2030,	1.8290,	1.3970,
+		1.3900,	0.5390,	0.9340,	2.3690,	2.4300
+    ])
+
+    # Should it be 1 or Z_HS? Discuss with supervisors.
+    Z = Z_HS(sigma, x, rho)
+    tau = 1/temp
+    for i in range(6):
+        Z += n[i]*rho**(d[i]-1)*d[i]*tau**t[i]
+    for i in range(7,12):
+        Z += n[i]*tau**t[i]*np.exp(-rho**l[i]) * (
+                d[i]*rho**(d[i]-1)
+                + rho**d[i]*(-l[i]*rho**(l[i]-1))
+            )
+    for i in range(13,23):
+        Z += n[i]*tau**t[i]*np.exp(
+                -beta[i]*(tau-gamma[i])**2 - eta[i]*(rho-epsilon[i])**2
+            ) * (
+                d[i]*rho**(d[i]-1) - rho**d[i]*eta[i]*2*(rho-epsilon[i])
+        )
+    return Z
+
+def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Mecke et al. (1996).
+        Validity range: 
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+    c = np.array([
+        0.33619760720e-05,	 -0.14707220591e+01,	-0.11972121043e+00,	
+        -0.11350363539e-04,	 -0.26778688896e-04,    0.12755936511e-05,	
+        0.40088615477e-02,	 0.52305580273e-05,	    -0.10214454556e-07,	
+        -0.14526799362e-01,	 0.64975356409e-01,	    -0.60304755494e-01,	
+        -0.14925537332e+00,	 -0.31664355868e-03,    0.28312781935e-01,	
+        0.13039603845e-03,	 0.10121435381e-01,	    -0.15425936014e-04,	
+        -0.61568007279e-01,	 0.76001994423e-02,	    -0.18906040708e+00,	
+        0.33141311846e+00,	 -0.25229604842e+00,    0.13145401812e+00,	
+        -0.48672350917e-01,	 0.14756043863e-02,	    -0.85996667747e-02,	
+        0.33880247915e-01,	 0.69427495094e-02,	    -0.22271531045e-07,	
+        -0.22656880018e-03,	 0.24056013779e-02
+    ])
+    m = np.array([
+        -2.0,	-1.0,	-1.0,	-1.0,	-0.5,	-0.5,	0.5,	0.5,	
+        1.0,	-5.0,	-4.0,	-2.0,	-2.0,	-2.0,	-1.0,	-1.0,	
+        0.0,	0.0,	-5.0,	-4.0,	-3.0,	-2.0,	-2.0,	-2.0,	
+        -1.0,	-10.0,	-6.0,	-4.0,	0.0,	-24.0,	-10.0,	-2.0
+    ])
+    n = np.array([
+        9,	1,	2,	9,	8,	10,	1,	7,	
+        10,	1,	1,	1,	2,	8,	1,	10,	
+        4,	9,	 2,	5,	1,	2,	3,	4,	
+        2,	3,	4,	2,	2,	5,	2,	10
+    ])
+    p = np.array([
+        0,	0,	0,	0,	0,	0,	0,	0,	
+        0,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	
+        -1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	
+        -1,	-1,	-1,	-1,	-1,	-1,	-1,	-1
+    ])
+    q = np.array([
+        0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 1, 1, 1, 1, 1, 1, 1, 
+        1, 1, 1, 2, 2, 2, 2, 2, 
+        2, 3, 3, 3, 3, 4, 4, 4
+    ])
+
+    Z = Z_HS(sigma, x, rho)
+    rho_c = 0.3107
+    T_c = 1.328
+    rho = rho/rho_c     # This EOS uses rho and T normalized by
+    T = temp/T_c        # the critical temperature and density.
+    for i in range(2):
+        Z += rho*c[i]*T**m[i]*n[i] * np.exp(p[i]*rho**q[i]) * (
+                rho**(n[i]-1) + p[i]*q[i]*rho**(q[i]-1)
+            )
+    return Z
+
+
+def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Hess (1998).
+        Validity range: 
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+
+
+
+#tests.test_eos()
+
+
+
+# LJ EOSes to implement:
+# N     Name                    Implemented?    Working?
+# 1.    Kolafa and Nezbeda      Yes             Yes
+# 2.    Gottschalk              Yes             No
+# 3.    Thol                    Yes             No
+# 4.    Mecke                   No              No
+# 5.    Hess                    No              No
 
 ##############################################################
 ## Radial distribution functions                            ##

@@ -4,7 +4,7 @@
 #####################################################
 
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import theory
 
 def assert_chunk_number(N_chunks, constants):
@@ -24,6 +24,9 @@ def assert_chunk_number(N_chunks, constants):
 
 def test_eos():
     pf = np.linspace(0.01, 0.5)
+    T = 0.7
+    #T = np.linspace(0.7,1.5)
+    #pf = 0.3
     sigma = np.array([1.0])
     sigma = theory.get_sigma(sigma)
     x = np.array([1.0])
@@ -32,17 +35,35 @@ def test_eos():
     #plt.legend()
     #plt.show()
 
-    #plt.plot(pf, theory.Z_CS(sigma, x, rho), label="CS EoS")
+    plt.plot(pf, theory.Z_CS(sigma, x, rho), label="CS EOS", linestyle=":")
     #plt.plot(pf, theory.Z_SPT(sigma, x, rho), label="SPT EoS")
     #plt.plot(pf, theory.Z_PY(sigma, x, rho), label="PY EoS")
     #plt.plot(pf, theory.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
-    #plt.plot(pf, theory.Z_LJ(sigma, x, rho, temp=1.0), label="LJ EoS", linestyle=":")
-    #plt.title("Mixture EoS")
-    #plt.legend()
-    #plt.show()
+    # Kolafa and Gottschalk (in this implementation) agree (somewhat) around T=4.0.
+    plt.plot(pf, theory.Z_kolafa(sigma, x, rho, temp=T), label="Kolafa EOS", linestyle="-.")
+    #plt.plot(pf, theory.Z_gottschalk(sigma, x, rho, temp=T), label="Gottschalk EOS", linestyle="-")
+    plt.plot(pf, theory.Z_thol(sigma, x, rho, temp=T), label="Thol EOS", linestyle="--")
+    plt.plot(pf, theory.Z_mecke(sigma, x, rho, temp=T), label="Mecke EOS", linestyle="-")
+    #plt.ylim((-2.0, 5.0))
+    plt.title("Lennard-Jones EOSs")
+    plt.legend()
+    plt.show()
 
-#test_eos()
+test_eos()
 
+def test_virial_coefficients(n, B):
+    """ 
+        Plots virial coefficients as functions of inverse temperature.
+        Needs to be called from within EOS function.
+    """
+    tau = np.linspace(0.001,1.4,100)
+    for i in range(7,7+n):
+        print(i)
+        coeff = np.array([B(i, 1/t) for t in tau] )
+        plt.plot(tau, coeff, "-", label=f"$B_{i}$")
+    plt.legend()
+    plt.ylim((-6,5))
+    plt.show()
 
 def test_thorne():
     # xi is the mole fraction, so np.sum(x) should equal 1.
