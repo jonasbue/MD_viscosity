@@ -24,7 +24,7 @@ def assert_chunk_number(N_chunks, constants):
 
 def test_eos():
     pf = np.linspace(0.01, 0.5)
-    T = 0.7
+    T = 1.315
     #T = np.linspace(0.7,1.5)
     #pf = 0.3
     sigma = np.array([1.0])
@@ -41,29 +41,17 @@ def test_eos():
     #plt.plot(pf, theory.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
     # Kolafa and Gottschalk (in this implementation) agree (somewhat) around T=4.0.
     plt.plot(pf, theory.Z_kolafa(sigma, x, rho, temp=T), label="Kolafa EOS", linestyle="-.")
-    #plt.plot(pf, theory.Z_gottschalk(sigma, x, rho, temp=T), label="Gottschalk EOS", linestyle="-")
+    plt.plot(pf, theory.Z_gottschalk(sigma, x, rho, temp=T), label="Gottschalk EOS", linestyle="-")
     plt.plot(pf, theory.Z_thol(sigma, x, rho, temp=T), label="Thol EOS", linestyle="--")
     plt.plot(pf, theory.Z_mecke(sigma, x, rho, temp=T), label="Mecke EOS", linestyle="-")
-    #plt.ylim((-2.0, 5.0))
+    plt.plot(pf, theory.Z_hess(sigma, x, rho, temp=T), label="Hess EOS", linestyle="dotted")
+    plt.ylim((-2.0, 5.0))
     plt.title("Lennard-Jones EOSs")
     plt.legend()
     plt.show()
 
 test_eos()
 
-def test_virial_coefficients(n, B):
-    """ 
-        Plots virial coefficients as functions of inverse temperature.
-        Needs to be called from within EOS function.
-    """
-    tau = np.linspace(0.001,1.4,100)
-    for i in range(7,7+n):
-        print(i)
-        coeff = np.array([B(i, 1/t) for t in tau] )
-        plt.plot(tau, coeff, "-", label=f"$B_{i}$")
-    plt.legend()
-    plt.ylim((-6,5))
-    plt.show()
 
 def test_thorne():
     # xi is the mole fraction, so np.sum(x) should equal 1.

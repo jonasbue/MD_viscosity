@@ -9,6 +9,8 @@
 import numpy as np
 import sys
 import utils
+from scipy.special import gamma, factorial
+import matplotlib.pyplot as plt
 #import tests
 
 
@@ -496,7 +498,7 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         Output:
             Z:      Compressibility factor of the system.
     """
-        
+
     # Parameters for the thermal virial coefficients of the EOS, from table V.
     B_i = np.array([
         [1.221844737e-1,	-1.832133004e-2,	-5.737837739e-2,    -1.107146794e-1],
@@ -527,7 +529,6 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         [-1.863883724e-6,	4.808860997e-6,		-4.538508711e-6,	1.455012606e-6,	    0,                  0,                  0,                  0,                  0,                  0,],
         [6.787957968e-9,	-3.433240822e-9,	0,		            0,		            0,                  0,                  0,                  0,                  0,                  0,]
 ])
-
     B_SS = np.array(
         [3.79107, 3.52751, 2.11494, 0.76953] # B^SS_i
     )
@@ -542,10 +543,6 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     )
 
     T = temp
-    # B_2 is known excactly:
-    # TODO: B_2
-    # def I(alpha, x):
-
     # Compute the virial coefficients:
     # B (thermal virial coefficients) and C (correction virial coefficients)
     # are almost identically defined. Therefore, call virial_coefficient()
@@ -562,26 +559,29 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
             value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T)-1)**((2*k-1)/4))
         return (T/4)**(-(i-1)/4) * value
 
-
-    b = 0
-    n = 2
-    def B(i, T):
-        return virial_coefficient(i, T, n+1, B_i, B_SS, ci)
+    def B(i, T, n):
+        if i == 2:
+            B2 = B2_LJ(T)
+            return B2
+        else:
+            # Add +1 to n, because B_2 is computed above. 
+            return virial_coefficient(i, T, n+1, B_i, B_SS, ci)
+    def C(i, T, n):
+        return virial_coefficient(i, T, n, C_i, C_SS, di)
     # Test-plotting the virial coefficients. Due to the definition
     # of the virial_coefficient() function, this must be called here.
-    # (2,7) comes only from the fact that B_3-B_6 are given in the paper
-    for i in range(n,7):
-        b += rho**(i-2) * B(i, T)
-
-    c = 0
-    n = 7
-    def C(i, T):
-        return virial_coefficient(i, T, n, C_i, C_SS, di)
-    #tests.test_virial_coefficients(1, C)
+    #test_virial_coefficients(5, B)
+    # B_3-B_6 are given in the paper
+    b = 0       # The total value of the series
+    n, m = 2, 6 # Range of coefficients to include
+    for i in range(n,m+1):
+        b += rho**(i-2) * B(i, T, n)
     # C_7,...,C_17 are given in the paper
-    for i in range(n,17):
-        c += rho**(i-2) * C(i, T)
-    Ar_01 = rho * (b + 0*c)
+    c = 0           # The total value of the series
+    n, m = 7, 6    # Range of coefficients to include
+    for i in range(n,m+1):
+        c += rho**(i-2) * C(i, T, n)
+    Ar_01 = rho * (b + c)
     Z = 1 + Ar_01
     return Z
 
@@ -749,6 +749,23 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         Output:
             Z:      Compressibility factor of the system.
     """
+    T = temp
+    # Effective volume. Slightly different from 
+    # the HS volume, due to soft potential.
+    v_eff = (np.pi/6)*sigma**3 * np.sqrt(2/np.sqrt(1 + T))
+    v_eff = v_eff[0]        # This EOS is not defined for mixtures, 
+                            # so mixing sigmas is not relevant.
+    # Virial coefficients:
+    # Use Gottschalk's expression for the second virial coefficient of the LJ fluid
+    # Find an expression for the second virial coefficient of the WCA fluid
+    B_WCA = B2_WCA(T)  # From Elliott et al.
+    B_LJ = B2_LJ(T)    # From Gottschalk
+
+    p_WCA = rho*T*(rho*B_WCA/(1-rho*v_eff)**2 + 2*(rho*v_eff)**2/(1-rho*v_eff)**3)
+    p_dis = rho**2*T*(B_LJ - B_WCA)
+    p = rho*T + p_WCA + p_dis
+    Z = p/(rho*T)
+    return Z
 
 
 
@@ -763,6 +780,7 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
 # 3.    Thol                    Yes             No
 # 4.    Mecke                   No              No
 # 5.    Hess                    No              No
+
 
 ##############################################################
 ## Radial distribution functions                            ##
@@ -907,3 +925,42 @@ def rdf_LJ(pf, T=1.0, *args):
     #    + r**(-2) * np.exp(-(g*r+h)) * cos(k*r+l)
     #)
     return g
+
+# Often denoted I_alpha(x) in literature
+def bessel(alpha, x):
+    val = 0
+    for k in range(10):
+        val += 1/(
+            factorial(k)*gamma(k+alpha+1)
+        ) * (x/2)**(2*k+alpha)
+    return val
+
+# B_2 for LJ fluid is known excactly:
+def B2_LJ(T):
+    return np.sqrt(2)*np.pi**2/3 * (
+            bessel(-3/4, 1/(2*T))
+            - bessel(-1/4, 1/(2*T))
+            - bessel(1/4, 1/(2*T))
+            + bessel(3/4, 1/(2*T))
+        )
+
+def B2_WCA(T):
+    B = 4*np.pi*np.sqrt(2)/6 * (
+        0.19667*T**2 + 10.56*T + 1
+    )**(3/24)
+    return B
+
+def test_virial_coefficients(n, B):
+    """ 
+        Plots virial coefficients as functions of inverse temperature.
+        Needs to be called from within EOS function.
+    """
+    tau = np.linspace(0.001,1.4,100)
+    a = 2
+    for i in range(a,a+n):
+        print(i)
+        coeff = np.array([B(i, 1/t, n) for t in tau] )
+        plt.plot(tau, coeff, "-", label=f"$B_{i}$")
+    plt.legend()
+    plt.ylim((-6,5))
+    plt.show()

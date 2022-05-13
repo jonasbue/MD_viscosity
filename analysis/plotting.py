@@ -139,7 +139,7 @@ if "eos" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "Z", "EOS_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            plot_result(path, filename, "pf", "Z", "EOS_kolafa", system_config, "cutoff", pltstr="o-", norm=False)
             plot_literature_results(lit_filename, system_config)
             plt.legend()
             plt.show()

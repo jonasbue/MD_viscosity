@@ -143,12 +143,17 @@ def compute_velcity_profile_from_directory(
     save.save_simulation_data(savename, data, data_name=data_name)
 
 def get_rdf_list():
-    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
     return [theory.rdf_PY, theory.rdf_CS, theory.rdf_LJ]
 
 
 def get_eos_list():
-    #return [theory.rdf_SPT, theory.rdf_PY_mix, theory.rdf_BMCSL]
-    return [theory.Z_PY, theory.Z_CS, theory.Z_kolafa]
+    return [
+        theory.Z_CS,
+        theory.Z_kolafa,
+        theory.Z_gottschalk,
+        theory.Z_thol,
+        theory.Z_mecke,
+        theory.Z_hess
+    ]
 
 main()
