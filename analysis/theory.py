@@ -775,11 +775,11 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
 
 # LJ EOSes to implement:
 # N     Name                    Implemented?    Working?
-# 1.    Kolafa and Nezbeda      Yes             Yes
-# 2.    Gottschalk              Yes             No
-# 3.    Thol                    Yes             No
-# 4.    Mecke                   No              No
-# 5.    Hess                    No              No
+# 1.    Kolafa and Nezbeda      Yes             Yes (this looks most accurate)
+# 2.    Gottschalk              Yes             Yes (for high T)
+# 3.    Thol                    Yes             No?
+# 4.    Mecke                   Yes             Yes?
+# 5.    Hess                    Yes             Yes
 
 
 ##############################################################
