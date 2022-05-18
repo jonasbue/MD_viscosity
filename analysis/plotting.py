@@ -84,10 +84,6 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
     fmt = ["--x", ":v", "-.s", "--*", ":+"]
     for i in range(len(theory_name)):
         plt.plot(x, t[i], fmt[i], label=theory_name[i]+", theoretical")
-    #plt.legend()
-    #plt.plot(x, t, "x")
-    #plt.plot(x, np.zeros_like(x), "0"), 
-    #plt.show()
     if lit_filename:
         plot_literature_results(lit_filename, system_config)
     plt.legend()
@@ -190,10 +186,16 @@ if "visc" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "viscosity", "enskog_RDF_PY", system_config, "cutoff", pltstr="o-", norm=False)
-            #plot_literature_results(lit_filename, system_config)
-            plt.legend()
-            plt.show()
+            plot_result(
+                path,
+                filename,
+                "pf",
+                "viscosity",
+                ["enskog_RDF_PY", "enskog_RDF_LJ"],
+                system_config,
+                "cutoff",
+                pltstr="ko-",
+                norm=True)
 if "lit" in sys.argv:
     plot_literature_results(lit_filename, system_config)
     plt.legend()
@@ -211,10 +213,17 @@ if "all" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "viscosity", "enskog_RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            plot_result(
+                path,
+                filename,
+                "pf",
+                "viscosity",
+                ["enskog_RDF_LJ"],
+                system_config,
+                "cutoff",
+                pltstr="o-",
+                norm=False)
             #plot_literature_results(lit_filename, system_config)
-            plt.legend()
-            plt.show()
 if "rdf-of-r" in sys.argv:
     path = f"data/{data_name}/"
     filenames = files.get_all_filenames(path)[:,3]
