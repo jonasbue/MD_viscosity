@@ -936,6 +936,7 @@ def bessel(alpha, x):
     return val
 
 # B_2 for LJ fluid is known excactly:
+# From Gottschalk
 def B2_LJ(T):
     return np.sqrt(2)*np.pi**2/3 * (
             bessel(-3/4, 1/(2*T))
@@ -958,7 +959,6 @@ def test_virial_coefficients(n, B):
     tau = np.linspace(0.001,1.4,100)
     a = 2
     for i in range(a,a+n):
-        print(i)
         coeff = np.array([B(i, 1/t, n) for t in tau] )
         plt.plot(tau, coeff, "-", label=f"$B_{i}$")
     plt.legend()

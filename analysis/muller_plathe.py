@@ -128,5 +128,3 @@ def find_viscosity_from_file(
     # Compute viscosity.
     eta, eta_abs, eta_rel = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time, step=step)
     return eta, C, eta_abs
-
-

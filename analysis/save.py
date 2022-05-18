@@ -51,7 +51,7 @@ def add_column_to_file(filename, new_column_data, new_column_name, fmt="%.3e"):
     df.to_csv(filename, float_format=fmt)
 
 
-def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
+def save_simulation_data(filename, data, number_of_components=1, data_name="viscosity", fmt="%.3e"):
     """ Appends resuls of a simulation, and the
         configuration of the system, to a given
         .csv file.
@@ -68,9 +68,11 @@ def save_simulation_data(filename, data, data_name="viscosity", fmt="%.3e"):
         This quantity should be specified in the 
         name of the data file.
     """
-    # TODO: Make a versatile way of writing a function header.
-    header = f"pf, N1, N2, m1, m2, sigma1, sigma2, {data_name}"
-    header = f"pf, N, m, T, sigma, cut, {data_name}"
+    header = ""
+    if number_of_components == 2:
+        header = f"pf, N1, N2, m1, m2, T, sigma1, sigma2, cut, {data_name}"
+    if number_of_components == 1:
+        header = f"pf, N, m, T, sigma, cut, {data_name}"
     np.savetxt(filename, data, header=header, fmt=fmt, delimiter=", ", comments="")
 
 

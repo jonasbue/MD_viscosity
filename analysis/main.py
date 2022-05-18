@@ -93,7 +93,7 @@ def compute_viscosity_from_directory(
 
     data_name = "viscosity, error"
     data_name += save.get_data_name(theory_functions, theoretical_viscosity) 
-    save.save_simulation_data(savename, data, data_name=data_name)
+    save.save_simulation_data(savename, data, data_name=data_name, number_of_components=2)
 
 
 def compute_eos_from_directory(

@@ -22,6 +22,7 @@ font = {
     "size"  : "18",
 }
 plt.rc("font", **font)
+plt.rcParams["figure.figsize"] = (15,10)
 
 filenames = []
 path = ""
@@ -34,11 +35,11 @@ for arg in sys.argv:
 path = "data/processed/"
 data_name = "lj"
 
-def plot_result(path, filename, x_name, y_name, theory_name, system_config, *args, pltstr="-", norm=True):
+def plot_result(path, filename, x_name, y_name, theory_name, system_config, *args, pltstr="-", lit_filename="", norm=True):
     #files.get_all_filenames(path)
     data = pd.read_csv(path+filename, delimiter=", ", engine="python")
     x = np.zeros_like(data[x_name])
-    y, t, err = np.zeros_like(x), np.zeros_like(x), np.zeros_like(x)
+    y, t, err = np.zeros_like(x), np.zeros((len(x), len(theory_name))), np.zeros_like(x) 
     variable_names = get_var_names()
 
     # Iterate through all simulations, and save those 
@@ -58,30 +59,43 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
             y[i] = row[y_name]
             err[i] = row["error"]
             if theory_name:
-                t[i] = row[theory_name]
+                for j in range(len(theory_name)):
+                    t[i,j] = row[theory_name[j]]
             else:
                 t[i] = np.ones_like(x[i])
             N, m, T, s, c = int(C[1]), C[2], C[3], C[4], C[5]
     # Remove unused space in the arrays.
-    x, y, t, err = np.trim_zeros(x), np.trim_zeros(y), np.trim_zeros(t), np.trim_zeros(err)
+    x, y, err = np.trim_zeros(x), np.trim_zeros(y), np.trim_zeros(err)
+    t = np.array([np.trim_zeros(t[:,i]) for i in range(len(theory_name))])
+
     n = len(np.unique(x))
     if len(y) != n or len(t) != n:
         print("WARNING: Some simulations overlap in parameter space.")
-    if norm:
-        y = y/t
-        t = t/t
-        err = err/t
     plt.title(f"N = {N}, m = {m}, T = {T}, $\sigma$ = {s}")
+    plt.xlabel(f"{x_name}")
+    plt.ylabel(f"{y_name}")
+    if norm:
+        nm = t[0]
+        y = y/nm
+        t = t/nm
+        err = err/nm
+        plt.ylabel(f"{y_name}/{theory_name[0]}")
     plt.errorbar(x, y, yerr=err, fmt=pltstr, label=f"{y_name}, numerical")
-    if theory_name:
-        plt.plot(x, t, "kx", label=theory_name+", theoretical")
+    fmt = ["--x", ":v", "-.s", "--*", ":+"]
+    for i in range(len(theory_name)):
+        plt.plot(x, t[i], fmt[i], label=theory_name[i]+", theoretical")
     #plt.legend()
     #plt.plot(x, t, "x")
     #plt.plot(x, np.zeros_like(x), "0"), 
-    savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}.png"
-    plt.savefig(savename)
     #plt.show()
-    
+    if lit_filename:
+        plot_literature_results(lit_filename, system_config)
+    plt.legend()
+    savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}.png"
+    if norm: 
+        savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}_normalized.png"
+    plt.savefig(savename)
+    plt.show()
 
 def plot_vs_literature(system_config, fluid_name, data_path):
     # Non-general code. Under construction.
@@ -132,6 +146,9 @@ def search_for_configs(filename):
 #variable_names = [         "pf",   "N",    "m",    "T", "sigma", "cutoff"]
 system_config = np.array([4.0e-1, 3.0e+3, 1.0e+0, 1.5e+00, 1.0e+00, 6.75e+0])
 lit_filename = "data/literature/thol_2016.csv"
+norm=True
+
+
 # These can all be done by one single function
 if "eos" in sys.argv:
     filenames = [f"eos_{data_name}.csv"] 
@@ -139,10 +156,24 @@ if "eos" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "Z", "EOS_kolafa", system_config, "cutoff", pltstr="o-", norm=False)
-            plot_literature_results(lit_filename, system_config)
-            plt.legend()
-            plt.show()
+            plot_result(
+                path,
+                filename,
+                "pf",
+                "Z",
+                [
+                    "EOS_kolafa",
+                    "EOS_mecke",
+                    "EOS_thol",
+                    "EOS_gottschalk",
+                    "EOS_hess"
+                ],
+                system_config,
+                "cutoff",
+                pltstr="ko-",
+                lit_filename=lit_filename,
+                norm=norm
+            )
 if "rdf" in sys.argv:
     filenames = [f"rdf_{data_name}.csv"] 
     for filename in filenames:
@@ -198,6 +229,8 @@ if "rdf-of-r" in sys.argv:
         plt.legend("$g(r)$")
         plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}")
         savename = f"figures/rdf/{filename[:-4]}.png"
+        if norm: 
+            savename = f"figures/rdf/{filename[:-4]}_normalized.png"
         plt.savefig(savename)
         plt.close()
 if "vel" in sys.argv:
@@ -220,3 +253,15 @@ if "vel" in sys.argv:
         savename = f"figures/vel/{f[:-4]}.png"
         plt.savefig(savename)
         plt.close()
+if "mix" in sys.argv:
+    path = "data/processed/"
+    data_name = "momentum_exchange"
+    filenames = [f"visc_{data_name}.csv"] 
+    for f in filenames:
+        data = pd.read_csv(path+f, delimiter=", ", engine="python")
+        pf = data["pf"]
+        visc = data["error"]
+        theory = data["enskog_RDF_CS"]
+        plt.plot(pf, visc/theory, "o")
+        plt.plot(pf, theory/theory, "x")
+        plt.show()
