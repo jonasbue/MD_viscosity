@@ -85,7 +85,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
     for i in range(len(theory_name)):
         plt.plot(x, t[i], fmt[i], label=theory_name[i]+", theoretical")
     if lit_filename:
-        plot_literature_results(lit_filename, system_config)
+        plot_literature_results(lit_filename, system_config, t[0], norm)
     plt.legend()
     savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}.png"
     if norm: 
@@ -118,11 +118,14 @@ def plot_vs_literature(system_config, fluid_name, data_path):
     # LJ and SI units.
 
 
-def plot_literature_results(filename, system_config):
+def plot_literature_results(filename, system_config, theory, norm):
     data = pd.read_csv(filename, sep=", ", engine="python")
     data = data.sort_values(by="rho")
     data = data[data["T"]==system_config[get_var_names().index("T")]]
-    plt.plot(data["rho"]*np.pi/6, data["Z"], "x-", label="Thol, 2016")
+    if not norm:
+        plt.plot(data["rho"]*np.pi/6, data["Z"], "x-", label="Thol, 2016")
+    #else:
+    #    plt.plot(data["rho"]*np.pi/6, data["Z"]/theory, "x-", label="Thol, 2016")
 
 
 def get_var_names():
@@ -179,7 +182,7 @@ if "rdf" in sys.argv:
             plot_result(path, filename, "pf", "g_sigma", "RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
             #plot_literature_results(lit_filename, system_config)
             plt.legend()
-            plt.show()
+            #plt.show()
 if "visc" in sys.argv:
     filenames = [f"visc_{data_name}.csv"] 
     for filename in filenames:

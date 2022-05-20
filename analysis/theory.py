@@ -9,6 +9,7 @@
 import numpy as np
 import sys
 import utils
+import constants
 from scipy.special import gamma, factorial
 import matplotlib.pyplot as plt
 #import tests
@@ -343,6 +344,12 @@ def rho_to_pf(sigma, x, rho):
     pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
     return pf
 
+def rho_to_pf_LJ(sigma, x, rho, T):
+    rho_c = constants.get_rho_c()
+    T_c = constants.get_T_c()
+    pf = 0.1617*rho/rho_c * (0.689 + 0.311*(T/T_c)**(0.3674))**(-1)
+    return pf
+
 def Z_CS(sigma, x, rho, **kwargs):
     """ Returns expected compressibility factor
         based on the Carnahan-Starling EoS,
@@ -431,39 +438,7 @@ def Z_kolafa(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         Output:
             Z:      Compressibility factor of the system.
     """
-        
-    # Coefficients of the EOS, from table 3.
-    # The indices are defined as follows in the original paper:
-    #   i in {0,-1,-2,-4}; j in [2..6].
-    # These indices are set to zero, giving no contribution to the EOS.
-    C_ij = np.array([
-        #0  j=1 j=2         j=3         j=4         j=5         j=6
-        [0, 0,  2.015,      -28.1788,   28.283,     -10.424,    0],         # i=0
-        [0, 0,  -19.5837,   75.623,     -120.7059,  93.927,     -27.3774],  # i=-1
-        [0, 0,  29.347,     -112.3536,  170.649,    -123.06669, 34.4229],   # i=-2
-        [0, 0,  0,          0,          0,          0,          0],         # i=-3
-        [0, 0,  -13.37,     65.3806,    -115.0923,  88.9197,    -25.6210],  # i=-4
-    ])
-    C_d_hBH = np.array([
-        1.08014,    # 0
-        0.00069,    # 1
-        -0.06392,   # ln
-        0.01112,    # -2
-        -0.07638,   # -1
-    ])
-    C_delta_B2 = np.array([
-        0.0246,     # 0
-        -0.5854,    # -7
-        0.4310,     # -6
-        0.8736,     # -5
-        -4.137,     # -4
-        2.9062,     # -3
-        -7.0218,    # -2
-        0,          # -1
-    ])
-    gamma = 1.92907278  # Damping parameter. Adjustable.
-                        # Value from table 3.
-
+    C_ij, C_d_hBH, C_delta_B2, gamma = constants.get_EOS_parameters("kolafa")
     #delta_B cmes from eq. 29 in the paper, with coefficients from above
     def f(T):
         a = 0
@@ -476,12 +451,12 @@ def Z_kolafa(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     b = rho*(1-2*gamma*rho**2)*np.exp(-gamma*rho**2)*delta_B
 
     c = 0
-    # FIX this
     for i in range(-4,1):
         for j in range(0,7):
             c += j*C_ij[i,j]*temp**(i/2-1)*rho**j 
     Z = a + b + c
     return Z
+
 
 def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
@@ -499,49 +474,7 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
             Z:      Compressibility factor of the system.
     """
 
-    # Parameters for the thermal virial coefficients of the EOS, from table V.
-    B_i = np.array([
-        [1.221844737e-1,	-1.832133004e-2,	-5.737837739e-2,    -1.107146794e-1],
-        [-2.533814785,		-2.221029066e-1,	2.384059560e-1,		3.639967813e-1],
-        [2.321052047,		-2.290140445,		-3.175043752e-1,	-1.722555372e-1],
-        [-2.221116991e1,	2.497587053,		1.411210874e-1,		5.355823913e-2],
-        [6.037723605e1,		-1.491751608,		-4.065269634e-2,	-9.119290154e-3],
-        [-8.614627023e1,	5.194910488e-1,		7.132450669e-3,		6.312327708e-4],
-        [7.947702893e1,		-7.580241786e-2,	-7.501879316e-4,	-6.471729317e-6],
-        [-5.013039389e1,	-9.570910251e-3,	5.000252419e-5,		-6.635662426e-7],
-        [2.179355452e1,		6.444596963e-3,		-2.224242683e-6,    1.145665574e-8],
-        [-6.423839356,		-1.323484892e-3,	6.334525666e-8,		-5.093701999e-10],
-        [1.222200983,		1.400743960e-4,		-1.124571857e-9,	0],
-        [-1.351435025e-1,	-7.861096502e-6,	1.120406875e-11,	0],
-        [6.519707093e-3,	1.749011555e-7,		-4.806632984e-14,	0]
-    ])
-    # Coefficients of the fitted correction parameters of the EOS, from table VI.
-    C_i = np.array([
-        [-3.848657712e3,	1.214533953e4,		5.841998321e4,		-4.717257385e5,		1.411244301e6,		-2.385034755e6,		2.465995272e6,		-1.550792557e6,		5.466032853e5,		-8.300129372e4],
-        [1.940790808e3,		-9.125315944e3,		5.336019753e3,		7.338796875e4,		-2.875424926e5,		5.411774951e5,		-5.990022139e5,		3.971186192e5,		-1.464740110e5,		2.318027845e4],
-        [-6.786775725e2,	3.397150517e3,		-6.39357702e3,		1.526191655e3,		2.109845310e4,		-5.532941146e4,		7.174967760e4,		-5.317159494e4,		2.148725004e4,		-3.684215524e3],
-        [1.592726729e2,		-7.355400823e2,		1.37142001e3,		-1.479809349e3,		9.648092327e2,		2.842688756e2,		-1.763990307e3,		2.096231490e3,		-1.141346457e3,		2.443351261e2],
-        [-2.733389532e1,	1.207984183e2,		-1.843597578e2,		1.033775279e2,		-1.118483146e1,		5.21058649e1,		-1.121805527e2,		7.436426163e1,		-1.333984225e1,		-2.185586771],
-        [3.305728801,		-1.595650007e1,		2.756765411e1,		-1.762232710e1,		-5.953997923,		1.569383441e1,		-7.327702248,		-1.053356075,		1.604683226,		-2.645512917e-1],
-        [-2.396300005e-1,	1.301737514,		-2.765120060,		3.029682621,		-1.736288154,		2.519375463e-1,		3.057812577e-1,		-1.621886602e-1,	1.067758340e-2,		3.982533293e-3],
-        [8.107532579e-3,    -4.828021321e-2,	1.107783436e-1,		-1.382464464e-1,	1.102848617e-1,		-5.923068772e-2,	1.906868401e-2,		-2.542729177e-3,	0,		            0],
-        [-5.209209916e-5,	4.779918832e-4,		-1.100471432e-3,	1.049186458e-3,	    -4.233596547e-4,	5.305829584e-5,		0,		            0,		            0,		            0],
-        [-1.863883724e-6,	4.808860997e-6,		-4.538508711e-6,	1.455012606e-6,	    0,                  0,                  0,                  0,                  0,                  0,],
-        [6.787957968e-9,	-3.433240822e-9,	0,		            0,		            0,                  0,                  0,                  0,                  0,                  0,]
-])
-    B_SS = np.array(
-        [3.79107, 3.52751, 2.11494, 0.76953] # B^SS_i
-    )
-    ci = np.array(
-        [1.529031885, 2.795121498, 4.903830267, 5.539252062] # c_i
-    )
-    C_SS = np.array(
-        [2.356773117e3, -3.264039611e3, -7.804186018e4, 4.734725795e6, -1.317864191e6, 2.146863058e6, -2.165267779e6, 1.335386749e6, -4.628739042e5, 6.922915835e4] # C^SS_i
-    )
-    di = np.array(
-        [4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85, 4.85] # d_i
-    )
-
+    B_i, C_i, B_SS, ci, C_SS, di = constants.get_EOS_parameters("gottschalk")
     T = temp
     # Compute the virial coefficients:
     # B (thermal virial coefficients) and C (correction virial coefficients)
@@ -578,7 +511,7 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         b += rho**(i-2) * B(i, T, n)
     # C_7,...,C_17 are given in the paper
     c = 0           # The total value of the series
-    n, m = 7, 6    # Range of coefficients to include
+    n, m = 7, 9    # Range of coefficients to include
     for i in range(n,m+1):
         c += rho**(i-2) * C(i, T, n)
     Ar_01 = rho * (b + c)
@@ -603,69 +536,22 @@ def Z_thol(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
             Z:      Compressibility factor of the system.
     """
 
-    # Fitted parameters: n, t, d, l, eta, beta, gamma and epsilon.
-    # Given in Table 2 of the paper.
-    n = np.array([
-        0.52080730e-2,	0.21862520e+1,	-0.21610160e+1,	0.14527000e+1,
-        -0.20417920e+1,	0.18695286e0,	-0.90988445e-1,	-0.49745610e0,
-        0.10901431e0,	-0.80055922e0,	-0.56883900e0,	-0.62086250e0,
-        -0.14667177e+1,	0.18914690e+1,	-0.13837010e0,	-0.38696450e0,
-        0.12657020e0,	0.60578100e0,	0.11791890e+1,	-0.47732679e0,
-        -0.99218575e+1,	-0.57479320e0,	0.37729230e-2
-    ])
-    t = np.array([
-        1.000, 0.320, 0.505, 0.672, 0.843, 0.898, 1.294, 2.590, 
-        1.786, 2.770, 1.786, 1.205, 2.830, 2.548, 4.650, 1.385, 
-        1.460, 1.351, 0.660, 1.496, 1.830, 1.616, 4.970
-    ])
-    d = np.array([
-        4, 1, 1, 2, 2, 3, 5, 2, 2, 3, 1, 1, 1, 1, 2, 3, 3, 2, 1, 2, 3, 1, 1
-    ])
-    l = np.array([
-        0, 0, 0, 0, 0, 0, 1, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    ])
-    eta = np.array([
-		0,		0,		0,		0,		0,		0,		
-        0,		0,		0,		0,		0,		0,		
-		2.067,	1.522,	8.820,	1.722,	0.679,	1.883,	
-		3.925,	2.461,	28.20,	0.753,	0.820
-    ])
-    beta = np.array([
-		0,		0,		0,		0,		0,		0,		
-        0,		0,		0,		0,		0,		0,		
-		0.625,	0.638,	3.910,	0.156,	0.157,	0.153,
-		1.160,	1.730,	383.0,	0.112,	0.119
-    ])
-    gamma = np.array([
-		0,		0,		0,		0,		0,		0,		
-        0,		0,		0,		0,		0,		0,		
-		0.710,	0.860,	1.940,	1.480,	1.490,	1.945,
-		3.020,	1.110,	1.170,	1.330,	0.240
-    ])
-    epsilon = np.array([
-		0,		0,		0,		0,		0,		0,		
-        0,		0,		0,		0,		0,		0,		
-		0.2053,	0.4090,	0.6000,	1.2030,	1.8290,	1.3970,
-		1.3900,	0.5390,	0.9340,	2.3690,	2.4300
-    ])
-
+    n, t, d, l, eta, beta, gamma, epsilon = constants.get_EOS_parameters("thol")
     # Should it be 1 or Z_HS? Discuss with supervisors.
-    Z = Z_HS(sigma, x, rho)
+    Z = 1 # Z_HS(sigma, x, rho)
     tau = 1/temp
-    for i in range(6):
-        Z += n[i]*rho**(d[i]-1)*d[i]*tau**t[i]
-    for i in range(7,12):
-        Z += n[i]*tau**t[i]*np.exp(-rho**l[i]) * (
-                d[i]*rho**(d[i]-1)
-                + rho**d[i]*(-l[i]*rho**(l[i]-1))
+    for i in range(0,6):
+        Z += n[i] * d[i]*rho**d[i] * tau**t[i]
+    for i in range(6,12):
+        Z += n[i]*tau**t[i] * rho**d[i] * np.exp(-rho**l[i]) * (
+                d[i] - l[i]*rho**l[i]
             )
-    for i in range(13,23):
-        Z += n[i]*tau**t[i]*np.exp(
-                -beta[i]*(tau-gamma[i])**2 - eta[i]*(rho-epsilon[i])**2
-            ) * (
-                d[i]*rho**(d[i]-1) - rho**d[i]*eta[i]*2*(rho-epsilon[i])
-        )
+    for i in range(12,23):
+        Z += n[i]*tau**t[i]*rho**d[i]*np.exp(
+                -eta[i]*(rho-epsilon[i])**2 - beta[i]*(tau-gamma[i])**2
+            ) * (d[i] - 2*rho*eta[i]*(rho-epsilon[i]))
     return Z
+
 
 def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
@@ -683,47 +569,11 @@ def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         Output:
             Z:      Compressibility factor of the system.
     """
-    c = np.array([
-        0.33619760720e-05,	 -0.14707220591e+01,	-0.11972121043e+00,	
-        -0.11350363539e-04,	 -0.26778688896e-04,    0.12755936511e-05,	
-        0.40088615477e-02,	 0.52305580273e-05,	    -0.10214454556e-07,	
-        -0.14526799362e-01,	 0.64975356409e-01,	    -0.60304755494e-01,	
-        -0.14925537332e+00,	 -0.31664355868e-03,    0.28312781935e-01,	
-        0.13039603845e-03,	 0.10121435381e-01,	    -0.15425936014e-04,	
-        -0.61568007279e-01,	 0.76001994423e-02,	    -0.18906040708e+00,	
-        0.33141311846e+00,	 -0.25229604842e+00,    0.13145401812e+00,	
-        -0.48672350917e-01,	 0.14756043863e-02,	    -0.85996667747e-02,	
-        0.33880247915e-01,	 0.69427495094e-02,	    -0.22271531045e-07,	
-        -0.22656880018e-03,	 0.24056013779e-02
-    ])
-    m = np.array([
-        -2.0,	-1.0,	-1.0,	-1.0,	-0.5,	-0.5,	0.5,	0.5,	
-        1.0,	-5.0,	-4.0,	-2.0,	-2.0,	-2.0,	-1.0,	-1.0,	
-        0.0,	0.0,	-5.0,	-4.0,	-3.0,	-2.0,	-2.0,	-2.0,	
-        -1.0,	-10.0,	-6.0,	-4.0,	0.0,	-24.0,	-10.0,	-2.0
-    ])
-    n = np.array([
-        9,	1,	2,	9,	8,	10,	1,	7,	
-        10,	1,	1,	1,	2,	8,	1,	10,	
-        4,	9,	 2,	5,	1,	2,	3,	4,	
-        2,	3,	4,	2,	2,	5,	2,	10
-    ])
-    p = np.array([
-        0,	0,	0,	0,	0,	0,	0,	0,	
-        0,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	
-        -1,	-1,	-1,	-1,	-1,	-1,	-1,	-1,	
-        -1,	-1,	-1,	-1,	-1,	-1,	-1,	-1
-    ])
-    q = np.array([
-        0, 0, 0, 0, 0, 0, 0, 0, 
-        0, 1, 1, 1, 1, 1, 1, 1, 
-        1, 1, 1, 2, 2, 2, 2, 2, 
-        2, 3, 3, 3, 3, 4, 4, 4
-    ])
-
+    
+    c, m, n, p, q = constants.get_EOS_parameters("mecke")
     Z = Z_HS(sigma, x, rho)
-    rho_c = 0.3107
-    T_c = 1.328
+    rho_c = constants.get_rho_c()
+    T_c = constants.get_T_c()
     rho = rho/rho_c     # This EOS uses rho and T normalized by
     T = temp/T_c        # the critical temperature and density.
     for i in range(2):
@@ -760,26 +610,195 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     # Find an expression for the second virial coefficient of the WCA fluid
     B_WCA = B2_WCA(T)  # From Elliott et al.
     B_LJ = B2_LJ(T)    # From Gottschalk
+    c = (9/8) * rho*v_eff*np.exp(-1/T)
 
     p_WCA = rho*T*(rho*B_WCA/(1-rho*v_eff)**2 + 2*(rho*v_eff)**2/(1-rho*v_eff)**3)
-    p_dis = rho**2*T*(B_LJ - B_WCA)
+    p_dis = rho**2*T*(B_LJ - B_WCA) * (1+c)
     p = rho*T + p_WCA + p_dis
     Z = p/(rho*T)
     return Z
 
-
-
 #tests.test_eos()
-
-
 
 # LJ EOSes to implement:
 # N     Name                    Implemented?    Working?
-# 1.    Kolafa and Nezbeda      Yes             Yes (this looks most accurate)
-# 2.    Gottschalk              Yes             Yes (for high T)
-# 3.    Thol                    Yes             No?
-# 4.    Mecke                   Yes             Yes?
-# 5.    Hess                    Yes             Yes
+# 1.    Kolafa and Nezbeda      Yes             Yes 
+# 2.    Gottschalk              Yes             Yes
+# 3.    Thol                    Yes             No (low density limit incorrect)
+# 4.    Mecke                   Yes             Yes 
+# 5.    Hess                    Yes             Yes (badly)
+
+##############################################################
+## Helmholtz free energy                                    ##
+##############################################################
+
+def F_BN(sigma, x, rho, temp=1.0, **kwargs):
+    pf = rho_to_pf(sigma, x, rho)
+    A = temp*(5/3 * np.log(1-pf) + pf * (34-33*pf*4*pf**2)/(6*(1-pf)**2))
+    return A
+
+
+def F_CS(sigma, x, rho, temp=1.0, **kwargs):
+    pf = rho_to_pf_LJ(sigma, x, rho, temp)
+    A = temp*((4*pf-3*pf**2)/(1-pf)**2)
+    return A
+
+def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Kolafa et al., explicit in 
+        Helmholtz free energy. This can be differentiated
+        numerically to gain equillibrium quantities.
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+    C_ij, C_d_hBH, C_delta_B2, gamma = constants.get_EOS_parameters("kolafa")
+    a = F_HS(sigma, x, rho, temp=temp)
+    #delta_B comes from eq. 29 in the paper, with coefficients from above
+    def f(T):
+        a = 0
+        for i in range(-7,1): # 1 is not included.
+            a += C_delta_B2[i]*T**(i/2)
+        return a + C_d_hBH[2]*np.log(T)
+    #a = Z_HS(sigma, x, rho) 
+    delta_B = f(temp)
+    b = np.exp(-gamma*rho**2)*rho*temp*delta_B
+
+    c = 0
+    for i in range(-4,1):
+        for j in range(0,7):
+            c += C_ij[i,j]*temp**(i/2)*rho**j 
+    A = a + b + c
+    return A
+
+
+def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
+    """ Computes the EOS of a Lennard-Jones fluid, 
+        using the EOS of Gottschalk. 
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+
+    B_i, C_i, B_SS, ci, C_SS, di = constants.get_EOS_parameters("gottschalk")
+    T = temp
+    # Compute the virial coefficients:
+    # B (thermal virial coefficients) and C (correction virial coefficients)
+    # are almost identically defined. Therefore, call virial_coefficient()
+    # with the corresponding parameter arrays to compute them.
+    def virial_coefficient(i, T, n, A_i, A_SS, ai):
+        # i starts at n, so subtract n in every list index
+        I = i-n
+        # ki is just the number of indices. Affects the precision
+        ki = A_i.shape[0]
+        value = A_SS[I]
+        for k in range(1,ki+1):
+            #   k starts at 1, so subtract 1 in every list
+            K = k-1
+            value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T)-1)**((2*k-1)/4))
+        return (T/4)**(-(i-1)/4) * value
+
+    def B(i, T, n):
+        if i == 2:
+            B2 = B2_LJ(T)
+            return B2
+        else:
+            # Add +1 to n, because B_2 is computed above. 
+            return virial_coefficient(i, T, n+1, B_i, B_SS, ci)
+    def C(i, T, n):
+        return virial_coefficient(i, T, n, C_i, C_SS, di)
+    # Test-plotting the virial coefficients. Due to the definition
+    # of the virial_coefficient() function, this must be called here.
+    #test_virial_coefficients(5, B)
+    # B_3-B_6 are given in the paper
+    b = 0       # The total value of the series
+    n, m = 2, 6 # Range of coefficients to include
+    for i in range(n,m+1):
+        b += rho**(i-1)/(i-1) * B(i, T, n)
+    # C_7,...,C_17 are given in the paper
+    c = 0           # The total value of the series
+    n, m = 7, 16    # Range of coefficients to include
+    for i in range(n,m+1):
+        c += rho**(i-1)/(i-1) * C(i, T, n)
+    A = b + c
+    return A
+
+
+def F_thol(sigma, x, rho, temp=1.0, **kwargs):
+    """ Computes the Helmholtz free energy of a Lennard-Jones 
+        fluid, using the EOS of Thol et al.  
+        Validity range: T in (0.661,9), p<65.
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+
+    n, t, d, l, eta, beta, gamma, epsilon = constants.get_EOS_parameters("thol")
+    tau = 1/temp
+
+    A = np.log(rho) + 1.5*np.log(tau) + 1.515151515*tau + 6.262265814
+    for i in range(0,6):
+        A += n[i] * rho**d[i] * tau**t[i]
+    for i in range(6,12):
+        A += n[i]*tau**t[i] * rho**d[i] * np.exp(-rho**l[i]) 
+    for i in range(12,23):
+        A += n[i] * tau**t[i] * rho**d[i] * np.exp(
+                -eta[i]*(rho-epsilon[i])**2 - beta[i]*(tau-gamma[i])**2
+            ) 
+    return A
+
+
+def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
+    """ Computes the Helmholtz free energy of a Lennard-Jones fluid, 
+        using the EOS of Mecke et al. (1996).
+        Validity range: 
+        Input:
+            sigma:  Diameter of the particles.
+            x:      Mole fraction of the particles. Should be 1, 
+                    because this EOS does not apply to mixtures.
+                    Required in Z_HS().
+            rho:    Density of the fluid.
+            temp:   Temperature.
+            Z_HS:   An EOS function for a HS system, of the same
+                    (sigma, x rho) configuration.
+        Output:
+            Z:      Compressibility factor of the system.
+    """
+    
+    c, m, n, p, q = constants.get_EOS_parameters("mecke")
+    A = F_HS(sigma, x, rho)
+    rho_c = constants.get_rho_c()
+    T_c = constants.get_T_c()
+    rho = rho/rho_c     # This EOS uses rho and T normalized by
+    T = temp/T_c        # the critical temperature and density.
+    for i in range(2):
+        A += c[i]*T**m[i] * rho**n[i] * np.exp(p[i]*rho**q[i])
+    return A
+
 
 
 ##############################################################

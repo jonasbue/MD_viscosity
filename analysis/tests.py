@@ -22,9 +22,9 @@ def assert_chunk_number(N_chunks, constants):
     #    Number of chunks is not equal in fix viscosity and fix/ave: \
     #    {N_chunks} is not {N_chunks_given}"
 
-def test_eos():
+def test_Z():
     pf = np.linspace(0.01, 0.5)
-    T = 1.315
+    T = 2.0
     #T = np.linspace(0.7,1.5)
     #pf = 0.3
     sigma = np.array([1.0])
@@ -40,18 +40,47 @@ def test_eos():
     #plt.plot(pf, theory.Z_PY(sigma, x, rho), label="PY EoS")
     #plt.plot(pf, theory.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
     # Kolafa and Gottschalk (in this implementation) agree (somewhat) around T=4.0.
-    plt.plot(pf, theory.Z_kolafa(sigma, x, rho, temp=T), label="Kolafa EOS", linestyle="-.")
-    plt.plot(pf, theory.Z_gottschalk(sigma, x, rho, temp=T), label="Gottschalk EOS", linestyle="-")
-    plt.plot(pf, theory.Z_thol(sigma, x, rho, temp=T), label="Thol EOS", linestyle="--")
-    plt.plot(pf, theory.Z_mecke(sigma, x, rho, temp=T), label="Mecke EOS", linestyle="-")
-    plt.plot(pf, theory.Z_hess(sigma, x, rho, temp=T), label="Hess EOS", linestyle="dotted")
+    t = theory.Z_kolafa(sigma, x, rho, temp=T)
+    plt.plot(pf, theory.Z_kolafa(sigma, x, rho, temp=T)/t, label="Kolafa EOS", linestyle="-.")
+    plt.plot(pf, theory.Z_gottschalk(sigma, x, rho, temp=T)/t, label="Gottschalk EOS", linestyle=":")
+    plt.plot(pf, theory.Z_thol(sigma, x, rho, temp=T)/t, label="Thol EOS", linestyle="-", linewidth=2)
+    plt.plot(pf, theory.Z_mecke(sigma, x, rho, temp=T)/t, label="Mecke EOS", linestyle="--")
+    plt.plot(pf, theory.Z_hess(sigma, x, rho, temp=T)/t, label="Hess EOS", linestyle="dotted")
     plt.ylim((-2.0, 5.0))
     plt.title("Lennard-Jones EOSs")
     plt.legend()
     plt.show()
 
-#test_eos()
+def test_eos():
+    pf = np.linspace(0.01, 0.5)
+    T = 2.0
+    #T = np.linspace(0.7,1.5)
+    #pf = 0.3
+    sigma = np.array([1.0])
+    sigma = theory.get_sigma(sigma)
+    x = np.array([1.0])
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    #plt.title("CS EoS")
+    #plt.legend()
+    #plt.show()
 
+    plt.plot(pf, theory.F_BN(sigma, x, rho), label="BN EOS (HS)", linestyle=":")
+    #plt.plot(pf, theory.Z_SPT(sigma, x, rho), label="SPT EoS")
+    #plt.plot(pf, theory.Z_PY(sigma, x, rho), label="PY EoS")
+    #plt.plot(pf, theory.Z_BMCSL(sigma, x, rho), label="BMCSL EoS", linestyle="--")
+    # Kolafa and Gottschalk (in this implementation) agree (somewhat) around T=4.0.
+    #t = theory.F_kolafa(sigma, x, rho, temp=T)
+    plt.plot(pf, theory.F_kolafa(sigma, x, rho, temp=T), label="Kolafa EOS", linestyle="-.")
+    plt.plot(pf, theory.F_gottschalk(sigma, x, rho, temp=T), label="Gottschalk EOS", linestyle=":")
+    plt.plot(pf, theory.F_thol(sigma, x, rho, temp=T), label="Thol EOS", linestyle="-", linewidth=2)
+    plt.plot(pf, theory.F_mecke(sigma, x, rho, temp=T), label="Mecke EOS", linestyle="--")
+    #plt.plot(pf, theory.F_hess(sigma, x, rho, temp=T)/t, label="Hess EOS", linestyle="dotted")
+    plt.ylim((-2.0, 5.0))
+    plt.title("Lennard-Jones EOSs")
+    plt.legend()
+    plt.show()
+
+test_eos()
 
 def test_thorne():
     # xi is the mole fraction, so np.sum(x) should equal 1.
