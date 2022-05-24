@@ -634,7 +634,7 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
 
 def F_BN(sigma, x, rho, temp=1.0, **kwargs):
     pf = rho_to_pf(sigma, x, rho)
-    A = temp*(5/3 * np.log(1-pf) + pf * (34-33*pf*4*pf**2)/(6*(1-pf)**2))
+    A = temp*(5/3 * np.log(1-pf) + pf * (34-33*pf+4*pf**2)/(6*(1-pf)**2))
     return A
 
 
@@ -664,15 +664,16 @@ def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
     a = F_HS(sigma, x, rho, temp=temp)
     #delta_B comes from eq. 29 in the paper, with coefficients from above
     def f(T):
-        a = 0
+        s = 0
         for i in range(-7,1): # 1 is not included.
-            a += C_delta_B2[i]*T**(i/2)
-        return a + C_d_hBH[2]*np.log(T)
-    #a = Z_HS(sigma, x, rho) 
+            s += C_delta_B2[i]*T**(i/2)
+        return s + C_d_hBH[2]*np.log(T)
     delta_B = f(temp)
     b = np.exp(-gamma*rho**2)*rho*temp*delta_B
 
     c = 0
+    # The indices that are not defined in the paper
+    # correspond to a zero in the array of coefficients
     for i in range(-4,1):
         for j in range(0,7):
             c += C_ij[i,j]*temp**(i/2)*rho**j 
@@ -760,15 +761,21 @@ def F_thol(sigma, x, rho, temp=1.0, **kwargs):
     n, t, d, l, eta, beta, gamma, epsilon = constants.get_EOS_parameters("thol")
     tau = 1/temp
 
-    A = np.log(rho) + 1.5*np.log(tau) + 1.515151515*tau + 6.262265814
+    A = np.log(rho) + 1.5*np.log(tau) - 1.515151515*tau + 6.262265814
     for i in range(0,6):
-        A += n[i] * rho**d[i] * tau**t[i]
+        a = n[i] * rho**d[i] * tau**t[i]
+        A += a
+        print(np.round(a, 3))
     for i in range(6,12):
-        A += n[i]*tau**t[i] * rho**d[i] * np.exp(-rho**l[i]) 
+        a = n[i]*tau**t[i] * rho**d[i] * np.exp(-rho**l[i]) 
+        A += a
+        print(np.round(a, 3))
     for i in range(12,23):
-        A += n[i] * tau**t[i] * rho**d[i] * np.exp(
+        a = n[i] * tau**t[i] * rho**d[i] * np.exp(
                 -eta[i]*(rho-epsilon[i])**2 - beta[i]*(tau-gamma[i])**2
             ) 
+        A += a
+        print(np.round(a, 3))
     return A
 
 
@@ -983,3 +990,20 @@ def test_virial_coefficients(n, B):
     plt.legend()
     plt.ylim((-6,5))
     plt.show()
+
+
+def dF_drho(f, sigma, x, rho, T):
+    """ 
+        General numerical differentiation function.
+        Input:
+            f:          function
+        Output:
+            df:         Estimated value of df/dx.
+    """
+    h = 0.01
+    df = (f(sigma, x, rho+h, temp=T) - f(sigma, x, rho, temp=T))/h
+    return df
+
+
+def get_Z_from_F(F, sigma, x, rho, T):
+    return 1 + rho*dF_drho(F, sigma, x, rho, T)
