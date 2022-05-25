@@ -90,7 +90,7 @@ def test_eos():
     plt.show()
 
 
-def test_eos_from_helmholts():
+def test_eos_from_helmholtz():
     pf = np.linspace(0.01, 0.5)
     T = 2.0
     #T = np.linspace(0.7,1.5)
@@ -100,25 +100,101 @@ def test_eos_from_helmholts():
     x = np.array([1.0])
     rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
 
-    plt.plot(pf, theory.get_Z_from_F(theory.F_kolafa, sigma, x, rho, T), 
-            label="kolafa EOS Helmholtz derived", linestyle="-.")
-    plt.plot(pf, theory.get_Z_from_F(theory.F_gottschalk, sigma, x, rho, T), 
-            label="gottschalk EOS Helmholtz derived", linestyle=":")
-    plt.plot(pf, theory.get_Z_from_F(theory.F_mecke, sigma, x, rho, T), 
-            label="mecke EOS Helmholtz derived", linestyle="--")
-    plt.plot(pf, theory.get_Z_from_F(theory.F_thol, sigma, x, rho, T), 
-            label="thol EOS Helmholtz derived", linestyle="-")
-    plt.plot(pf, theory.get_Z_from_F(theory.F_BN, sigma, x, rho, T), 
-            label="BN EOS Helmholtz derived", linestyle=":")
+    t = theory.Z_kolafa(sigma, x, rho, temp=T)
+    plt.plot(pf, theory.get_Z_from_F(theory.F_kolafa, sigma, x, rho, T)/t, "b-",
+            label="Kolafa EOS (Helmholtz derived)")
+    plt.plot(pf, theory.Z_kolafa(sigma, x, rho, temp=T)/t, "b:",
+            label="Kolafa EOS (hand derived)")
+    #plt.plot(pf, theory.get_Z_from_F(theory.F_gottschalk, sigma, x, rho, T)/t, "k-",
+    #        label="Gottschalk EOS Helmholtz derived")
+    #plt.plot(pf, theory.Z_gottschalk(sigma, x, rho, temp=T)/t, "k:",
+    #        label="Gottschalk EOS (hand derived)")
+    plt.plot(pf, theory.get_Z_from_F(theory.F_mecke, sigma, x, rho, T)/t, "g-",
+            label="mecke EOS Helmholtz derived")
+    plt.plot(pf, theory.Z_mecke(sigma, x, rho, temp=T)/t, "g:",
+            label="Mecke EOS (hand derived)")
+    #plt.plot(pf, theory.get_Z_from_F(theory.F_thol, sigma, x, rho, T)/t, "y-",
+    #        label="thol EOS Helmholtz derived")
+    #plt.plot(pf, theory.Z_thol(sigma, x, rho, temp=T)/t, "y:",
+    #        label="Thol EOS (hand derived)")
+    plt.plot(pf, theory.get_Z_from_F(theory.F_BN, sigma, x, rho, T)/t, "m-",
+            label="BN EOS Helmholtz derived")
+    plt.plot(pf, theory.Z_BN(sigma, x, rho, temp=T)/t, "m:",
+            label="BN EOS (hand derived)")
 
     plt.ylim((-2.0, 5.0))
     plt.title("Lennard-Jones EOSs derived from Helmholtz free energy")
     plt.legend()
     plt.show()
 
-test_Z()
-test_eos()
-test_eos_from_helmholts()
+
+def test_rdf_from_helmholtz():
+    pf = np.linspace(0.01, 0.5)
+    T = 2.0
+    #T = np.linspace(0.7,1.5)
+    #pf = 0.3
+    sigma = np.array([1.0])
+    sigma = theory.get_sigma(sigma)
+    x = np.array([1.0])
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+
+    plt.plot(pf, theory.get_rdf_from_F(theory.F_kolafa, sigma, x, rho, T), 
+            label="kolafa RDF, Helmholtz derived", linestyle="-.")
+    #plt.plot(pf, theory.get_rdf_from_F(theory.F_gottschalk, sigma, x, rho, T), 
+    #        label="gottschalk RDF, Helmholtz derived", linestyle=":")
+    plt.plot(pf, theory.get_rdf_from_F(theory.F_mecke, sigma, x, rho, T), 
+            label="mecke RDF, Helmholtz derived", linestyle="--")
+    #plt.plot(pf, theory.get_rdf_from_F(theory.F_thol, sigma, x, rho, T), 
+    #        label="thol RDF, Helmholtz derived", linestyle="-")
+    plt.plot(pf, theory.get_rdf_from_F(theory.F_BN, sigma, x, rho, T), 
+            label="BN RDF, Helmholtz derived", linestyle=":")
+    plt.plot(pf, theory.rdf_LJ(pf, T=T), 
+            label="Morsali RDF", linestyle="-")
+
+    #plt.ylim((-2.0, 5.0))
+    plt.title("Lennard-Jones EOSs derived from Helmholtz free energy")
+    plt.legend()
+    plt.show()
+
+
+def test_viscosity_from_helmholtz():
+    pf = np.linspace(0.01, 0.5)
+    T = 5.0
+    #T = np.linspace(0.7,1.5)
+    #pf = 0.3
+    sigma = np.array([1.0])
+    sigma = theory.get_sigma(sigma)
+    x = np.array([1.0])
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    m = 1.0
+
+    t = theory.enskog(pf, sigma.flatten(), T, m, theory.rdf_CS, k=1.0)
+    plt.plot(pf, t, "--")
+    plt.plot(pf, theory.get_viscosity_from_F(theory.F_kolafa, sigma, x, rho, T), 
+            label="kolafa RDF, Helmholtz derived", linestyle="-")
+    #plt.plot(pf, theory.get_viscosity_from_F(theory.F_gottschalk, sigma, x, rho, T), 
+    #        label="gottschalk RDF, Helmholtz derived", linestyle=":")
+    plt.plot(pf, theory.get_viscosity_from_F(theory.F_mecke, sigma, x, rho, T), 
+            label="mecke RDF, Helmholtz derived", linestyle=":")
+    #plt.plot(pf, theory.get_viscosity_from_F(theory.F_thol, sigma, x, rho, T), 
+    #        label="thol RDF, Helmholtz derived", linestyle="-")
+    plt.plot(pf, theory.get_viscosity_from_F(theory.F_BN, sigma, x, rho, T), 
+            label="BN RDF, Helmholtz derived", linestyle="-.")
+    plt.plot(pf, theory.rdf_LJ(pf, T=T), 
+            label="Morsali RDF", linestyle="--")
+
+    #plt.ylim((-2.0, 5.0))
+    plt.title("Lennard-Jones vicosity with RDF from Helmholtz free energy")
+    plt.legend()
+    plt.show()
+
+
+
+#test_Z()
+#test_eos()
+#test_eos_from_helmholtz()
+#test_rdf_from_helmholtz()
+test_viscosity_from_helmholtz()
 
 def test_thorne():
     # xi is the mole fraction, so np.sum(x) should equal 1.

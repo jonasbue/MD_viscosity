@@ -991,8 +991,13 @@ def test_virial_coefficients(n, B):
     plt.ylim((-6,5))
     plt.show()
 
+#####################################################
+# Any equilibrium property can be computed from     #
+# derivatives of the Helmholtz free energy.         #
+# The functions below perform such computations.    #
+#####################################################
 
-def dF_drho(f, sigma, x, rho, T):
+def dF_drho(f, sigma, x, rho, T, h=0.01):
     """ 
         General numerical differentiation function.
         Input:
@@ -1000,10 +1005,55 @@ def dF_drho(f, sigma, x, rho, T):
         Output:
             df:         Estimated value of df/dx.
     """
-    h = 0.01
     df = (f(sigma, x, rho+h, temp=T) - f(sigma, x, rho, temp=T))/h
     return df
 
 
+def dF_dtau(f, sigma, x, rho, T, h=0.01):
+    """ 
+        Numerical differentiation function.
+        Returns dF/dtau, where F is a function 
+        (Helmholtz free energy, though any function
+        f(sigma, x, rho) will work), and tau is the 
+        inverse temperature (1/temp).
+        Input:
+            f:          function
+        Output:
+            df:         Estimated value of df/dx.
+    """
+    # The T**2 comes from the chain rule. 
+    # dF/dtau = dF/dT * dT/dtau = dF/dT * (-1/tau**2)
+    df = -T**2 * (f(sigma, x, rho, temp=T+h) - f(sigma, x, rho, temp=T))/h
+    return df
+
+
 def get_Z_from_F(F, sigma, x, rho, T):
+    """
+        From a Helmholts free energy, computes the compressibility factor.
+    """
     return 1 + rho*dF_drho(F, sigma, x, rho, T)
+
+def get_internal_energy(F, sigma, x, rho, T):
+    """
+        From a Helmholts free energy, computes the internal energy,
+        which is the total potential energy of a system.
+    """
+    return dF_dtau(F, sigma, x, rho, T)/T
+
+def get_rdf_from_F(F, sigma, x, rho, T, N=1000):
+    """
+        From a Helmholts free energy, computes the RDF at contact.
+    """
+    U = get_internal_energy(F, sigma, x, rho, T)
+    Z = get_Z_from_F(F, sigma, x, rho, T)
+    N = 3000
+    sigma = sigma.flatten()
+    return (Z - 1 - U/N/T) * 3/(2*np.pi*rho*sigma**3)
+
+def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0):
+    def g(pf): 
+        rho = pf_to_rho(sigma, x, pf)
+        return get_rdf_from_F(F, sigma, x, rho, T)
+    pf = rho_to_pf(sigma, x, rho)
+    eta = enskog(pf, sigma.flatten(), T, m, g, k=1.0)
+    return eta
