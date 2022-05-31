@@ -1,5 +1,4 @@
-#########################################################
-# This file contains two large functions that compute   #
+######################################################### # This file contains two large functions that compute   #
 # the viscosity from a Müller-Plathe experiment.        #
 #########################################################
 
@@ -7,7 +6,6 @@ import numpy as np
 import convert
 import theory
 import files
-import tests
 import utils
 import regression
 import save

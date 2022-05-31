@@ -11,8 +11,6 @@ import sys
 import utils
 import constants
 from scipy.special import gamma, factorial
-import matplotlib.pyplot as plt
-#import tests
 
 
 def enskog_2sigma(pf, sigma_1, T, m, rdf, k=1.0, sigma_2=1.0):
@@ -509,11 +507,12 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     n, m = 2, 6 # Range of coefficients to include
     for i in range(n,m+1):
         b += rho**(i-2) * B(i, T, n)
-    # C_7,...,C_17 are given in the paper
+    # C_7,...,C_16 are given in the paper
     c = 0           # The total value of the series
-    n, m = 7, 9    # Range of coefficients to include
-    for i in range(n,m+1):
-        c += rho**(i-2) * C(i, T, n)
+    #n, m = 7, 16   # Range of coefficients to include
+    # Explodes if m > 7.
+    #for i in range(n,m+1):
+    #    c += rho**(i-2) * C(i, T, n)
     Ar_01 = rho * (b + c)
     Z = 1 + Ar_01
     return Z
@@ -539,7 +538,10 @@ def Z_thol(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     n, t, d, l, eta, beta, gamma, epsilon = constants.get_EOS_parameters("thol")
     # Should it be 1 or Z_HS? Discuss with supervisors.
     Z = 1 # Z_HS(sigma, x, rho)
-    tau = 1/temp
+    T_c = constants.get_T_c()
+    rho_c = constants.get_rho_c()
+    tau = T_c/temp
+    rho = rho/rho_c
     for i in range(0,6):
         Z += n[i] * d[i]*rho**d[i] * tau**t[i]
     for i in range(6,12):
@@ -571,13 +573,13 @@ def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     """
     
     c, m, n, p, q = constants.get_EOS_parameters("mecke")
-    Z = Z_HS(sigma, x, rho)
+    Z = Z_HS(sigma, x, rho, temp=temp)
     rho_c = constants.get_rho_c()
     T_c = constants.get_T_c()
     rho = rho/rho_c     # This EOS uses rho and T normalized by
     T = temp/T_c        # the critical temperature and density.
-    for i in range(2):
-        Z += rho*c[i]*T**m[i]*n[i] * np.exp(p[i]*rho**q[i]) * (
+    for i in range(len(c)):
+        Z += rho * c[i]*T**m[i]*n[i] * np.exp(p[i]*rho**q[i]) * (
                 rho**(n[i]-1) + p[i]*q[i]*rho**(q[i]-1)
             )
     return Z
@@ -613,18 +615,20 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     c = (9/8) * rho*v_eff*np.exp(-1/T)
 
     p_WCA = rho*T*(rho*B_WCA/(1-rho*v_eff)**2 + 2*(rho*v_eff)**2/(1-rho*v_eff)**3)
-    p_dis = rho**2*T*(B_LJ - B_WCA) * (1+c)
+    p_dis = rho**2*T*(B_LJ - B_WCA)
+    # This works better in the two-phase region
+    #p_dis = rho**2*T*(B_LJ - B_WCA) * (1+c)
     p = rho*T + p_WCA + p_dis
     Z = p/(rho*T)
     return Z
 
-#tests.test_eos()
 
 # LJ EOSes to implement:
 # N     Name                    Implemented?    Working?
+# 0.    Boublik and Nezbeda     Yes             No? 
 # 1.    Kolafa and Nezbeda      Yes             Yes 
-# 2.    Gottschalk              Yes             Yes
-# 3.    Thol                    Yes             No (low density limit incorrect)
+# 2.    Gottschalk              Yes             No (high order terms explode)
+# 3.    Thol                    Yes             No (all terms -> 0)
 # 4.    Mecke                   Yes             Yes 
 # 5.    Hess                    Yes             Yes (badly)
 
@@ -663,17 +667,16 @@ def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
     C_ij, C_d_hBH, C_delta_B2, gamma = constants.get_EOS_parameters("kolafa")
     a = F_HS(sigma, x, rho, temp=temp)
     #delta_B comes from eq. 29 in the paper, with coefficients from above
-    def f(T):
+    def delta_B(T):
         s = 0
         for i in range(-7,1): # 1 is not included.
             s += C_delta_B2[i]*T**(i/2)
         return s + C_d_hBH[2]*np.log(T)
-    delta_B = f(temp)
-    b = np.exp(-gamma*rho**2)*rho*temp*delta_B
+    b = np.exp(-gamma*rho**2)*rho*temp*delta_B(temp)
 
-    c = 0
     # The indices that are not defined in the paper
     # correspond to a zero in the array of coefficients
+    c = 0
     for i in range(-4,1):
         for j in range(0,7):
             c += C_ij[i,j]*temp**(i/2)*rho**j 
@@ -732,11 +735,12 @@ def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
     n, m = 2, 6 # Range of coefficients to include
     for i in range(n,m+1):
         b += rho**(i-1)/(i-1) * B(i, T, n)
-    # C_7,...,C_17 are given in the paper
+    # C_7,...,C_16 are given in the paper
     c = 0           # The total value of the series
-    n, m = 7, 16    # Range of coefficients to include
-    for i in range(n,m+1):
-        c += rho**(i-1)/(i-1) * C(i, T, n)
+    #n, m = 7, 16   # Range of coefficients to include
+    ## Explodes to -inf if m > 7
+    #for i in range(n,m+1):
+    #    c += rho**(i-1)/(i-1) * C(i, T, n)
     A = b + c
     return A
 
@@ -759,27 +763,27 @@ def F_thol(sigma, x, rho, temp=1.0, **kwargs):
     """
 
     n, t, d, l, eta, beta, gamma, epsilon = constants.get_EOS_parameters("thol")
-    tau = 1/temp
+    T_c = constants.get_T_c()
+    rho_c = constants.get_rho_c()
+    tau = T_c/temp
+    rho = rho/rho_c
 
     A = np.log(rho) + 1.5*np.log(tau) - 1.515151515*tau + 6.262265814
     for i in range(0,6):
         a = n[i] * rho**d[i] * tau**t[i]
         A += a
-        print(np.round(a, 3))
     for i in range(6,12):
         a = n[i]*tau**t[i] * rho**d[i] * np.exp(-rho**l[i]) 
         A += a
-        print(np.round(a, 3))
     for i in range(12,23):
         a = n[i] * tau**t[i] * rho**d[i] * np.exp(
                 -eta[i]*(rho-epsilon[i])**2 - beta[i]*(tau-gamma[i])**2
             ) 
         A += a
-        print(np.round(a, 3))
     return A
 
 
-def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
+def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
     """ Computes the Helmholtz free energy of a Lennard-Jones fluid, 
         using the EOS of Mecke et al. (1996).
         Validity range: 
@@ -797,16 +801,36 @@ def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     """
     
     c, m, n, p, q = constants.get_EOS_parameters("mecke")
-    A = F_HS(sigma, x, rho)
+    A = F_HS(sigma, x, rho, temp=temp)
     rho_c = constants.get_rho_c()
     T_c = constants.get_T_c()
     rho = rho/rho_c     # This EOS uses rho and T normalized by
     T = temp/T_c        # the critical temperature and density.
-    for i in range(2):
+    for i in range(len(c)):
         A += c[i]*T**m[i] * rho**n[i] * np.exp(p[i]*rho**q[i])
     return A
 
 
+def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
+    T = temp
+    # Effective volume. Slightly different from 
+    # the HS volume, due to soft potential.
+    v_eff = (np.pi/6)*sigma**3 * np.sqrt(2/np.sqrt(1 + T))
+    v_eff = v_eff[0]        # This EOS is not defined for mixtures, 
+                            # so mixing sigmas is not relevant.
+    # Virial coefficients:
+    # Use Gottschalk's expression for the second virial coefficient of the LJ fluid
+    # Find an expression for the second virial coefficient of the WCA fluid
+    B_WCA = B2_WCA(T)  # From Elliott et al.
+    B_LJ = B2_LJ(T)    # From Gottschalk
+    c = (9/8) * rho*v_eff*np.exp(-1/T)
+
+    f_WCA = T*(rho*B_WCA/(1-rho*v_eff) + ((rho*v_eff)/(1-rho*v_eff))**2)
+    f_dis = rho*T*(B_LJ - B_WCA)
+    # This works better in the two-phase region
+    #f_dis = rho*T*(B_LJ - B_WCA) * (1+c) 
+    F = f_WCA + f_dis
+    return F
 
 ##############################################################
 ## Radial distribution functions                            ##
@@ -977,19 +1001,19 @@ def B2_WCA(T):
     )**(3/24)
     return B
 
-def test_virial_coefficients(n, B):
-    """ 
-        Plots virial coefficients as functions of inverse temperature.
-        Needs to be called from within EOS function.
-    """
-    tau = np.linspace(0.001,1.4,100)
-    a = 2
-    for i in range(a,a+n):
-        coeff = np.array([B(i, 1/t, n) for t in tau] )
-        plt.plot(tau, coeff, "-", label=f"$B_{i}$")
-    plt.legend()
-    plt.ylim((-6,5))
-    plt.show()
+#def test_virial_coefficients(n, B):
+#    """ 
+#        Plots virial coefficients as functions of inverse temperature.
+#        Needs to be called from within EOS function.
+#    """
+#    tau = np.linspace(0.001,1.4,100)
+#    a = 2
+#    for i in range(a,a+n):
+#        coeff = np.array([B(i, 1/t, n) for t in tau] )
+#        plt.plot(tau, coeff, "-", label=f"$B_{i}$")
+#    plt.legend()
+#    plt.ylim((-6,5))
+#    plt.show()
 
 #####################################################
 # Any equilibrium property can be computed from     #
@@ -997,7 +1021,7 @@ def test_virial_coefficients(n, B):
 # The functions below perform such computations.    #
 #####################################################
 
-def dF_drho(f, sigma, x, rho, T, h=0.01):
+def dF_drho(f, sigma, x, rho, T, h=0.0001):
     """ 
         General numerical differentiation function.
         Input:
@@ -1009,7 +1033,7 @@ def dF_drho(f, sigma, x, rho, T, h=0.01):
     return df
 
 
-def dF_dtau(f, sigma, x, rho, T, h=0.01):
+def dF_dtau(f, sigma, x, rho, T, h=0.0001):
     """ 
         Numerical differentiation function.
         Returns dF/dtau, where F is a function 
@@ -1027,25 +1051,38 @@ def dF_dtau(f, sigma, x, rho, T, h=0.01):
     return df
 
 
-def get_Z_from_F(F, sigma, x, rho, T):
+def get_Z_from_F(F, sigma, x, rho, T, method=""):
     """
         From a Helmholts free energy, computes the compressibility factor.
     """
-    return 1 + rho*dF_drho(F, sigma, x, rho, T)
+    if method=="kolafa":
+        # This calculation is for the free energy per particle
+        # and is used in Kolafa and Hess
+        return 1+rho*dF_drho(F, sigma, x, rho, T)/T
+    if method=="thol":
+        # This method is used by Thol.
+        return rho*dF_drho(F, sigma, x, rho, T)
+    else:
+        # This method is used by Gottschalk and Mecke.
+        return 1+rho*dF_drho(F, sigma, x, rho, T)
 
-def get_internal_energy(F, sigma, x, rho, T):
+def get_internal_energy(F, sigma, x, rho, T, method=""):
     """
         From a Helmholts free energy, computes the internal energy,
         which is the total potential energy of a system.
     """
-    return dF_dtau(F, sigma, x, rho, T)/T
+    if method=="kolafa":
+        return 1+dF_dtau(F, sigma, x, rho, T)/T
+    if method=="thol":
+        return dF_dtau(F, sigma, x, rho, T)/T
+    return 1+dF_dtau(F, sigma, x, rho, T)
 
-def get_rdf_from_F(F, sigma, x, rho, T, N=1000):
+def get_rdf_from_F(F, sigma, x, rho, T, N=1000, method=""):
     """
         From a Helmholts free energy, computes the RDF at contact.
     """
-    U = get_internal_energy(F, sigma, x, rho, T)
-    Z = get_Z_from_F(F, sigma, x, rho, T)
+    U = get_internal_energy(F, sigma, x, rho, T, method=method)
+    Z = get_Z_from_F(F, sigma, x, rho, T, method=method)
     N = 3000
     sigma = sigma.flatten()
     return (Z - 1 - U/N/T) * 3/(2*np.pi*rho*sigma**3)

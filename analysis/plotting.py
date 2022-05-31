@@ -80,6 +80,10 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         t = t/nm
         err = err/nm
         plt.ylabel(f"{y_name}/{theory_name[0]}")
+    print(x.shape)
+    print(y.shape)
+    print(t.shape)
+    print(err.shape)
     plt.errorbar(x, y, yerr=err, fmt=pltstr, label=f"{y_name}, numerical")
     fmt = ["--x", ":v", "-.s", "--*", ":+"]
     for i in range(len(theory_name)):
@@ -143,7 +147,7 @@ def search_for_configs(filename):
 
 
 #variable_names = [         "pf",   "N",    "m",    "T", "sigma", "cutoff"]
-system_config = np.array([4.0e-1, 3.0e+3, 1.0e+0, 1.5e+00, 1.0e+00, 6.75e+0])
+system_config = np.array([4.0e-1, 3.0e+3, 1.0e+0, 1.0e+00, 1.0e+00, 6.75e+0])
 lit_filename = "data/literature/thol_2016.csv"
 norm=True
 
@@ -179,7 +183,7 @@ if "rdf" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "g_sigma", "RDF_LJ", system_config, "cutoff", pltstr="o-", norm=False)
+            plot_result(path, filename, "pf", "g_sigma", ["RDF_LJ"], system_config, "cutoff", pltstr="o-", norm=False)
             #plot_literature_results(lit_filename, system_config)
             plt.legend()
             #plt.show()
