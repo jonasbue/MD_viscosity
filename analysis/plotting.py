@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import termplotlib as tpl
 import numpy as np
 import pandas as pd
+import os
 #import regression
 #import viscosity
 #import eos
@@ -80,22 +81,19 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         t = t/nm
         err = err/nm
         plt.ylabel(f"{y_name}/{theory_name[0]}")
-    print(x.shape)
-    print(y.shape)
-    print(t.shape)
-    print(err.shape)
-    plt.errorbar(x, y, yerr=err, fmt=pltstr, label=f"{y_name}, numerical")
+    plt.errorbar(x, y, yerr=err, fmt=pltstr, label=f"{y_name}, {T}")
     fmt = ["--x", ":v", "-.s", "--*", ":+"]
     for i in range(len(theory_name)):
-        plt.plot(x, t[i], fmt[i], label=theory_name[i]+", theoretical")
+        plt.plot(x, t[i], fmt[i], label=theory_name[i]+"")
     if lit_filename:
         plot_literature_results(lit_filename, system_config, t[0], norm)
     plt.legend()
-    savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}.png"
+    savename = f"figures/lj_{y_name}({x_name})_m_{m}_T_{T}_sigma_{s}.png"
     if norm: 
-        savename = f"figures/lj_{y_name}({x_name})_N_{N}_m_{m}_T_{T}_sigma_{s}_normalized.png"
+        savename = f"figures/lj_{y_name}({x_name})_m_{m}_T_{T}_sigma_{s}_normalized.png"
     plt.savefig(savename)
-    plt.show()
+    #plt.show()
+    plt.close()
 
 def plot_vs_literature(system_config, fluid_name, data_path):
     # Non-general code. Under construction.
@@ -166,13 +164,13 @@ if "eos" in sys.argv:
                 "Z",
                 [
                     "EOS_kolafa",
-                    "EOS_mecke",
+                    #"EOS_mecke",
                     "EOS_thol",
                     "EOS_gottschalk",
-                    "EOS_hess"
+                    #"EOS_hess"
                 ],
                 system_config,
-                "cutoff",
+                "cutoff", "N",
                 pltstr="ko-",
                 lit_filename=lit_filename,
                 norm=norm
@@ -198,7 +196,7 @@ if "visc" in sys.argv:
                 filename,
                 "pf",
                 "viscosity",
-                ["enskog_RDF_PY", "enskog_RDF_LJ"],
+                ["enskog_RDF_F_thol", "enskog_RDF_LJ"],
                 system_config,
                 "cutoff",
                 pltstr="ko-",
@@ -233,7 +231,7 @@ if "all" in sys.argv:
             #plot_literature_results(lit_filename, system_config)
 if "rdf-of-r" in sys.argv:
     path = f"data/{data_name}/"
-    filenames = files.get_all_filenames(path)[:,3]
+    filenames = [f for f in os.listdir(path) if files.get_filetype(f)=="rdf"]
     for filename in filenames:
         f = path+filename
         system_info = files.read_filename(path+f)
@@ -245,13 +243,12 @@ if "rdf-of-r" in sys.argv:
         plt.legend("$g(r)$")
         plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}")
         savename = f"figures/rdf/{filename[:-4]}.png"
-        if norm: 
-            savename = f"figures/rdf/{filename[:-4]}_normalized.png"
         plt.savefig(savename)
         plt.close()
 if "vel" in sys.argv:
     path = f"data/{data_name}/"
-    filenames = files.get_all_filenames(path)[:,4]
+    print(files.get_all_filenames(path))
+    filenames = files.get_all_filenames(path)[:,2]
     for f in filenames:
         system_info = files.read_filename(path+f)
         data = pd.read_csv(path+f, delimiter=", ", engine="python")

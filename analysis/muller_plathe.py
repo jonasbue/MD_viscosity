@@ -1,4 +1,5 @@
-######################################################### # This file contains two large functions that compute   #
+#########################################################
+# This file contains two large functions that compute   #
 # the viscosity from a Müller-Plathe experiment.        #
 #########################################################
 
@@ -53,6 +54,9 @@ def compute_all_viscosities(
             computation_params, 
         )
 
+        # theoretical_viscosity is the Enskog equation (or similar)
+        # rdf can be both an actual RDF or a Helmholtz free energy 
+        # from which the RDF is computed within get_viscosity_from_C()
         theoretical_value = [theory.get_viscosity_from_C(C, theoretical_viscosity, rdf) for rdf in rdf_list]
         values = np.array([eta, error])
         values = np.append(values, theoretical_value)

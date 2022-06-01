@@ -36,7 +36,7 @@ def get_all_filenames(directory):
     return files
 
 
-def sort_files(filenames, packing_fractions, rdf=False):
+def sort_files(filenames, packing_fractions, ignore_rdf=True, ignore_dump=True):
     """
         Given a list of filenames, returns a list containing
         only the LAMMPS output files (fix, log, dump), sorted
@@ -73,8 +73,9 @@ def sort_files(filenames, packing_fractions, rdf=False):
                         rdf.append(f)
                     elif filetype == "vel":
                         vel.append(f)
-    if len(dump):
-        if rdf:
+    # This is a mess. Needs fixing.
+    if not ignore_dump and len(dump):
+        if not ignore_dump and rdf:
             assert len(rdf) == len(fix), f"ERROR. There are {len(rdf)} rdf files, while there are {len(fix)} fix files."
             files = np.array([fix, log, dump, rdf], dtype=str)
             if vel:
@@ -83,7 +84,7 @@ def sort_files(filenames, packing_fractions, rdf=False):
             files = np.array([fix, log, dump], dtype=str)
     else:
         assert len(fix) == len(log), "A file is missing!"
-        files = np.array([fix, log], dtype=str)
+        files = np.array([fix, log, vel], dtype=str)
     files = np.sort(files)
     return files.transpose()
 

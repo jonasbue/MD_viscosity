@@ -50,7 +50,7 @@ def enskog(pf, sigma, T, m, rdf, k=1.0):
 def zero_density_viscosity(m, sigma, T, k):
     return 5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
 
-def get_viscosity_from_C(C, viscosity, rdf):
+def get_viscosity_from_C(C, viscosity, rdf, helmholts=False):
     pf = C["PF"]
     T = C["TEMP"]
     N_list = utils.get_component_lists(C, "N")
@@ -58,8 +58,15 @@ def get_viscosity_from_C(C, viscosity, rdf):
     mass_list = utils.get_component_lists(C, "MASS")
     x = N_list/np.sum(N_list)
     visc = np.zeros(C["ATOM_TYPES"])
+    sigma = get_sigma(sigma_list)
     for i in range(len(visc)):
-        visc[i] = viscosity(pf, sigma_list[i], T, mass_list[i], rdf)
+        # If the rdf function is not an RDF but a Helmholtz free energy,
+        # use a different function to compute viscosity.
+        if rdf.__name__[0] == "F":
+            rho = pf_to_rho(sigma, x, pf)
+            visc[i] = get_viscosity_from_F(rdf, sigma_list[i], x, rho, T, N=N_list[0], m=mass_list[0])
+        else:
+            visc[i] = viscosity(pf, sigma_list[i], T, mass_list[i], rdf)
     return visc
 
 def get_thorne_from_C(C, rdf):
@@ -335,11 +342,20 @@ def partial_pf(sigma, x, rho):
 
 
 def pf_to_rho(sigma, x, pf):
-    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    #rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    if sigma.ndim == 2:
+        rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    #if sigma.ndim == 1:
+    #    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    if sigma.ndim == 0:
+        rho = 6*pf/np.pi/np.sum(x*sigma**3)
     return rho
 
 def rho_to_pf(sigma, x, rho):
-    pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
+    if sigma.ndim == 2:
+        pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
+    if sigma.ndim == 0:
+        pf = rho / (6/np.pi/np.sum(x*sigma**3))
     return pf
 
 def rho_to_pf_LJ(sigma, x, rho, T):
@@ -1092,5 +1108,6 @@ def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0):
         rho = pf_to_rho(sigma, x, pf)
         return get_rdf_from_F(F, sigma, x, rho, T)
     pf = rho_to_pf(sigma, x, rho)
+    # enskog() can be replaced with other viscosity equations.
     eta = enskog(pf, sigma.flatten(), T, m, g, k=1.0)
     return eta

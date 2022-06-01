@@ -33,7 +33,7 @@ save_path_list = ["lj"]
 computation_params = {
     "particle_types": 1,
     "cut_fraction"  : 0.3,
-    "step" 		    : 6,
+    "step" 		    : 4,
     "per_time"		: False,
 }
 
@@ -58,7 +58,7 @@ def main():
 
         if "visc" in sysargs:
             compute_viscosity_from_directory(
-                path, get_savename("visc"), get_rdf_list(), computation_params, theoretical_viscosity)
+                path, get_savename("visc"), get_helmholtz_list(), computation_params, theoretical_viscosity)
         if "eos" in sysargs:
             compute_eos_from_directory(
                 path, get_savename("eos"), get_eos_list(), computation_params)
@@ -137,13 +137,15 @@ def compute_velcity_profile_from_directory(
         computation_params
     ):
     # Compute all the viscosities in directory
-    data = regression.compute_all_velocity_profiles(directory, computation_params)
-    data_name = "z, vx"
-    save.save_simulation_data(savename, data, data_name=data_name)
+    # Saving is done within this function.
+    regression.compute_all_velocity_profiles(directory, computation_params)
 
 def get_rdf_list():
     return [theory.rdf_PY, theory.rdf_CS, theory.rdf_LJ]
 
+def get_helmholtz_list():
+    #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
+    return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.rdf_LJ]
 
 def get_eos_list():
     return [

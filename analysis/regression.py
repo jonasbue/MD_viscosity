@@ -31,6 +31,9 @@ def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_
     else:
         N = number_of_chunks
         T = len(t)
+        if len(z) != T*N:
+            z = z[-T*N:]
+            vx = vx[-T*N:]
         z = np.reshape(z, (T,N))
         vx = np.reshape(vx, (T,N))
 
@@ -196,12 +199,24 @@ def compute_all_velocity_profiles(directory, computation_params):
         # This is done in the same way as in viscosity
         # computation.
         vx, z = get_velocity_profile(fix_name)
+        C, Lz, t, A, Ptot, number_of_chunks = files.extract_simulation_variables(log_name, fix_name)
+        def remove_minimize_steps(a, T, N):
+            if len(a) != T*N:
+                a = z[-T*N:]
+            return a
+        N = number_of_chunks
+        T = len(t)
+        vx = remove_minimize_steps(vx, T, N)
+        z = remove_minimize_steps(z, T, N)
         vx_l, vx_u, z_l, z_u = isolate_slabs(vx, z)
+        #vx_l = remove_minimize_steps(vx_l, T, N//2)
+        #vx_u = remove_minimize_steps(vx_u, T, N//2)
+        #z_l = remove_minimize_steps(z_l, T, N//2)
+        #z_u = remove_minimize_steps(z_u, T, N//2)
         reg_l = velocity_profile_regression(vx_l, z_l)
         reg_u = velocity_profile_regression(vx_u, z_u)
 
         # Save regression lines
-        C, Lz, t, A, Ptot, number_of_chunks = files.extract_simulation_variables(log_name, fix_name)
         z = np.unique(z)
         line_l = reg_l.slope*np.where(z <= np.amax(z/2), z, np.nan) + reg_l.intercept
         line_u = reg_u.slope*np.where(z >= np.amax(z/2), z, np.nan) + reg_u.intercept
@@ -218,8 +233,8 @@ def compute_all_velocity_profiles(directory, computation_params):
         # for each chunk is plotted. The difference is almost only
         # a matter of principle. The viscosity is the same either way,
         # but computation time is slightly (noticably) different.
-        values = np.array([z, vx, line_l, line_u]).T
-        np.savetxt(savename, values, delimiter=", ", header="z, vx, reg_lower, reg_upper", comments="")
+        values = np.array([z, vx, line_l, line_u], dtype="object").T
+        np.savetxt(savename, values, delimiter=", ", header="z, vx, reg_lower, reg_upper", comments="", fmt="%s")
     print("")
     return data
 
