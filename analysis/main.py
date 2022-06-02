@@ -243,53 +243,6 @@ def compute_all_theoretical_values(
         save.add_column_to_file(savename, data, name)
 
 
-def old(
-        directory,
-        savename,
-        eos_list,
-        rdf_list,
-        helmholtz_list,
-        function=None
-    ):
-    for Z in eos_list:
-        for i in range(len(C)):
-            c = C[i] 
-            utils.status_bar(i, len(C))
-            sigma, x, pf = np.array([c[3]]), np.array([1]), c[0]
-            rho = theory.pf_to_rho(sigma, x, pf)
-            data[i] = Z(sigma, x, rho, temp=T)
-        name = save.get_data_name([Z]).replace(",", "").strip()
-        save.add_column_to_file(savename, data, name)
-    for g in rdf_list:
-        for i in range(len(C)):
-            c = C[i] 
-            utils.status_bar(i, len(C))
-            sigma, x, pf = np.array([c[3]]), np.array([1]), c[0]
-            rho = theory.pf_to_rho(sigma, x, pf, temp=T)
-            data[i] = g(sigma, x, rho)
-        name = save.get_data_name([g]).replace(",", "").strip()
-        save.add_column_to_file(savename, data, name)
-    for F in helmholtz_list:
-        for i in range(len(C)):
-            c = C[i] 
-            utils.status_bar(i, len(C))
-            sigma, x, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
-            rho = theory.pf_to_rho(sigma, x, pf)
-            data[i] = theory.get_rdf_from_F(F, sigma, x, rho, T)
-        name = save.get_data_name([F]).replace(",", "").strip()
-        save.add_column_to_file(savename, data, name)
-    for F in helmholtz_list:
-        for i in range(len(C)):
-            c = C[i] 
-            utils.status_bar(i, len(C))
-            sigma, x, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
-            rho = theory.pf_to_rho(sigma, x, pf)
-            data[i] = theory.get_viscosity_from_F(F, sigma, x, rho, T)
-        name = "enskog_"+save.get_data_name([F]).replace(",", "").strip()
-        save.add_column_to_file(savename, data, name)
-
-
-
 def get_rdf_list():
     return [theory.rdf_PY, theory.rdf_CS, theory.rdf_LJ]
 
