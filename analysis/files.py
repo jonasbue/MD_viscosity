@@ -16,6 +16,7 @@ import logging
 import sys
 import theory
 import tests
+import save
 
 log = logging.getLogger("__main__." + __name__)
 log.addHandler(logging.StreamHandler(sys.stdout))
@@ -387,4 +388,23 @@ def extract_simulation_variables(log_filename, fix_filename):
     tests.assert_chunk_number(N_chunks, constants)
     return constants, Lz, t, A, Ptot, N_chunks 
 
+
+def search_for_configs(filename):
+    filename = f"data/processed/{filename}"
+    configs = pd.read_csv(filename, sep=", ", engine="python")
+    cols = configs.columns[len(system_config):]
+    configs = configs.drop(columns=cols)
+    configs = configs.drop_duplicates(subset=configs.columns[1:len(system_config)-1])
+    return configs
+
+
+def get_all_configs(directory):
+    log_files = get_all_filenames(directory)[:,1]
+    config_array = np.zeros((len(log_files), len(save.get_system_config(number_of_components=1))))
+    for (i, f) in enumerate(log_files):
+        log = f"{directory}/{f}"
+        C = convert.extract_constants_from_log(log)
+        c = save.get_system_config(C)
+        config_array[i,:] = c
+    return config_array
 

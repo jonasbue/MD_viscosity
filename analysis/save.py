@@ -4,6 +4,7 @@
 # as a csv file, so the results can be used by pgfplots.    #
 #############################################################
 import numpy as np
+import pandas as pd
 
 import theory
 
@@ -36,6 +37,7 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.F_gottschalk : "RDF_F_gottschalk",
         theory.F_mecke      : "RDF_F_mecke",
         theory.F_hess       : "RDF_F_hess",
+        theory.get_viscosity_from_F : "enskog_",
     }
     if viscosity_function:
         data_name = "".join([f", {function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])
@@ -49,11 +51,10 @@ def add_column_to_file(filename, new_column_data, new_column_name, fmt="%.3e"):
     """ Takes a (csv) file and a 1D np.array, and appends 
         the contents of the array as a new column to the file.
     """
-    # TODO: Test this function
     df = pd.read_csv(filename)
-    df[new_column_name] = new_column_data
-    # TODO: Add some assertions
-    df.to_csv(filename, float_format=fmt)
+    df.insert(len(df.columns), new_column_name, new_column_data)
+    # Consider np savetxt, for the same strucure as in all other files.
+    df.to_csv(filename, float_format=fmt, sep=",", index=False)
 
 
 def save_simulation_data(filename, data, number_of_components=1, data_name="viscosity", fmt="%.3e"):
@@ -112,6 +113,7 @@ def get_system_config(C=None, pf=None, number_of_components=None):
         packing fraction, particle number and mass etc.
         To be used in datafiles.
     """
+    #parameters = np.zeros(1)
     if C != None:
         number_of_components = C["ATOM_TYPES"]
         if number_of_components == 1:
@@ -134,7 +136,8 @@ def get_system_config(C=None, pf=None, number_of_components=None):
             if pf == None:
                 pf = C["PF"]
             parameters = np.array([pf, N1, N2, m1, m2, T, sigma1, sigma2])
-    else:
+    # If no arguments, return empty array with corect size:
+    else: 
         if number_of_components == 1:
             # NOTE: This should be 4 normally.
             # TODO: Make versatile functionality here, based on required config.

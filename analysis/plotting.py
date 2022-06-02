@@ -278,3 +278,16 @@ if "mix" in sys.argv:
         plt.plot(pf, visc/theory, "o")
         plt.plot(pf, theory/theory, "x")
         plt.show()
+if "theory" in sys.argv:
+    path = "data/processed/"
+    data_name = "lj"
+    filenames = [f"theory_eos_of_T_{data_name}.csv"] 
+    for f in filenames:
+        data = pd.read_csv(path+f, delimiter=",", engine="python")
+        x = data["pf"]
+        y = data["EOS_kolafa"]
+        theory = data["EOS_thol"]
+        plt.plot(x, y/theory, "o")
+        plt.plot(x, theory/theory, "x")
+        plt.ylim((0.5,1.5))
+        plt.show()

@@ -31,6 +31,7 @@ def enskog_2sigma(pf, sigma_1, T, m, rdf, k=1.0, sigma_2=1.0):
     return eta
 
 
+# TODO: Rework arguments to fit all other theory functions.
 def enskog(pf, sigma, T, m, rdf, k=1.0):
     """ Returns the theoretical value of the 
         viscosity for a given packing fraction.
@@ -342,7 +343,7 @@ def partial_pf(sigma, x, rho):
 
 
 def pf_to_rho(sigma, x, pf):
-    #rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
+    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
     if sigma.ndim == 2:
         rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
     #if sigma.ndim == 1:
@@ -352,6 +353,7 @@ def pf_to_rho(sigma, x, pf):
     return rho
 
 def rho_to_pf(sigma, x, rho):
+    pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
     if sigma.ndim == 2:
         pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
     if sigma.ndim == 0:
@@ -866,13 +868,13 @@ def get_rdf_from_C(C, g, i=1, j=1):
 
 
 
-def rdf_CS(pf, *args):
+def rdf_CS(pf, *args, **kwargs):
     xi = pf
     #return (1-xi/2)/(1-xi)**2
     return 1/(1-xi) + 3/2*xi/(1-xi)**2 + 1/2*xi**2/(1-xi)**3
 
 
-def rdf_PY(pf, *args):
+def rdf_PY(pf, *args, **kwargs):
     """ Returns the thoretical radial distribution 
         function, as given in Pousaneh and de Wijn's paper.
 
@@ -881,13 +883,13 @@ def rdf_PY(pf, *args):
     return (1+xi/2)/(1-xi)**2
 
 
-def rdf_SPT_one(pf, *args):
+def rdf_SPT_one(pf, *args, **kwargs):
     xi = pf
     return 1/(1-xi) + 3/2*xi/(1-xi)**2 + 3/4*xi**2/(1-xi)**3
 
 
 
-def rdf_SPT(sigma, x, rho, i, j):
+def rdf_SPT(sigma, x, rho, i, j, **kwargs):
     """ The radial distribution function in a mixture of
         hard sphere gases.
         Inputs:
@@ -906,7 +908,7 @@ def rdf_SPT(sigma, x, rho, i, j):
     return g_ij
 
 
-def rdf_PY_mix(sigma, x, rho, i, j):
+def rdf_PY_mix(sigma, x, rho, i, j, **kwargs):
     xi = partial_pf(sigma, x, rho)
     g_ij = (
         1/(1-xi(3))
@@ -916,7 +918,7 @@ def rdf_PY_mix(sigma, x, rho, i, j):
     return g_ij
 
 
-def rdf_BMCSL(sigma, x, rho, i, j):
+def rdf_BMCSL(sigma, x, rho, i, j, **kwargs):
     xi = partial_pf(sigma, x, rho)
     g_ij = (
         1/(1-xi(3))
@@ -928,7 +930,7 @@ def rdf_BMCSL(sigma, x, rho, i, j):
     return g_ij
 
 
-def rdf_LJ(pf, T=1.0, *args):
+def rdf_LJ(pf, *args, T=1.0, **kwargs):
     """ 
         Gives the RDF (at contact) for a one-component Lennard-Jones fluid,
         as given by Morsali et al. r = 1 gives the RDF at contact.
@@ -1093,15 +1095,15 @@ def get_internal_energy(F, sigma, x, rho, T, method=""):
         return dF_dtau(F, sigma, x, rho, T)/T
     return 1+dF_dtau(F, sigma, x, rho, T)
 
-def get_rdf_from_F(F, sigma, x, rho, T, N=1000, method=""):
+def get_rdf_from_F(F, sigma, x, rho, T, N=3000, method=""):
     """
         From a Helmholts free energy, computes the RDF at contact.
     """
     U = get_internal_energy(F, sigma, x, rho, T, method=method)
     Z = get_Z_from_F(F, sigma, x, rho, T, method=method)
-    N = 3000
     sigma = sigma.flatten()
     return (Z - 1 - U/N/T) * 3/(2*np.pi*rho*sigma**3)
+
 
 def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0):
     def g(pf): 

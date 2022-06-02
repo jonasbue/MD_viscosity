@@ -68,6 +68,52 @@ def main():
         if "vel" in sysargs:
             compute_velcity_profile_from_directory(
                 path, get_savename("vel"), computation_params)
+
+        if "theory" in sysargs:
+            compute_all_theoretical_values(
+                    path,
+                    get_savename("theory_eos_of_pf"),
+                    get_eos_list(),
+                    #get_rdf_list(),
+                    #get_helmholtz_list(),
+                    "pf",
+                    theory_function=None,
+                    xmin=0.01,
+                    xmax=0.51,
+            )
+            compute_all_theoretical_values(
+                    path,
+                    get_savename("theory_eos_of_T"),
+                    get_eos_list(),
+                    #get_rdf_list(),
+                    #get_helmholtz_list(),
+                    "T",
+                    theory_function=None,
+                    xmin=1.3,
+                    xmax=4.0,
+            )
+            compute_all_theoretical_values(
+                    path,
+                    get_savename("theory_visc_of_pf"),
+                    #get_eos_list(),
+                    #get_rdf_list(),
+                    get_helmholtz_list(),
+                    "pf",
+                    theory_function=theory.get_viscosity_from_F,
+                    xmin=0.01,
+                    xmax=0.51,
+            )
+            compute_all_theoretical_values(
+                    path,
+                    get_savename("theory_visc_of_T"),
+                    #get_eos_list(),
+                    #get_rdf_list(),
+                    get_helmholtz_list(),
+                    "T",
+                    theory_function=theory.get_viscosity_from_F,
+                    xmin=1.3,
+                    xmax=4.0,
+            )
         # To make nice plots, it is convenient to save a separate 
         # file of theoretical values, with denser data points than 
         # the numerical data. TODO: Cleanup.
@@ -140,12 +186,118 @@ def compute_velcity_profile_from_directory(
     # Saving is done within this function.
     regression.compute_all_velocity_profiles(directory, computation_params)
 
+
+def compute_all_theoretical_values(
+        directory,
+        savename,
+        equation_list,
+        ordinate_variable,
+        theory_function=None,
+        xmin=0.01,
+        xmax=0.51,
+    ):
+    """
+        Given a directory of lammps output files,
+        compute the theoretical value of EOSs and 
+        RDFs for all the simulated systems. Store
+        the results in one single file.
+    """
+    ordinate_index = 0
+    header = f"pf,N,m,T,sigma,cut"
+    if ordinate_variable == "T":
+        ordinate_index = 3
+        header = f"T,pf,N,m,sigma,cut"
+
+    system_configs = files.get_all_configs(directory)
+    ordinate_variable
+    # Drop packing fraction and remove duplicates
+    # We now have an array of all (N, m, T, sigma, cut) 
+    # that were used to generate the data.
+    system_configs = np.delete(system_configs, ordinate_index, axis=1)
+    system_configs = np.unique(system_configs, axis=0)
+
+    # Now, we can compute every theoretical function in eos_list,
+    # rdf_list, and helmholtz_list with these configurations.
+    x = np.linspace(xmin, xmax)
+    # Join C and pf into one large array of configurations 
+    # Shape: (len(pf)*len(C), 6)
+    C = np.tile(system_configs, (len(x),1))
+    C = np.insert(C, ordinate_index, np.array([np.repeat(x, len(C)//len(x))]), axis=1)
+
+    # For compatibility with pandas, use slightly different conventions to save.
+    np.savetxt(savename, C, header=header, fmt="%.3e", delimiter=",", comments="")
+    data = np.zeros(len(C[:,0]))
+    for eq in equation_list:
+        for i in range(len(C)):
+            c = C[i] 
+            utils.status_bar(i, len(C))
+            # comp_fraction (usually "x") equals one for one-component fluids.
+            # Code needs generalization to work with mulit-component systems.
+            sigma, comp_fraction, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
+            rho = theory.pf_to_rho(sigma, comp_fraction, pf)
+            if theory_function:
+                data[i] = theory_function(eq, sigma, comp_fraction, rho, T)
+            else:
+                data[i] = eq(sigma, comp_fraction, rho, temp=T)
+        name = save.get_data_name([eq], viscosity_function=theory_function).replace(",", "").strip()
+        save.add_column_to_file(savename, data, name)
+
+
+def old(
+        directory,
+        savename,
+        eos_list,
+        rdf_list,
+        helmholtz_list,
+        function=None
+    ):
+    for Z in eos_list:
+        for i in range(len(C)):
+            c = C[i] 
+            utils.status_bar(i, len(C))
+            sigma, x, pf = np.array([c[3]]), np.array([1]), c[0]
+            rho = theory.pf_to_rho(sigma, x, pf)
+            data[i] = Z(sigma, x, rho, temp=T)
+        name = save.get_data_name([Z]).replace(",", "").strip()
+        save.add_column_to_file(savename, data, name)
+    for g in rdf_list:
+        for i in range(len(C)):
+            c = C[i] 
+            utils.status_bar(i, len(C))
+            sigma, x, pf = np.array([c[3]]), np.array([1]), c[0]
+            rho = theory.pf_to_rho(sigma, x, pf, temp=T)
+            data[i] = g(sigma, x, rho)
+        name = save.get_data_name([g]).replace(",", "").strip()
+        save.add_column_to_file(savename, data, name)
+    for F in helmholtz_list:
+        for i in range(len(C)):
+            c = C[i] 
+            utils.status_bar(i, len(C))
+            sigma, x, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
+            rho = theory.pf_to_rho(sigma, x, pf)
+            data[i] = theory.get_rdf_from_F(F, sigma, x, rho, T)
+        name = save.get_data_name([F]).replace(",", "").strip()
+        save.add_column_to_file(savename, data, name)
+    for F in helmholtz_list:
+        for i in range(len(C)):
+            c = C[i] 
+            utils.status_bar(i, len(C))
+            sigma, x, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
+            rho = theory.pf_to_rho(sigma, x, pf)
+            data[i] = theory.get_viscosity_from_F(F, sigma, x, rho, T)
+        name = "enskog_"+save.get_data_name([F]).replace(",", "").strip()
+        save.add_column_to_file(savename, data, name)
+
+
+
 def get_rdf_list():
     return [theory.rdf_PY, theory.rdf_CS, theory.rdf_LJ]
 
+
 def get_helmholtz_list():
     #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-    return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.rdf_LJ]
+    return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk]
+
 
 def get_eos_list():
     return [
