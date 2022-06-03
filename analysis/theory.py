@@ -1105,10 +1105,10 @@ def get_rdf_from_F(F, sigma, x, rho, T, N=3000, method=""):
     return (Z - 1 - U/N/T) * 3/(2*np.pi*rho*sigma**3)
 
 
-def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0):
+def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, method=""):
     def g(pf): 
         rho = pf_to_rho(sigma, x, pf)
-        return get_rdf_from_F(F, sigma, x, rho, T)
+        return get_rdf_from_F(F, sigma, x, rho, T, method=method)
     pf = rho_to_pf(sigma, x, rho)
     # enskog() can be replaced with other viscosity equations.
     eta = enskog(pf, sigma.flatten(), T, m, g, k=1.0)

@@ -32,6 +32,7 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.rdf_LJ       : "RDF_LJ",
         theory.enskog       : "enskog_",
         theory.thorne       : "thorne_",
+        theory.F_CS         : "RDF_F_CS",
         theory.F_kolafa     : "RDF_F_kolafa",
         theory.F_thol       : "RDF_F_thol",
         theory.F_gottschalk : "RDF_F_gottschalk",

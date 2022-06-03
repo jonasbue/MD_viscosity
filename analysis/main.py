@@ -78,6 +78,7 @@ def main():
                     #get_helmholtz_list(),
                     "pf",
                     theory_function=None,
+                    method_list=get_method_list(),
                     xmin=0.01,
                     xmax=0.51,
             )
@@ -88,6 +89,7 @@ def main():
                     #get_rdf_list(),
                     #get_helmholtz_list(),
                     "T",
+                    method_list=get_method_list(),
                     theory_function=None,
                     xmin=1.3,
                     xmax=4.0,
@@ -99,6 +101,7 @@ def main():
                     #get_rdf_list(),
                     get_helmholtz_list(),
                     "pf",
+                    method_list=get_method_list(),
                     theory_function=theory.get_viscosity_from_F,
                     xmin=0.01,
                     xmax=0.51,
@@ -110,6 +113,7 @@ def main():
                     #get_rdf_list(),
                     get_helmholtz_list(),
                     "T",
+                    method_list=get_method_list(),
                     theory_function=theory.get_viscosity_from_F,
                     xmin=1.3,
                     xmax=4.0,
@@ -192,9 +196,11 @@ def compute_all_theoretical_values(
         savename,
         equation_list,
         ordinate_variable,
+        method_list=[],
         theory_function=None,
         xmin=0.01,
         xmax=0.51,
+        resolution=20,
     ):
     """
         Given a directory of lammps output files,
@@ -203,22 +209,32 @@ def compute_all_theoretical_values(
         the results in one single file.
     """
     ordinate_index = 0
+    N_index = 1
     header = f"pf,N,m,T,sigma,cut"
     if ordinate_variable == "T":
         ordinate_index = 3
+        #N_index = 2
         header = f"T,pf,N,m,sigma,cut"
 
     system_configs = files.get_all_configs(directory)
     ordinate_variable
+    # If there are multiple values for N, we can get rid of all but one.
+    # Produces smaller files.
+    N = system_configs[0,N_index]
+    # Set all values of N to the first one.
+    # This does not affect the function values, but makes for smaller files.
+    system_configs[:,N_index] = N #system_configs[:,N_index]==N, N, np.nan axis=0)
+
     # Drop packing fraction and remove duplicates
     # We now have an array of all (N, m, T, sigma, cut) 
     # that were used to generate the data.
     system_configs = np.delete(system_configs, ordinate_index, axis=1)
+
     system_configs = np.unique(system_configs, axis=0)
 
     # Now, we can compute every theoretical function in eos_list,
     # rdf_list, and helmholtz_list with these configurations.
-    x = np.linspace(xmin, xmax)
+    x = np.linspace(xmin, xmax, resolution)
     # Join C and pf into one large array of configurations 
     # Shape: (len(pf)*len(C), 6)
     C = np.tile(system_configs, (len(x),1))
@@ -227,7 +243,7 @@ def compute_all_theoretical_values(
     # For compatibility with pandas, use slightly different conventions to save.
     np.savetxt(savename, C, header=header, fmt="%.3e", delimiter=",", comments="")
     data = np.zeros(len(C[:,0]))
-    for eq in equation_list:
+    for (j, eq) in enumerate(equation_list):
         for i in range(len(C)):
             c = C[i] 
             utils.status_bar(i, len(C))
@@ -236,20 +252,20 @@ def compute_all_theoretical_values(
             sigma, comp_fraction, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
             rho = theory.pf_to_rho(sigma, comp_fraction, pf)
             if theory_function:
-                data[i] = theory_function(eq, sigma, comp_fraction, rho, T)
+                data[i] = theory_function(eq, sigma, comp_fraction, rho, T, method=method_list[j])
             else:
-                data[i] = eq(sigma, comp_fraction, rho, temp=T)
+                data[i] = eq(sigma, comp_fraction, rho, temp=T, method=method_list[j])
         name = save.get_data_name([eq], viscosity_function=theory_function).replace(",", "").strip()
         save.add_column_to_file(savename, data, name)
 
 
 def get_rdf_list():
-    return [theory.rdf_PY, theory.rdf_CS, theory.rdf_LJ]
+    return [theory.rdf_CS, theory.rdf_LJ]
 
 
 def get_helmholtz_list():
     #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-    return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk]
+    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk]
 
 
 def get_eos_list():
@@ -261,5 +277,9 @@ def get_eos_list():
         theory.Z_mecke,
         theory.Z_hess
     ]
+
+
+def get_method_list():
+    return ["kolafa", "thol", "thol", "thol", "kolafa", "kolafa", "kolafa", "kolafa", "kolafa"]
 
 main()
