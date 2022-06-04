@@ -77,8 +77,8 @@ def main():
                     #get_rdf_list(),
                     #get_helmholtz_list(),
                     "pf",
-                    theory_function=None,
-                    method_list=get_method_list(),
+                    #theory_function=theory.get_Z_from_F,
+                    #method_list=get_method_list(),
                     xmin=0.01,
                     xmax=0.51,
             )
@@ -89,7 +89,27 @@ def main():
                     #get_rdf_list(),
                     #get_helmholtz_list(),
                     "T",
-                    method_list=get_method_list(),
+                    #method_list=get_method_list(),
+                    #theory_function=theory.get_Z_from_F,
+                    xmin=1.3,
+                    xmax=4.0,
+            )
+            compute_all_theoretical_values(
+                    path,
+                    get_savename("theory_rdf_of_pf"),
+                    get_rdf_list(),
+                    "pf",
+                    #method_list=get_method_list(),
+                    theory_function=None,
+                    xmin=0.01,
+                    xmax=0.51,
+            )
+            compute_all_theoretical_values(
+                    path,
+                    get_savename("theory_rdf_of_T"),
+                    get_rdf_list(),
+                    "T",
+                    #method_list=get_method_list(),
                     theory_function=None,
                     xmin=1.3,
                     xmax=4.0,
@@ -97,8 +117,6 @@ def main():
             compute_all_theoretical_values(
                     path,
                     get_savename("theory_visc_of_pf"),
-                    #get_eos_list(),
-                    #get_rdf_list(),
                     get_helmholtz_list(),
                     "pf",
                     method_list=get_method_list(),
@@ -109,8 +127,6 @@ def main():
             compute_all_theoretical_values(
                     path,
                     get_savename("theory_visc_of_T"),
-                    #get_eos_list(),
-                    #get_rdf_list(),
                     get_helmholtz_list(),
                     "T",
                     method_list=get_method_list(),
@@ -120,7 +136,7 @@ def main():
             )
         # To make nice plots, it is convenient to save a separate 
         # file of theoretical values, with denser data points than 
-        # the numerical data. TODO: Cleanup.
+        # the numerical data. TODO: Clean up function calls.
         #save_theory(path, filenames, get_savename("theory"))
         #save_rdf(path, filenames, get_savename=("rdf"))
 
@@ -243,30 +259,23 @@ def compute_all_theoretical_values(
     # For compatibility with pandas, use slightly different conventions to save.
     np.savetxt(savename, C, header=header, fmt="%.3e", delimiter=",", comments="")
     data = np.zeros(len(C[:,0]))
+
     for (j, eq) in enumerate(equation_list):
         for i in range(len(C)):
             c = C[i] 
             utils.status_bar(i, len(C))
             # comp_fraction (usually "x") equals one for one-component fluids.
             # Code needs generalization to work with mulit-component systems.
-            sigma, comp_fraction, pf, T = np.array([c[3]]), np.array([1]), c[0], c[2]
+            sigma, comp_fraction, pf, T = np.array([c[4]]), np.array([1]), c[0], c[3]
+            if ordinate_variable == "T":
+                pf, T = c[1], c[0]
             rho = theory.pf_to_rho(sigma, comp_fraction, pf)
             if theory_function:
                 data[i] = theory_function(eq, sigma, comp_fraction, rho, T, method=method_list[j])
             else:
-                data[i] = eq(sigma, comp_fraction, rho, temp=T, method=method_list[j])
+                data[i] = eq(sigma, comp_fraction, rho, temp=T)
         name = save.get_data_name([eq], viscosity_function=theory_function).replace(",", "").strip()
         save.add_column_to_file(savename, data, name)
-
-
-def get_rdf_list():
-    return [theory.rdf_CS, theory.rdf_LJ]
-
-
-def get_helmholtz_list():
-    #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk]
-
 
 def get_eos_list():
     return [
@@ -279,7 +288,16 @@ def get_eos_list():
     ]
 
 
+def get_rdf_list():
+    return [theory.rdf_CS, theory.rdf_LJ]
+
+
+def get_helmholtz_list():
+    #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
+    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess]
+
+
 def get_method_list():
-    return ["kolafa", "thol", "thol", "thol", "kolafa", "kolafa", "kolafa", "kolafa", "kolafa"]
+    return ["kolafa", "kolafa", "thol", "mecke", "gottschalk", "kolafa"]
 
 main()

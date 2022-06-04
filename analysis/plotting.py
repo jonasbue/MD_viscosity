@@ -164,10 +164,10 @@ if "eos" in sys.argv:
                 "Z",
                 [
                     "EOS_kolafa",
-                    #"EOS_mecke",
+                    "EOS_mecke",
                     "EOS_thol",
                     "EOS_gottschalk",
-                    #"EOS_hess"
+                    "EOS_hess"
                 ],
                 system_config,
                 "cutoff", "N",

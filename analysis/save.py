@@ -32,13 +32,14 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.rdf_LJ       : "RDF_LJ",
         theory.enskog       : "enskog_",
         theory.thorne       : "thorne_",
-        theory.F_CS         : "RDF_F_CS",
-        theory.F_kolafa     : "RDF_F_kolafa",
-        theory.F_thol       : "RDF_F_thol",
-        theory.F_gottschalk : "RDF_F_gottschalk",
-        theory.F_mecke      : "RDF_F_mecke",
-        theory.F_hess       : "RDF_F_hess",
+        theory.F_CS         : "F-CS",
+        theory.F_kolafa     : "F-kolafa",
+        theory.F_thol       : "F-thol",
+        theory.F_gottschalk : "F-gottschalk",
+        theory.F_mecke      : "F-mecke",
+        theory.F_hess       : "F-hess",
         theory.get_viscosity_from_F : "enskog_",
+        theory.get_Z_from_F : "EOS_",
     }
     if viscosity_function:
         data_name = "".join([f", {function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])

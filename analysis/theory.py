@@ -51,7 +51,7 @@ def enskog(pf, sigma, T, m, rdf, k=1.0):
 def zero_density_viscosity(m, sigma, T, k):
     return 5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
 
-def get_viscosity_from_C(C, viscosity, rdf, helmholts=False):
+def get_viscosity_from_C(C, viscosity, rdf):
     pf = C["PF"]
     T = C["TEMP"]
     N_list = utils.get_component_lists(C, "N")
@@ -343,20 +343,16 @@ def partial_pf(sigma, x, rho):
 
 
 def pf_to_rho(sigma, x, pf):
-    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
-    if sigma.ndim == 2:
+    if sigma.ndim > 0:
         rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
-    #if sigma.ndim == 1:
-    #    rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
-    if sigma.ndim == 0:
+    else:
         rho = 6*pf/np.pi/np.sum(x*sigma**3)
     return rho
 
 def rho_to_pf(sigma, x, rho):
-    pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
-    if sigma.ndim == 2:
+    if sigma.ndim > 0:
         pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
-    if sigma.ndim == 0:
+    else:
         pf = rho / (6/np.pi/np.sum(x*sigma**3))
     return pf
 
@@ -834,8 +830,10 @@ def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     # Effective volume. Slightly different from 
     # the HS volume, due to soft potential.
     v_eff = (np.pi/6)*sigma**3 * np.sqrt(2/np.sqrt(1 + T))
-    v_eff = v_eff[0]        # This EOS is not defined for mixtures, 
-                            # so mixing sigmas is not relevant.
+    # This EOS is not defined for mixtures, 
+    # so mixing sigmas is not relevant.
+    if isinstance(v_eff, list):
+        v_eff = v_eff[0]        
     # Virial coefficients:
     # Use Gottschalk's expression for the second virial coefficient of the LJ fluid
     # Find an expression for the second virial coefficient of the WCA fluid

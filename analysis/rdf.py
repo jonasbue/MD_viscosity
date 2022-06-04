@@ -11,10 +11,10 @@ import os
 import sys
 import logging
 
-import numba as nb
-from numba import njit
-from numba.np.ufunc import parallel
-from numba import prange
+#import numba as nb
+#from numba import njit
+#from numba.np.ufunc import parallel
+#from numba import prange
 
 import files
 import save
