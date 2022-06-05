@@ -121,6 +121,7 @@ def main():
                     "pf",
                     method_list=get_method_list(),
                     theory_function=theory.get_viscosity_from_F,
+                    collision_integrals=get_fitted_collision_integrals(),
                     xmin=0.01,
                     xmax=0.51,
             )
@@ -131,6 +132,7 @@ def main():
                     "T",
                     method_list=get_method_list(),
                     theory_function=theory.get_viscosity_from_F,
+                    collision_integrals=get_fitted_collision_integrals(),
                     xmin=1.3,
                     xmax=4.0,
             )
@@ -214,9 +216,10 @@ def compute_all_theoretical_values(
         ordinate_variable,
         method_list=[],
         theory_function=None,
+        collision_integrals=[],
         xmin=0.01,
         xmax=0.51,
-        resolution=20,
+        resolution=15,
     ):
     """
         Given a directory of lammps output files,
@@ -262,8 +265,11 @@ def compute_all_theoretical_values(
 
     for (j, eq) in enumerate(equation_list):
         for i in range(len(C)):
-            c = C[i] 
             utils.status_bar(i, len(C))
+            c = C[i] 
+            coll=1.0
+            if len(collision_integrals):
+                coll=collision_integrals[j]
             # comp_fraction (usually "x") equals one for one-component fluids.
             # Code needs generalization to work with mulit-component systems.
             sigma, comp_fraction, pf, T = np.array([c[4]]), np.array([1]), c[0], c[3]
@@ -271,9 +277,11 @@ def compute_all_theoretical_values(
                 pf, T = c[1], c[0]
             rho = theory.pf_to_rho(sigma, comp_fraction, pf)
             if theory_function:
-                data[i] = theory_function(eq, sigma, comp_fraction, rho, T, method=method_list[j])
+                if eq.__name__[:4] == "rdf":
+                    data[i] = theory_function(eq, sigma, comp_fraction, rho, T, collision_integral=coll, no_F=True)
+                data[i] = theory_function(eq, sigma, comp_fraction, rho, T, collision_integral=coll)
             else:
-                data[i] = eq(sigma, comp_fraction, rho, temp=T)
+                data[i] = eq(sigma, comp_fraction, rho, temp=T, collision_integral=coll)
         name = save.get_data_name([eq], viscosity_function=theory_function).replace(",", "").strip()
         save.add_column_to_file(savename, data, name)
 
@@ -294,8 +302,15 @@ def get_rdf_list():
 
 def get_helmholtz_list():
     #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess]
+    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
 
+def get_fitted_collision_integrals():
+    """ These are guesses. """
+    #return [1.4, 0.8, 0.8, 1.4, 0.8, 0.9, 0.9]
+    HS = 1
+    #               CS Kolafa Thol Meck Gott Hess Morsali
+    return np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])*HS
+    #return np.array([1.0, 0.65, 0.65, 1.1, 0.7, 0.75, 0.75])*HS
 
 def get_method_list():
     return ["kolafa", "kolafa", "thol", "mecke", "gottschalk", "kolafa"]

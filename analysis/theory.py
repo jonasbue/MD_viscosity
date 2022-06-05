@@ -13,31 +13,13 @@ import constants
 from scipy.special import gamma, factorial
 
 
-def enskog_2sigma(pf, sigma_1, T, m, rdf, k=1.0, sigma_2=1.0):
-    """
-        To allow the same framework for this as the other visc functions,
-        sigma_2=1.0 => sigma_1 == sigma_2.
-
-    """
-    V_excl = 2*np.pi*(sigma_1**3)/3
-    eta_0 = zero_density_viscosity(m, sigma_2, T, k)
-    rho = 6*pf/np.pi
-    g = rdf(pf) # should use sigma_2
-    eta = eta_0 * (
-        1/g 
-        + 0.8 * V_excl * rho
-        + 0.776 * V_excl**2 * rho**2 * g
-    )
-    return eta
-
-
 # TODO: Rework arguments to fit all other theory functions.
-def enskog(pf, sigma, T, m, rdf, k=1.0):
+def enskog(pf, sigma, T, m, rdf, k=1.0, collision_integral=1.0, **kwargs):
     """ Returns the theoretical value of the 
         viscosity for a given packing fraction.
     """
     V_excl = 2*np.pi*(sigma**3)/3
-    eta_0 = zero_density_viscosity(m, sigma, T, k)
+    eta_0 = zero_density_viscosity(m, sigma, T, k, collision_integral)
     rho = 6*pf/np.pi
     g = rdf(pf)
     eta = eta_0 * (
@@ -48,8 +30,9 @@ def enskog(pf, sigma, T, m, rdf, k=1.0):
     return eta
 
 
-def zero_density_viscosity(m, sigma, T, k):
-    return 5 * np.sqrt((m*k*T)/np.pi) / (16*sigma**2)
+def zero_density_viscosity(m, sigma, T, k, coll):
+    return 5 * np.sqrt((m*k*T)/np.pi) / (16*coll*sigma**2)
+
 
 def get_viscosity_from_C(C, viscosity, rdf):
     pf = C["PF"]
@@ -569,7 +552,7 @@ def Z_thol(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     return Z
 
 
-def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
         using the EOS of Mecke et al. (1996).
         Validity range: 
@@ -695,7 +678,7 @@ def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
         for j in range(0,7):
             c += C_ij[i,j]*temp**(i/2)*rho**j 
     A = a + b + c
-    return A
+    return A/temp
 
 
 def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
@@ -797,7 +780,7 @@ def F_thol(sigma, x, rho, temp=1.0, **kwargs):
     return A
 
 
-def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
+def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     """ Computes the Helmholtz free energy of a Lennard-Jones fluid, 
         using the EOS of Mecke et al. (1996).
         Validity range: 
@@ -829,7 +812,7 @@ def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     T = temp
     # Effective volume. Slightly different from 
     # the HS volume, due to soft potential.
-    v_eff = (np.pi/6)*sigma**3 * np.sqrt(2/np.sqrt(1 + T))
+    v_eff = (np.pi/6)*np.sum(sigma)**3 * np.sqrt(2/np.sqrt(1 + T))
     # This EOS is not defined for mixtures, 
     # so mixing sigmas is not relevant.
     if isinstance(v_eff, list):
@@ -846,7 +829,7 @@ def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     # This works better in the two-phase region
     #f_dis = rho*T*(B_LJ - B_WCA) * (1+c) 
     F = f_WCA + f_dis
-    return F
+    return F/temp
 
 ##############################################################
 ## Radial distribution functions                            ##
@@ -1071,27 +1054,19 @@ def get_Z_from_F(F, sigma, x, rho, T, method=""):
     """
         From a Helmholts free energy, computes the compressibility factor.
     """
-    if method=="kolafa":
-        # This calculation is for the free energy per particle
-        # and is used in Kolafa and Hess
-        return 1+rho*dF_drho(F, sigma, x, rho, T)/T
+    # Thol uses a slightly different definition.
     if method=="thol":
-        # This method is used by Thol.
         return rho*dF_drho(F, sigma, x, rho, T)
-    else:
-        # This method is used by Gottschalk and Mecke.
-        return 1+rho*dF_drho(F, sigma, x, rho, T)
+    return 1+rho*dF_drho(F, sigma, x, rho, T)
+
 
 def get_internal_energy(F, sigma, x, rho, T, method=""):
     """
         From a Helmholts free energy, computes the internal energy,
         which is the total potential energy of a system.
     """
-    if method=="kolafa":
-        return 1+dF_dtau(F, sigma, x, rho, T)/T
-    if method=="thol":
-        return dF_dtau(F, sigma, x, rho, T)/T
-    return 1+dF_dtau(F, sigma, x, rho, T)
+    return dF_dtau(F, sigma, x, rho, T)/T
+
 
 def get_rdf_from_F(F, sigma, x, rho, T, N=3000, method=""):
     """
@@ -1099,15 +1074,20 @@ def get_rdf_from_F(F, sigma, x, rho, T, N=3000, method=""):
     """
     U = get_internal_energy(F, sigma, x, rho, T, method=method)
     Z = get_Z_from_F(F, sigma, x, rho, T, method=method)
+    #if method == "mecke": # This is ad hoc, because F_mecke has a bug.
+    #    Z = Z_mecke(sigma, x, rho, temp=T)
     sigma = sigma.flatten()
-    return (Z - 1 - U/N/T) * 3/(2*np.pi*rho*sigma**3)
+    return (Z - U/T) * 3/(2*np.pi*rho*sigma**3)
 
 
-def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, method=""):
+def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False):
+    pf = rho_to_pf(sigma, x, rho)
+    if no_F:
+        # Compute viscosity directly from an RDF, while still using this function.
+        eta = enskog(pf, sigma.flatten(), T, m, F, collision_integral=collision_integral)
     def g(pf): 
         rho = pf_to_rho(sigma, x, pf)
         return get_rdf_from_F(F, sigma, x, rho, T, method=method)
-    pf = rho_to_pf(sigma, x, rho)
     # enskog() can be replaced with other viscosity equations.
-    eta = enskog(pf, sigma.flatten(), T, m, g, k=1.0)
+    eta = enskog(pf, sigma.flatten(), T, m, g, collision_integral=collision_integral)
     return eta

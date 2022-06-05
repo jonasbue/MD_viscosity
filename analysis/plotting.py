@@ -196,9 +196,9 @@ if "visc" in sys.argv:
                 filename,
                 "pf",
                 "viscosity",
-                ["enskog_RDF_F_thol", "enskog_RDF_LJ"],
+                ["enskog_F-CS", "enskog_F-kolafa", "enskog_F-thol", "enskog_F-hess"],
                 system_config,
-                "cutoff",
+                "cutoff", "N",
                 pltstr="ko-",
                 norm=True)
 if "lit" in sys.argv:
