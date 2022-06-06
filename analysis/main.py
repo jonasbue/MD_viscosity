@@ -34,7 +34,7 @@ computation_params = {
     "particle_types": 1,
     "cut_fraction"  : 0.3,
     "step" 		    : 4,
-    "per_time"		: True,
+    "per_time"		: False,
 }
 
 # 1. convert all files in directory
