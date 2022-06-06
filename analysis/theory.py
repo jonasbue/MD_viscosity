@@ -21,7 +21,7 @@ def enskog(pf, sigma, T, m, rdf, k=1.0, collision_integral=1.0, **kwargs):
     V_excl = 2*np.pi*(sigma**3)/3
     eta_0 = zero_density_viscosity(m, sigma, T, k, collision_integral)
     rho = 6*pf/np.pi
-    g = rdf(pf)
+    g = rdf(pf, T=T)
     eta = eta_0 * (
         1/g 
         + 0.8 * V_excl * rho
@@ -570,15 +570,17 @@ def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     """
     
     c, m, n, p, q = constants.get_EOS_parameters("mecke")
-    Z = Z_HS(sigma, x, rho, temp=temp)
+    a = Z_HS(sigma, x, rho, temp=temp)
     rho_c = constants.get_rho_c()
     T_c = constants.get_T_c()
     rho = rho/rho_c     # This EOS uses rho and T normalized by
     T = temp/T_c        # the critical temperature and density.
+    b = 0
     for i in range(len(c)):
-        Z += rho * c[i]*T**m[i]*n[i] * np.exp(p[i]*rho**q[i]) * (
-                rho**(n[i]-1) + p[i]*q[i]*rho**(q[i]-1)
+        b += rho * c[i]*T**m[i] * np.exp(p[i]*rho**q[i]) * (
+                n[i]*rho**(n[i]-1) + p[i]*q[i]*rho**(q[i]-1)
             )
+    Z = a + b
     return Z
 
 
@@ -601,9 +603,11 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     T = temp
     # Effective volume. Slightly different from 
     # the HS volume, due to soft potential.
-    v_eff = (np.pi/6)*sigma**3 * np.sqrt(2/np.sqrt(1 + T))
-    v_eff = v_eff[0]        # This EOS is not defined for mixtures, 
-                            # so mixing sigmas is not relevant.
+    v_eff = (np.pi/6)*sigma.flatten()**3 * np.sqrt(2/np.sqrt(1 + T))
+    if isinstance(v_eff, list): # This EOS is not defined for mixtures, 
+        v_eff = v_eff[0]        # so mixing sigmas is not relevant.
+    
+    
     # Virial coefficients:
     # Use Gottschalk's expression for the second virial coefficient of the LJ fluid
     # Find an expression for the second virial coefficient of the WCA fluid
@@ -635,13 +639,13 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
 
 def F_BN(sigma, x, rho, temp=1.0, **kwargs):
     pf = rho_to_pf(sigma, x, rho)
-    A = temp*(5/3 * np.log(1-pf) + pf * (34-33*pf+4*pf**2)/(6*(1-pf)**2))
+    A = (5/3 * np.log(1-pf) + pf * (34-33*pf+4*pf**2)/(6*(1-pf)**2))
     return A
 
 
 def F_CS(sigma, x, rho, temp=1.0, **kwargs):
     pf = rho_to_pf_LJ(sigma, x, rho, temp)
-    A = temp*((4*pf-3*pf**2)/(1-pf)**2)
+    A = ((4*pf-3*pf**2)/(1-pf)**2)
     return A
 
 def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
@@ -677,8 +681,8 @@ def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
     for i in range(-4,1):
         for j in range(0,7):
             c += C_ij[i,j]*temp**(i/2)*rho**j 
-    A = a + b + c
-    return A/temp
+    A = a + (b + c)/temp
+    return A
 
 
 def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
@@ -699,6 +703,11 @@ def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
 
     B_i, C_i, B_SS, ci, C_SS, di = constants.get_EOS_parameters("gottschalk")
     T = temp
+    tau = constants.get_T_c()/T
+    delta = rho/constants.get_rho_c()
+    #a = np.log(delta) + 1.5*np.log(tau) - 1.515151515*tau + 6.262265814
+    a = 0
+
     # Compute the virial coefficients:
     # B (thermal virial coefficients) and C (correction virial coefficients)
     # are almost identically defined. Therefore, call virial_coefficient()
@@ -738,7 +747,7 @@ def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
     ## Explodes to -inf if m > 7
     #for i in range(n,m+1):
     #    c += rho**(i-1)/(i-1) * C(i, T, n)
-    A = b + c
+    A = a + b + c
     return A
 
 
@@ -758,14 +767,14 @@ def F_thol(sigma, x, rho, temp=1.0, **kwargs):
         Output:
             Z:      Compressibility factor of the system.
     """
-
     n, t, d, l, eta, beta, gamma, epsilon = constants.get_EOS_parameters("thol")
     T_c = constants.get_T_c()
     rho_c = constants.get_rho_c()
     tau = T_c/temp
     rho = rho/rho_c
 
-    A = np.log(rho) + 1.5*np.log(tau) - 1.515151515*tau + 6.262265814
+    #A = np.log(rho) + 1.5*np.log(tau) - 1.515151515*tau + 6.262265814
+    A = 0
     for i in range(0,6):
         a = n[i] * rho**d[i] * tau**t[i]
         A += a
@@ -812,11 +821,11 @@ def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     T = temp
     # Effective volume. Slightly different from 
     # the HS volume, due to soft potential.
-    v_eff = (np.pi/6)*np.sum(sigma)**3 * np.sqrt(2/np.sqrt(1 + T))
-    # This EOS is not defined for mixtures, 
-    # so mixing sigmas is not relevant.
+    v_eff = (np.pi/6)*sigma.flatten()**3 * np.sqrt(2/np.sqrt(1 + T))
     if isinstance(v_eff, list):
         v_eff = v_eff[0]        
+    # This EOS is not defined for mixtures, 
+    # so mixing sigmas is not relevant.
     # Virial coefficients:
     # Use Gottschalk's expression for the second virial coefficient of the LJ fluid
     # Find an expression for the second virial coefficient of the WCA fluid
@@ -829,7 +838,7 @@ def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     # This works better in the two-phase region
     #f_dis = rho*T*(B_LJ - B_WCA) * (1+c) 
     F = f_WCA + f_dis
-    return F/temp
+    return F/T
 
 ##############################################################
 ## Radial distribution functions                            ##
@@ -987,12 +996,13 @@ def bessel(alpha, x):
 # B_2 for LJ fluid is known excactly:
 # From Gottschalk
 def B2_LJ(T):
-    return np.sqrt(2)*np.pi**2/3 * (
+    B = (
             bessel(-3/4, 1/(2*T))
             - bessel(-1/4, 1/(2*T))
             - bessel(1/4, 1/(2*T))
             + bessel(3/4, 1/(2*T))
         )
+    return np.sqrt(2)*np.pi**2/3 * 1/T * np.exp(1/(2*T)) * B
 
 def B2_WCA(T):
     B = 4*np.pi*np.sqrt(2)/6 * (
@@ -1047,6 +1057,8 @@ def dF_dtau(f, sigma, x, rho, T, h=0.0001):
     # The T**2 comes from the chain rule. 
     # dF/dtau = dF/dT * dT/dtau = dF/dT * (-1/tau**2)
     df = -T**2 * (f(sigma, x, rho, temp=T+h) - f(sigma, x, rho, temp=T))/h
+    #F = f(sigma, x, rho, temp=T)
+    #return -(F + T*df)
     return df
 
 
@@ -1054,9 +1066,10 @@ def get_Z_from_F(F, sigma, x, rho, T, method=""):
     """
         From a Helmholts free energy, computes the compressibility factor.
     """
-    # Thol uses a slightly different definition.
-    if method=="thol":
-        return rho*dF_drho(F, sigma, x, rho, T)
+    # For ideal gas + res, some slightly different definition
+    # *seems* correct. This is likely a symptom of an error.
+    #if method=="thol":
+    #    return rho*dF_drho(F, sigma, x, rho, T)
     return 1+rho*dF_drho(F, sigma, x, rho, T)
 
 
@@ -1065,6 +1078,9 @@ def get_internal_energy(F, sigma, x, rho, T, method=""):
         From a Helmholts free energy, computes the internal energy,
         which is the total potential energy of a system.
     """
+    #return F(sigma, x, rho, temp=T) + dF_dtau(F, sigma, x, rho, T)/T
+    #if method=="thol":
+    #    return dF_dtau(F, sigma, x, rho, T)/T
     return dF_dtau(F, sigma, x, rho, T)/T
 
 
@@ -1074,18 +1090,18 @@ def get_rdf_from_F(F, sigma, x, rho, T, N=3000, method=""):
     """
     U = get_internal_energy(F, sigma, x, rho, T, method=method)
     Z = get_Z_from_F(F, sigma, x, rho, T, method=method)
-    #if method == "mecke": # This is ad hoc, because F_mecke has a bug.
-    #    Z = Z_mecke(sigma, x, rho, temp=T)
     sigma = sigma.flatten()
-    return (Z - U/T) * 3/(2*np.pi*rho*sigma**3)
+    return (Z - 1 - U) * 3/(2*np.pi*rho*sigma**3) 
 
 
 def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False):
     pf = rho_to_pf(sigma, x, rho)
+    eta = 0
     if no_F:
         # Compute viscosity directly from an RDF, while still using this function.
         eta = enskog(pf, sigma.flatten(), T, m, F, collision_integral=collision_integral)
-    def g(pf): 
+        return eta
+    def g(pf, T=1.0): 
         rho = pf_to_rho(sigma, x, pf)
         return get_rdf_from_F(F, sigma, x, rho, T, method=method)
     # enskog() can be replaced with other viscosity equations.

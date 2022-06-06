@@ -37,11 +37,6 @@ def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_
         z = np.reshape(z, (T,N))
         vx = np.reshape(vx, (T,N))
 
-        # Remove early values. They are not useful.
-        t = utils.cut_time(cut_fraction, t)     # These arrays contain the
-        z = utils.cut_time(cut_fraction, z)     # same values many times, 
-        vx = utils.cut_time(cut_fraction, vx)   # corresponding to 
-                                                # different chunks.
         # Remove correlated time steps.
         # This will skip every [step] time steps,
         # to remove time correlation.
@@ -50,6 +45,14 @@ def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_
         vx = vx[::step].flatten()
 
         vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+
+        # Remove early values. They are not useful.
+        t = utils.cut_time(cut_fraction, t)             # These arrays contain the
+        z_lower = utils.cut_time(cut_fraction, z)       # same values many times, 
+        vx_lower = utils.cut_time(cut_fraction, vx)     # corresponding to 
+        z_upper = utils.cut_time(cut_fraction, z)       # different chunks.
+        vx_upper = utils.cut_time(cut_fraction, vx)  
+
         dv, v_err = regression_for_single_time(
                 vx_lower, vx_upper, z_lower, z_upper)
     return dv, v_err, t, z, vx
