@@ -41,7 +41,7 @@ def compute_all_viscosities(
     data = save.create_data_array(filenames, rdf_list, N)
 
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="train")
+        utils.status_bar(i, len(filenames), fmt="percent")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
@@ -90,6 +90,10 @@ def compute_viscosity(
                         eta-standard error.
     """
     dv, v_err, t, z, vx = regression.get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_time)
+
+    z_max = np.nanmax(z)
+    if z_max > 1000:
+        print("WARNING: z is", z_max, ". dv is", dv)
     Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
     # Only unique time steps:
     t = np.unique(t)
@@ -127,6 +131,7 @@ def find_viscosity_from_file(
     step = computation_params["step"]
     cut_fraction = computation_params["cut_fraction"]
 
+    #vx, z, t, Ptot = regression.reshape_data(vx, z, Ptot, step, cut_fraction)
     # Compute viscosity.
     eta, eta_abs, eta_rel = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time, step=step)
     return eta, C, eta_abs

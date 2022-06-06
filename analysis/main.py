@@ -33,8 +33,8 @@ save_path_list = ["lj"]
 computation_params = {
     "particle_types": 1,
     "cut_fraction"  : 0.3,
-    "step" 		    : 1,
-    "per_time"		: False,
+    "step" 		    : 4,
+    "per_time"		: True,
 }
 
 # 1. convert all files in directory

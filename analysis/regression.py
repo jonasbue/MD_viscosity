@@ -36,27 +36,71 @@ def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_
             vx = vx[-T*N:]
         z = np.reshape(z, (T,N))
         vx = np.reshape(vx, (T,N))
+        vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+
+        # Remove early values. They are not useful.
+        t = utils.cut_time(cut_fraction, t)                 # These arrays contain the
+        z_lower = utils.cut_time(cut_fraction, z_lower)     # same values many times, 
+        vx_lower = utils.cut_time(cut_fraction, vx_lower)   # corresponding to 
+        z_upper = utils.cut_time(cut_fraction, z_lower)     # different chunks.
+        vx_upper = utils.cut_time(cut_fraction, vx_lower)  
 
         # Remove correlated time steps.
         # This will skip every [step] time steps,
         # to remove time correlation.
         t = t[::step]
-        z = z[::step].flatten()
-        vx = vx[::step].flatten()
+        z_lower = z_lower[::step].flatten()
+        vx_lower = vx_lower[::step].flatten()
+        z_upper = z_upper[::step].flatten()
+        vx_upper = vx_upper[::step].flatten()
 
+        dv, v_err = regression_for_single_time(
+                vx_lower, vx_upper, z_lower, z_upper)
+    return dv, v_err, t, z, vx
+
+# This could be a neater way to structure previous function
+"""
+def reshape_data():
+    Ptot = utils.cut_time(cut_fraction, Ptot)[::step]
+    if per_time:
+        t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
+        t, z = utils.make_time_dependent(z, t, number_of_chunks)
+
+        # Remove early values. They are not useful.
+        t = utils.cut_time(cut_fraction, t)
+        z = utils.cut_time(cut_fraction, z)
+        vx = utils.cut_time(cut_fraction, vx)
+        vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
+    else:
+        N = number_of_chunks
+        T = len(t)
+        if len(z) != T*N:
+            z = z[-T*N:]
+            vx = vx[-T*N:]
+        z = np.reshape(z, (T,N))
+        vx = np.reshape(vx, (T,N))
         vx_lower, vx_upper, z_lower, z_upper = isolate_slabs(vx, z)
 
         # Remove early values. They are not useful.
+        print(t.shape)
+        print(z_lower.shape)
+        print(vx_lower.shape)
         t = utils.cut_time(cut_fraction, t)             # These arrays contain the
         z_lower = utils.cut_time(cut_fraction, z)       # same values many times, 
         vx_lower = utils.cut_time(cut_fraction, vx)     # corresponding to 
         z_upper = utils.cut_time(cut_fraction, z)       # different chunks.
         vx_upper = utils.cut_time(cut_fraction, vx)  
 
-        dv, v_err = regression_for_single_time(
-                vx_lower, vx_upper, z_lower, z_upper)
-    return dv, v_err, t, z, vx
-
+        # Remove correlated time steps.
+        # This will skip every [step] time steps,
+        # to remove time correlation.
+        t = t[::step]
+        z_lower = z_lower[::step].flatten()
+        vx_lower = vx_lower[::step].flatten()
+        z_upper = z_upper[::step].flatten()
+        vx_upper = vx_upper[::step].flatten()
+    return t, vx_lower, vx_upper, z_lower, z_upper
+"""
 
 def get_velocity_profile(fix_filename):
     """ From a LAMMPS fix file, extracts the x-velocities and z-coordinates
@@ -96,9 +140,11 @@ def isolate_slabs(vx, z):
         # we need to read the arrays.
         # This method does not work for 1D-arrays.
         z_max = np.nanmax(z)
+        if z_max > 1:
+            print("WARNING: z is", z_max)
         z_mid = z_max/2
 
-        lower_half = np.where(z<=z_mid, vx, np.nan).reshape(vx.shape)
+        lower_half = np.where(z<z_mid, vx, np.nan).reshape(vx.shape)
         upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
         z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
         z_upper = np.where(z>=z_mid, z, np.nan).reshape(z.shape)
@@ -107,6 +153,11 @@ def isolate_slabs(vx, z):
         upper_half = utils.remove_nans(upper_half)
         z_lower = utils.remove_nans(z_lower)
         z_upper = utils.remove_nans(z_upper)
+        print(lower_half.shape, upper_half.shape)
+        print(z_lower.shape, z_upper.shape)
+        if np.abs(len(z_upper) - len(z_lower)) > 10:
+            print(z_mid)
+            print(z_lower, z_upper)
     return lower_half, upper_half, z_lower, z_upper
 
 
@@ -193,7 +244,7 @@ def compute_all_velocity_profiles(directory, computation_params):
     per_time = False
 
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="train")
+        #utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         savename = fix_name.replace("fix", "vel") + ".csv"
@@ -203,6 +254,8 @@ def compute_all_velocity_profiles(directory, computation_params):
         # computation.
         vx, z = get_velocity_profile(fix_name)
         C, Lz, t, A, Ptot, number_of_chunks = files.extract_simulation_variables(log_name, fix_name)
+        if np.nanmax(z > 2):
+            print(C)
         def remove_minimize_steps(a, T, N):
             if len(a) != T*N:
                 a = z[-T*N:]
@@ -212,12 +265,11 @@ def compute_all_velocity_profiles(directory, computation_params):
         vx = remove_minimize_steps(vx, T, N)
         z = remove_minimize_steps(z, T, N)
         vx_l, vx_u, z_l, z_u = isolate_slabs(vx, z)
-        #vx_l = remove_minimize_steps(vx_l, T, N//2)
-        #vx_u = remove_minimize_steps(vx_u, T, N//2)
-        #z_l = remove_minimize_steps(z_l, T, N//2)
-        #z_u = remove_minimize_steps(z_u, T, N//2)
+        print(z_l)
         reg_l = velocity_profile_regression(vx_l, z_l)
         reg_u = velocity_profile_regression(vx_u, z_u)
+        #if dv < 1e-1:
+        #   print(dv, "\t", vx.shape)
 
         # Save regression lines
         z = np.unique(z)
@@ -237,6 +289,15 @@ def compute_all_velocity_profiles(directory, computation_params):
         # a matter of principle. The viscosity is the same either way,
         # but computation time is slightly (noticably) different.
         values = np.array([z, vx, line_l, line_u], dtype="object").T
+        if values.shape == (4,):
+            print(values.shape)
+            #print(z)
+            #print(vx)
+            values = values.T
+            #print(values.shape)
+        #if reg_l.slope==1.0:
+        #    print(values.shape)
+        #    print(reg_l.slope)
         np.savetxt(savename, values, delimiter=", ", header="z, vx, reg_lower, reg_upper", comments="", fmt="%s")
     print("")
     return data

@@ -52,17 +52,21 @@ def get_avg(lower, upper):
     return (np.abs(lower) + np.abs(upper))/2
 
 
-def make_time_dependent(arr, t, number_of_chunks):
+def make_time_dependent(arr, t, N):
     """ Takes an array with multiple values for each timestep,
         and converts it to a 2D array in which first dimension
         is the time and second dimension contains the values
         at that time.
     """
     t = np.unique(t)
+    T = len(t)
+    if len(arr) != T*N:
+        arr = arr[-T*N:]
+        #vx = vx[-T*N:]
     # Ad hoc: With current data, two values are missing from first timestep.
     #arr = np.insert(arr, 0, np.nan)
     #arr = np.insert(arr, 0, np.nan)
-    arr = np.reshape(arr, (len(t), number_of_chunks))
+    arr = np.reshape(arr, (T, N))
     return t, arr
 
 
