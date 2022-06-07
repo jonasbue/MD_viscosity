@@ -206,9 +206,11 @@ def compute_all_theoretical_values(
     if ordinate_variable == "T":
         ordinate_index = 3
         #N_index = 2
-        header = f"T,pf,N,m,sigma,cut"
+        #header = f"T,pf,N,m,sigma,cut"
         xmin, xmax = 1.3, 4.0
     system_configs = files.get_all_configs(directory)
+    print("Should have everything")
+    print(system_configs[:3,:]) 
     ordinate_variable
     # If there are multiple values for N, we can get rid of all but one.
     # Produces smaller files.
@@ -228,8 +230,12 @@ def compute_all_theoretical_values(
     x = np.linspace(xmin, xmax, resolution)
     # Join C and pf into one large array of configurations 
     # Shape: (len(pf)*len(C), 6)
+    print("Should lack pf or T")
+    print(system_configs[:3,:]) # Should lack x (T of pf)
     C = np.tile(system_configs, (len(x),1))
     C = np.insert(C, ordinate_index, np.array([np.repeat(x, len(C)//len(x))]), axis=1)
+    print("Should have pf or T again")
+    print(C[:3,:])
 
     # For compatibility with pandas, use slightly different conventions to save.
     np.savetxt(savename, C, header=header, fmt="%.3e", delimiter=",", comments="")
