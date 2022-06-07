@@ -200,7 +200,7 @@ if "visc" in sys.argv:
                 system_config,
                 "cutoff", "N",
                 pltstr="ko-",
-                norm=True)
+                norm=False)
 if "lit" in sys.argv:
     plot_literature_results(lit_filename, system_config)
     plt.legend()
@@ -256,13 +256,14 @@ if "vel" in sys.argv:
         z = np.array(data["z"])
         reg_l = np.array(data["reg_lower"])
         reg_u = np.array(data["reg_upper"])
+        dv = data["dv"][0]
         plt.plot(vx, z, "o")
         plt.plot(reg_l, z, "-")
         plt.plot(reg_u, z, "-")
         plt.legend("$v_x$")
         plt.xlabel("$v_x$")
         plt.ylabel("$z$")
-        plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}")
+        plt.title(f"N = {system_info['N']}, T = {system_info['temp']}, pf = {system_info['pf']}, dv = {dv}")
         savename = f"figures/vel/{f[:-4]}.png"
         plt.savefig(savename)
         plt.close()

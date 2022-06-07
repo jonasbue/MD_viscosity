@@ -31,9 +31,10 @@ def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_
     else:
         N = number_of_chunks
         T = len(t)
-        if len(z) != T*N:
-            z = z[-T*N:]
-            vx = vx[-T*N:]
+        #if len(z) != T*N:
+        #    print(z.shape)
+        #    z = z[-T*N:]
+        #    vx = vx[-T*N:]
         z = np.reshape(z, (T,N))
         vx = np.reshape(vx, (T,N))
 
@@ -83,12 +84,14 @@ def isolate_slabs(vx, z):
     if vx.ndim == 2:
         # If all vx and z correspond to one single 
         # time, we can use a simple solution.
+        print(2)
         n = len(z[0,:])//2
         z_lower = z[:,:n]
         z_upper = z[:,n:]
         lower_half = vx[:,:n]
         upper_half = vx[:,n:]
     elif vx.ndim == 1:
+        #print(1)
         # If vx and z contain values from multiple times,
         # we need to read the arrays.
         # This method does not work for 1D-arrays.
@@ -202,7 +205,7 @@ def compute_all_velocity_profiles(directory, computation_params):
         C, Lz, t, A, Ptot, number_of_chunks = files.extract_simulation_variables(log_name, fix_name)
         def remove_minimize_steps(a, T, N):
             if len(a) != T*N:
-                a = z[-T*N:]
+                a = z[:T*N]
             return a
         N = number_of_chunks
         T = len(t)
@@ -220,6 +223,7 @@ def compute_all_velocity_profiles(directory, computation_params):
         z = np.unique(z)
         line_l = reg_l.slope*np.where(z <= np.amax(z/2), z, np.nan) + reg_l.intercept
         line_u = reg_u.slope*np.where(z >= np.amax(z/2), z, np.nan) + reg_u.intercept
+        dv = utils.get_avg(reg_l.slope, reg_u.slope)
 
         # Create a small set of velocity points, one for each chunk.
         t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
@@ -233,8 +237,8 @@ def compute_all_velocity_profiles(directory, computation_params):
         # for each chunk is plotted. The difference is almost only
         # a matter of principle. The viscosity is the same either way,
         # but computation time is slightly (noticably) different.
-        values = np.array([z, vx, line_l, line_u], dtype="object").T
-        np.savetxt(savename, values, delimiter=", ", header="z, vx, reg_lower, reg_upper", comments="", fmt="%s")
+        values = np.array([z, vx, line_l, line_u, np.full_like(z, dv)], dtype="object").T
+        np.savetxt(savename, values, delimiter=", ", header="z, vx, reg_lower, reg_upper, dv", comments="", fmt="%s")
     print("")
     return data
 

@@ -41,7 +41,7 @@ def compute_all_viscosities(
     data = save.create_data_array(filenames, rdf_list, N)
 
     for (i, f) in enumerate(filenames):
-        utils.status_bar(i, len(filenames), fmt="train")
+        #utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
@@ -122,11 +122,15 @@ def find_viscosity_from_file(
     # Extract vx and z from fix file.
     vx, z = regression.get_velocity_profile(fix_filename)
     C, Lz, t, A, Ptot, N_chunks = files.extract_simulation_variables(log_filename, fix_filename)
+    N_vals = N_chunks*len(np.unique(t))
+    if len(z) != N_vals:
+        vx = vx[:N_vals]
+        z = z[:N_vals]
 
     per_time = computation_params["per_time"]
     step = computation_params["step"]
     cut_fraction = computation_params["cut_fraction"]
 
     # Compute viscosity.
-    eta, eta_abs, eta_rel = compute_viscosity(vx, z*2*Lz, t, A, Ptot, N_chunks, cut_fraction, per_time, step=step)
+    eta, eta_abs, eta_rel = compute_viscosity(vx, 2*Lz*z, t, A, Ptot, N_chunks, cut_fraction, per_time, step=step)
     return eta, C, eta_abs

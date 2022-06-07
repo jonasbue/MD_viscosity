@@ -32,8 +32,8 @@ save_path_list = ["lj"]
 
 computation_params = {
     "particle_types": 1,
-    "cut_fraction"  : 0.2,
-    "step" 		    : 8,
+    "cut_fraction"  : 0.3,
+    "step" 		    : 2,
     "per_time"		: False,
 }
 
