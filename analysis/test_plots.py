@@ -53,7 +53,7 @@ def test_helmholtz(pf, T, temp = False):
     #plt.plot(pf, theory.Z_BMCSL(sigma, x, rho), label="BMCSL F", linestyle="--")
     # Kolafa and Gottschalk (in this implementation) agree (somewhat) around T=4.0.
     #t = theory.F_kolafa(sigma, x, rho, temp=T)
-    if not temp:
+    if temp:
         plt.plot(pf, theory.F_CS(sigma, x, rho, temp=T), 
                 label="CS F", linestyle="-")
         plt.plot(pf, theory.F_kolafa(sigma, x, rho, temp=T), 
@@ -109,13 +109,13 @@ def test_eos_from_helmholtz(pf, T):
     #plt.show()
 
 
-def test_rdf_from_helmholtz(pf, T, temp=False):
+def test_rdf_from_helmholtz(pf, T, of_temp=False):
     sigma = np.array([1.0])
     sigma = theory.get_sigma(sigma)
     x = np.array([1.0])
     rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
 
-    if not temp:
+    if not of_temp:
         plt.plot(pf, theory.get_rdf_from_F(theory.F_CS, sigma, x, rho, T, method="kolafa"), 
                 "k--", label="CS RDF, Helmholtz derived")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_BN, sigma, x, rho, T, method="kolafa"), 
@@ -130,15 +130,13 @@ def test_rdf_from_helmholtz(pf, T, temp=False):
                 "c-", label="thol RDF, Helmholtz derived")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_hess, sigma, x, rho, T, method=""), 
                 "k:", label="Hess RDF, Helmholtz derived")
-        print(theory.rdf_LJ(pf, T=T))
         plt.plot(pf, theory.rdf_LJ(pf, T=T), 
                 "k-.", label="Morsali RDF")
-        plt.plot(pf, theory.pf_to_rho(sigma, x, pf), "k--")
-    else:
-        T = np.linspace(1.25,4.0)
+        plt.plot(pf, np.ones_like(pf), "--", label="one")
         pf = 0.05
         rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
         j = 0
+    else:
         for F in [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess]:
             A = np.zeros_like(T)
             for i in range(len(T)):
@@ -198,9 +196,9 @@ def test_viscosity_from_helmholtz(pf, T):
             label="thol RDF, Helmholtz derived", linestyle="--", color="lime")
     plt.plot(pf, theory.get_viscosity_from_F(theory.F_hess, sigma, x, rho, T, method="hess")/t, 
             label="hess RDF, Helmholtz derived", linestyle="--", color="lime")
-    #plt.plot(pf, theory.get_viscosity_from_F(theory.F_cs, sigma, x, rho, t)/t, 
-    #        label="CS RDF, Helmholtz derived", linestyle="-.")
-    def g(pf):
+    plt.plot(pf, theory.get_viscosity_from_F(theory.F_CS, sigma, x, rho, t)/t, 
+            label="CS RDF, Helmholtz derived", linestyle="-.")
+    def g(pf, T=1.0):
         rho = 6*pf/np.pi
         return theory.rdf_LJ(sigma, x, rho)
     plt.plot(pf, theory.enskog(pf, sigma, T, m, g).flatten()/t, 
@@ -222,7 +220,7 @@ def test_viscosity_from_helmholtz(pf, T):
 #plt.show()
 #test_internal_energy_from_helmholtz(pf, T)
 #plt.show()
-#test_rdf_from_helmholtz(pf, T)
-#plt.show()
+test_rdf_from_helmholtz(pf, T)
+plt.show()
 test_viscosity_from_helmholtz(pf, T)
 plt.show()
