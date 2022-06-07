@@ -53,25 +53,23 @@ def main():
         save_dir = "./data/processed/"
         filenames = files.get_all_filenames(path)
         # Brief function to wrap the name of the saved files.
-        def get_savename(body):
-            return f"{save_dir}{body}_{savepath}.csv"
 
         if "visc" in sysargs:
             compute_viscosity_from_directory(
-                path, get_savename("visc"), get_helmholtz_list(), computation_params, theoretical_viscosity)
+                path, get_savename("visc", save_dir, savepath), get_helmholtz_list(), computation_params, theoretical_viscosity)
         if "eos" in sysargs:
             compute_eos_from_directory(
-                path, get_savename("eos"), get_eos_list(), computation_params)
+                path, get_savename("eos", save_dir, savepath), get_eos_list(), computation_params)
         if "rdf" in sysargs:
             compute_rdf_from_directory(
-                path, get_savename("rdf"), get_rdf_list(), computation_params)
+                path, get_savename("rdf", save_dir, savepath), get_rdf_list(), computation_params)
         if "vel" in sysargs:
             compute_velcity_profile_from_directory(
-                path, get_savename("vel"), computation_params)
+                path, get_savename("vel", save_dir, savepath), computation_params)
         if "theory" in sysargs:
             # This is a collection of function calls to make 
             # different theory data files for plotting.
-            theory_plotting(path) 
+            theory_plotting(path, save_dir, savepath) 
 
 
 def compute_viscosity_from_directory(
@@ -140,37 +138,37 @@ def compute_velcity_profile_from_directory(
     regression.compute_all_velocity_profiles(directory, computation_params)
 
 
-def theory_plotting(path):
+def theory_plotting(path, save_dir, savepath):
     compute_all_theoretical_values(
-            path, get_savename("theory_eos_of_pf"),
+            path, get_savename("theory_eos_of_pf", save_dir, savepath),
             get_eos_list(), "pf",
             #theory_function=theory.get_Z_from_F,
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_eos_of_T"),
+            path, get_savename("theory_eos_of_T", save_dir, savepath),
             get_eos_list(), "T",
             #method_list=get_method_list(),
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_rdf_of_pf"),
+            path, get_savename("theory_rdf_of_pf", save_dir, savepath),
             get_rdf_list(), "pf",
             #method_list=get_method_list(),
             theory_function=None,
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_rdf_of_T"),
+            path, get_savename("theory_rdf_of_T", save_dir, savepath),
             get_rdf_list(), "T",
             theory_function=None,
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_visc_of_pf"),
+            path, get_savename("theory_visc_of_pf", save_dir, savepath),
             get_helmholtz_list(), "pf",
             #method_list=get_method_list(),
             theory_function=theory.get_viscosity_from_F,
             #collision_integrals=get_fitted_collision_integrals(),
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_visc_of_T"),
+            path, get_savename("theory_visc_of_T", save_dir, savepath),
             get_helmholtz_list(), "T",
             #method_list=get_method_list(),
             theory_function=theory.get_viscosity_from_F,
@@ -287,5 +285,8 @@ def get_fitted_collision_integrals():
 
 def get_method_list():
     return ["kolafa", "kolafa", "thol", "mecke", "gottschalk", "kolafa"]
+
+def get_savename(body, save_dir, savepath):
+    return f"{save_dir}{body}_{savepath}.csv"
 
 main()
