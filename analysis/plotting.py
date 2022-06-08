@@ -34,7 +34,7 @@ for arg in sys.argv:
         path = arg[arg.index("-")+1:]
 
 path = "data/processed/"
-data_name = "lj"
+data_name = "test"
 
 def plot_result(path, filename, x_name, y_name, theory_name, system_config, *args, pltstr="-", lit_filename="", norm=True):
     #files.get_all_filenames(path)
@@ -201,6 +201,16 @@ if "visc" in sys.argv:
                 "cutoff", "N",
                 pltstr="ko-",
                 norm=False)
+            plot_result(
+                path,
+                filename,
+                "pf",
+                "viscosity",
+                ["enskog_F-CS", "enskog_F-kolafa", "enskog_F-thol", "enskog_F-hess"],
+                system_config,
+                "cutoff", "N",
+                pltstr="ko-",
+                norm=True)
 if "lit" in sys.argv:
     plot_literature_results(lit_filename, system_config)
     plt.legend()

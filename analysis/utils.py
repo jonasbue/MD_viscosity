@@ -59,7 +59,8 @@ def make_time_dependent(arr, t, N):
         at that time.
     """
     t = np.unique(t)
-    T = len(t)
+    #T = len(t)
+    T = len(arr)//N
     if len(arr) != T*N:
         arr = arr[-T*N:]
         #vx = vx[-T*N:]

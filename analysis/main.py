@@ -27,13 +27,13 @@ if "debug" in sysargs:
     # but info is cleaner.
     log.setLevel(logging.INFO)
 
-data_path_list = ["./data/lj"]
-save_path_list = ["lj"]
+data_path_list = ["./data/test"]
+save_path_list = ["test"]
 
 computation_params = {
     "particle_types": 1,
     "cut_fraction"  : 0.3,
-    "step" 		    : 2,
+    "step" 		    : 6,
     "per_time"		: False,
 }
 
@@ -174,6 +174,20 @@ def theory_plotting(path, save_dir, savepath):
             theory_function=theory.get_viscosity_from_F,
             #collision_integrals=get_fitted_collision_integrals(),
     )
+    compute_all_theoretical_values(
+            path, get_savename("theory_visc_of_pf_fudged", save_dir, savepath),
+            get_helmholtz_list(), "pf",
+            #method_list=get_method_list(),
+            theory_function=theory.get_viscosity_from_F,
+            collision_integrals=get_fitted_collision_integrals(),
+    )
+    compute_all_theoretical_values(
+            path, get_savename("theory_visc_of_T_fudged", save_dir, savepath),
+            get_helmholtz_list(), "T",
+            #method_list=get_method_list(),
+            theory_function=theory.get_viscosity_from_F,
+            collision_integrals=get_fitted_collision_integrals(),
+    )
     # To make nice plots, it is convenient to save a separate 
     # file of theoretical values, with denser data points than 
     # the numerical data. TODO: Clean up function calls.
@@ -286,8 +300,8 @@ def get_fitted_collision_integrals():
     #return [1.4, 0.8, 0.8, 1.4, 0.8, 0.9, 0.9]
     HS = 1
     #               CS Kolafa Thol Meck Gott Hess Morsali
-    return np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])*HS
-    #return np.array([1.0, 0.65, 0.65, 1.1, 0.7, 0.75, 0.75])*HS
+    #return np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])*HS
+    return np.array([1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])*HS
 
 def get_method_list():
     return ["kolafa", "kolafa", "thol", "mecke", "gottschalk", "kolafa"]

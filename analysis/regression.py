@@ -30,7 +30,8 @@ def get_velocity_regression(vx, z, t, number_of_chunks, cut_fraction, step, per_
         v_err = np.sqrt(np.mean(v_err**2))
     else:
         N = number_of_chunks
-        T = len(t)
+        #T = len(t)
+        T = len(z)//N
         #if len(z) != T*N:
         #    print(z.shape)
         #    z = z[-T*N:]

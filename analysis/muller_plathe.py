@@ -41,7 +41,7 @@ def compute_all_viscosities(
     data = save.create_data_array(filenames, rdf_list, N)
 
     for (i, f) in enumerate(filenames):
-        #utils.status_bar(i, len(filenames), fmt="train")
+        utils.status_bar(i, len(filenames), fmt="train")
         fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
         log.info(f"Loading file\t{fix_name}")
