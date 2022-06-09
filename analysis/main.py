@@ -121,7 +121,8 @@ def compute_rdf_from_directory(
         theory_functions,
         computation_params,
         cut=0.9,
-        dr=0.04
+        dr=0.04,
+        recompute=False
     )
     data_name = "g_sigma, error"
     data_name += save.get_data_name(theory_functions) 
@@ -298,12 +299,13 @@ def get_helmholtz_list():
 def get_fitted_collision_integrals():
     """ These are guesses. """
     #return [1.4, 0.8, 0.8, 1.4, 0.8, 0.9, 0.9]
-    HS = 1
-    #               CS Kolafa Thol Meck Gott Hess Morsali
+    HS = 1 # Collision integral is excactly one.
+    # Names are:    CS Kolafa Thol Meck Gott Hess Morsali
     #return np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])*HS
     return np.array([1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])*HS
 
 def get_method_list():
+    """ Out of date """
     return ["kolafa", "kolafa", "thol", "mecke", "gottschalk", "kolafa"]
 
 def get_savename(body, save_dir, savepath):

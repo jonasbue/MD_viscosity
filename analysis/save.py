@@ -81,6 +81,7 @@ def save_simulation_data(filename, data, number_of_components=1, data_name="visc
         header = f"pf, N1, N2, m1, m2, T, sigma1, sigma2, cut, {data_name}"
     if number_of_components == 1:
         header = f"pf, N, m, T, sigma, cut, {data_name}"
+    data = np.sort(data, axis=0)
     np.savetxt(filename, data, header=header, fmt=fmt, delimiter=", ", comments="")
 
 

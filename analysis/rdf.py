@@ -38,7 +38,8 @@ def compute_all_rdfs(
         theory_functions, 
         computation_params,
         cut=0.9,
-        dr=0.05
+        dr=0.05,
+        recompute=True
     ):
     path = directory
     filenames = files.get_all_filenames(directory)
@@ -50,34 +51,80 @@ def compute_all_rdfs(
     repeat = 1
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="percent")
-        dump_name = f"{path}/" + f[2]
         log_name = f"{path}/" + f[1]
-        savename = dump_name.replace("dump", "rdf") + ".csv"
+        savename = log_name.replace("log", "rdf") + ".csv"
+        log.info(f"Loading file\t{log_name}")
+        C = convert.extract_constants_from_log(log_name)
+        if recompute:
+            dump_name = f"{path}/" + f[2]
+            log.info(f"Loading file\t{dump_name}")
+            r_max=cut*C["LX"]
+            # Note that this gives out g_sigma and error,
+            # and that fast_rdf does not.
+            rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
+            # fast_rdf uses the rdfpy library. It is parallellized and
+            # memory-efficient, but does not give RDFs that approach one
+            # at long distances (known issue).
+            #rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr)
+            # For fast_rdf, compute an average over all times
+            #rdf, std = rdf_average(rdf)
+            # Trim zeros at the end, and drop corresponding values of rdf.
+            r = np.trim_zeros(r, trim="b")
+            rdf = rdf[:len(r)]
+            save_data = np.zeros((len(rdf),3))
+            save_data[:len(r),0] = r
+            save_data[:len(rdf),1] = rdf
+            save_data[:len(rdf),2] = error
+            np.savetxt(savename, save_data, delimiter=", ", header="r, g, error", comments="")
+            log.info(f"Saved to file\t{savename}")
+            g_sigma = np.amax(rdf)
+            j = np.where(rdf == g_sigma)[0][0]
+            #error = std[j]
+        else:
+            rdf = pd.read_csv(savename, sep=", ", engine="python")
+            print("\n")
+            print(rdf)
+            rdf = rdf["g"]
+            g_sigma = np.amax(rdf)
+            # Error can not be included in current version.
+            error = np.zeros_like(g_sigma)
+            #data = np.array([g_sigma, error])
+        # In both cases, save everything to data.
+        theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
+        #values = np.array([g_sigma, error])
+        values = np.array([g_sigma, error])
+        print(values)
+        print(data)
+        values = np.append(values, theoretical_values)
+        save.insert_results_in_array(data, values, C, i)
+    print("")
+    return data
+
+def get_g_sigma_from_directory(
+        directory, 
+        theory_functions, 
+        computation_params,
+        cut=0.9,
+        dr=0.05
+    ):
+    path = directory
+    filenames = files.get_all_filenames(directory)
+    rdf_list = theory_functions
+    N = computation_params["particle_types"]
+    data = save.create_data_array(filenames, rdf_list, N)
+    for (i, f) in enumerate(filenames):
+        utils.status_bar(i, len(filenames), fmt="percent")
+        dump_name = f"{path}/" + f[2]
+        #log_name = f"{path}/" + f[1]
+        rdf_name = dump_name.replace("dump", "rdf") + ".csv"
         log.info(f"Loading file\t{dump_name}")
         log.info(f"Loading file\t{log_name}")
 
-        C = convert.extract_constants_from_log(log_name)
-            
-        r_max=cut*C["LX"]
-        # Note that this gives out g_sigma and error,
-        # and that fast_rdf does not.
-        rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
-        # fast_rdf uses the rdfpy library. It is parallellized and
-        # memory-efficient, but does not give RDFs that approach one
-        # at long distances (known issue).
-        #rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr)
-        # For fast_rdf, compute an average over all times
-        #rdf, std = rdf_average(rdf)
-        # Trim zeros at the end, and drop corresponding values of rdf.
-        r = np.trim_zeros(r, trim="b")
-        rdf = rdf[:len(r)]
-        save_data = np.zeros((len(rdf),2))
-        save_data[:len(r),0] = r
-        save_data[:len(rdf),1] = rdf
-        np.savetxt(savename, save_data, delimiter=", ", header="r, g", comments="")
-        log.info(f"Saved to file\t{savename}")
+        data = pd.read_csv(rdf_name)
+        rdf = data["g"]
         g_sigma = np.amax(rdf)
-        j = np.where(rdf == g_sigma)[0][0]
+
+        #j = np.where(rdf == g_sigma)[0][0]
         #error = std[j]
 
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]

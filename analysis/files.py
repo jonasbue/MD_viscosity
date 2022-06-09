@@ -37,7 +37,7 @@ def get_all_filenames(directory):
     return files
 
 
-def sort_files(filenames, packing_fractions, ignore_rdf=True, ignore_dump=True):
+def sort_files(filenames, packing_fractions, ignore_rdf=True, ignore_dump=False):
     """
         Given a list of filenames, returns a list containing
         only the LAMMPS output files (fix, log, dump), sorted

@@ -34,7 +34,7 @@ for arg in sys.argv:
         path = arg[arg.index("-")+1:]
 
 path = "data/processed/"
-data_name = "test"
+data_name = "lj"
 
 def plot_result(path, filename, x_name, y_name, theory_name, system_config, *args, pltstr="-", lit_filename="", norm=True):
     #files.get_all_filenames(path)
