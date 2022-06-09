@@ -329,14 +329,14 @@ def pf_to_rho(sigma, x, pf):
     if sigma.ndim > 0:
         rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
     else:
-        rho = 6*pf/np.pi/np.sum(x*sigma**3)
+        rho = 6*pf/np.pi/(x*sigma**3)
     return rho
 
 def rho_to_pf(sigma, x, rho):
     if sigma.ndim > 0:
         pf = rho / (6/np.pi/np.sum(x*np.diag(sigma)**3))
     else:
-        pf = rho / (6/np.pi/np.sum(x*sigma**3))
+        pf = rho / (6/np.pi/(x*sigma**3))
     return pf
 
 def rho_to_pf_LJ(sigma, x, rho, T):
@@ -1084,7 +1084,7 @@ def get_internal_energy(F, sigma, x, rho, T, method=""):
     return dF_dtau(F, sigma, x, rho, T)/T
 
 
-def get_rdf_from_F(F, sigma, x, rho, T, N=3000, method=""):
+def get_rdf_from_F(F, sigma, x, rho, T, method=""):
     """
         From a Helmholts free energy, computes the RDF at contact.
     """
@@ -1099,7 +1099,8 @@ def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=
     eta = 0
     if no_F:
         # Compute viscosity directly from an RDF, while still using this function.
-        eta = enskog(pf, sigma.flatten(), T, m, F, collision_integral=collision_integral)
+        rdf = F
+        eta = enskog(pf, sigma.flatten(), T, m, rdf, collision_integral=collision_integral)
         return eta
     def g(pf, T=1.0): 
         rho = pf_to_rho(sigma, x, pf)

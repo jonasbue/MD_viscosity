@@ -54,7 +54,11 @@ def add_column_to_file(filename, new_column_data, new_column_name, fmt="%.3e"):
         the contents of the array as a new column to the file.
     """
     df = pd.read_csv(filename)
-    df.insert(len(df.columns), new_column_name, new_column_data)
+    if new_column_name in df:
+        # Overwrite
+        df[new_column_name] = new_column_data
+    else:
+        df.insert(len(df.columns), new_column_name, new_column_data)
     # Consider np savetxt, for the same strucure as in all other files.
     df.to_csv(filename, float_format=fmt, sep=",", index=False)
 

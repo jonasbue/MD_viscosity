@@ -14,10 +14,10 @@ import muller_plathe
 import save
 import utils
 import rdf
-import convert
-import block_average
 import eos
 import regression
+import names
+import curve_fit
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -29,6 +29,7 @@ if "debug" in sysargs:
 
 data_path_list = ["./data/lj"]
 save_path_list = ["lj"]
+resolution = 25
 
 computation_params = {
     "particle_types": 1,
@@ -56,20 +57,22 @@ def main():
 
         if "visc" in sysargs:
             compute_viscosity_from_directory(
-                path, get_savename("visc", save_dir, savepath), get_helmholtz_list(), computation_params, theoretical_viscosity)
+                path, names.get_savename("visc", save_dir, savepath), names.get_helmholtz_list(), computation_params, theoretical_viscosity)
         if "eos" in sysargs:
             compute_eos_from_directory(
-                path, get_savename("eos", save_dir, savepath), get_eos_list(), computation_params)
+                path, names.get_savename("eos", save_dir, savepath), names.get_eos_list(), computation_params)
         if "rdf" in sysargs:
             compute_rdf_from_directory(
-                path, get_savename("rdf", save_dir, savepath), get_rdf_list(), computation_params)
+                path, names.get_savename("rdf", save_dir, savepath), names.get_rdf_list(), computation_params)
         if "vel" in sysargs:
             compute_velcity_profile_from_directory(
-                path, get_savename("vel", save_dir, savepath), computation_params)
+                path, names.get_savename("vel", save_dir, savepath), computation_params)
         if "theory" in sysargs:
             # This is a collection of function calls to make 
             # different theory data files for plotting.
-            theory_plotting(path, save_dir, savepath) 
+            theory_plotting(path, save_dir, savepath, resolution=resolution) 
+        if "fit" in sysargs:
+            fit_parameters(save_dir, savepath, resolution=resolution)
 
 
 def compute_viscosity_from_directory(
@@ -139,61 +142,61 @@ def compute_velcity_profile_from_directory(
     regression.compute_all_velocity_profiles(directory, computation_params)
 
 
-def theory_plotting(path, save_dir, savepath):
+def theory_plotting(path, save_dir, savepath, resolution=20):
     compute_all_theoretical_values(
-            path, get_savename("theory_eos_of_pf", save_dir, savepath),
-            get_eos_list(), "pf",
+            path, names.get_savename("theory_eos_of_pf", save_dir, savepath),
+            names.get_eos_list(), "pf", resolution=resolution,
             #theory_function=theory.get_Z_from_F,
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_eos_of_T", save_dir, savepath),
-            get_eos_list(), "T",
+            path, names.get_savename("theory_eos_of_T", save_dir, savepath),
+            names.get_eos_list(), "T", resolution=resolution,
             #method_list=get_method_list(),
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_rdf_of_pf", save_dir, savepath),
-            get_rdf_list(), "pf",
+            path, names.get_savename("theory_rdf_of_pf", save_dir, savepath),
+            names.get_rdf_list(), "pf", resolution=resolution,
             #method_list=get_method_list(),
             theory_function=None,
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_rdf_of_T", save_dir, savepath),
-            get_rdf_list(), "T",
+            path, names.get_savename("theory_rdf_of_T", save_dir, savepath),
+            names.get_rdf_list(), "T", resolution=resolution,
             theory_function=None,
     )
     compute_all_theoretical_values(
-            path, get_savename("theory_visc_of_pf", save_dir, savepath),
-            get_helmholtz_list(), "pf",
+            path, names.get_savename("theory_visc_of_pf", save_dir, savepath),
+            names.get_helmholtz_list(), "pf", resolution=resolution,
+            #method_list=get_method_list(),
+            theory_function=theory.get_viscosity_from_F,
+            #collision_integrals=names.get_fitted_collision_integrals(),
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_visc_of_T", save_dir, savepath),
+            names.get_helmholtz_list(), "T", resolution=resolution,
             #method_list=get_method_list(),
             theory_function=theory.get_viscosity_from_F,
             #collision_integrals=get_fitted_collision_integrals(),
     )
-    compute_all_theoretical_values(
-            path, get_savename("theory_visc_of_T", save_dir, savepath),
-            get_helmholtz_list(), "T",
-            #method_list=get_method_list(),
-            theory_function=theory.get_viscosity_from_F,
-            #collision_integrals=get_fitted_collision_integrals(),
-    )
-    compute_all_theoretical_values(
-            path, get_savename("theory_visc_of_pf_fudged", save_dir, savepath),
-            get_helmholtz_list(), "pf",
-            #method_list=get_method_list(),
-            theory_function=theory.get_viscosity_from_F,
-            collision_integrals=get_fitted_collision_integrals(),
-    )
-    compute_all_theoretical_values(
-            path, get_savename("theory_visc_of_T_fudged", save_dir, savepath),
-            get_helmholtz_list(), "T",
-            #method_list=get_method_list(),
-            theory_function=theory.get_viscosity_from_F,
-            collision_integrals=get_fitted_collision_integrals(),
-    )
+    #compute_all_theoretical_values(
+    #        path, names.get_savename("theory_visc_of_pf_fudged", save_dir, savepath),
+    #        names.get_helmholtz_list(), "pf",
+    #        #method_list=get_method_list(),
+    #        theory_function=theory.get_viscosity_from_F,
+    #        collision_integrals=get_fitted_collision_integrals(),
+    #)
+    #compute_all_theoretical_values(
+    #        path, names.get_savename("theory_visc_of_T_fudged", save_dir, savepath),
+    #        names.get_helmholtz_list(), "T",
+    #        #method_list=get_method_list(),
+    #        theory_function=theory.get_viscosity_from_F,
+    #        collision_integrals=get_fitted_collision_integrals(),
+    #)
     # To make nice plots, it is convenient to save a separate 
     # file of theoretical values, with denser data points than 
     # the numerical data. TODO: Clean up function calls.
-    #save_theory(path, filenames, get_savename("theory"))
-    #save_rdf(path, filenames, get_savename=("rdf"))
+    #save_theory(path, filenames, names.get_savename("theory"))
+    #save_rdf(path, filenames, names.get_savename=("rdf"))
 
 
 
@@ -205,9 +208,9 @@ def compute_all_theoretical_values(
         method_list=[],
         theory_function=None,
         collision_integrals=[],
-        xmin=0.01,
-        xmax=0.51,
-        resolution=20,
+        xmin=0.02,
+        xmax=0.50,
+        resolution=25,
     ):
     """
         Given a directory of lammps output files,
@@ -223,9 +226,8 @@ def compute_all_theoretical_values(
         #N_index = 2
         #header = f"T,pf,N,m,sigma,cut"
         xmin, xmax = 1.3, 4.0
+        resolution=28
     system_configs = files.get_all_configs(directory)
-    print("Should have everything")
-    print(system_configs[:3,:]) 
     ordinate_variable
     # If there are multiple values for N, we can get rid of all but one.
     # Produces smaller files.
@@ -245,12 +247,8 @@ def compute_all_theoretical_values(
     x = np.linspace(xmin, xmax, resolution)
     # Join C and pf into one large array of configurations 
     # Shape: (len(pf)*len(C), 6)
-    print("Should lack pf or T")
-    print(system_configs[:3,:]) # Should lack x (T of pf)
     C = np.tile(system_configs, (len(x),1))
     C = np.insert(C, ordinate_index, np.array([np.repeat(x, len(C)//len(x))]), axis=1)
-    print("Should have pf or T again")
-    print(C[:3,:])
 
     # For compatibility with pandas, use slightly different conventions to save.
     np.savetxt(savename, C, header=header, fmt="%.3e", delimiter=",", comments="")
@@ -277,38 +275,31 @@ def compute_all_theoretical_values(
         name = save.get_data_name([eq], viscosity_function=theory_function).replace(",", "").strip()
         save.add_column_to_file(savename, data, name)
 
-def get_eos_list():
-    return [
-        theory.Z_CS,
-        theory.Z_kolafa,
-        theory.Z_gottschalk,
-        theory.Z_thol,
-        theory.Z_mecke,
-        theory.Z_hess
-    ]
 
+def fit_parameters(save_dir, savepath, resolution=20):
+    savename = names.get_savename("theory_visc_of_pf", save_dir, savepath)
+    filename = names.get_savename("visc", save_dir, savepath)
+    omega, eta, sigma = curve_fit.fit_viscosity(
+        filename,
+        curve_fit.simplified_enskog, 
+        resolution,
+        fit_sigma=False
+    )
+    name = "omega"
+    omega = omega.flatten(order="F")
+    save.add_column_to_file(savename, omega, name)
 
-def get_rdf_list():
-    return [theory.rdf_CS, theory.rdf_LJ]
-
-
-def get_helmholtz_list():
-    #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-
-def get_fitted_collision_integrals():
-    """ These are guesses. """
-    #return [1.4, 0.8, 0.8, 1.4, 0.8, 0.9, 0.9]
-    HS = 1 # Collision integral is excactly one.
-    # Names are:    CS Kolafa Thol Meck Gott Hess Morsali
-    #return np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])*HS
-    return np.array([1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])*HS
-
-def get_method_list():
-    """ Out of date """
-    return ["kolafa", "kolafa", "thol", "mecke", "gottschalk", "kolafa"]
-
-def get_savename(body, save_dir, savepath):
-    return f"{save_dir}{body}_{savepath}.csv"
+    omega, eta, sigma = curve_fit.fit_viscosity(
+        filename,
+        curve_fit.simplified_enskog,
+        resolution,
+        fit_sigma=True
+    )
+    name = "enskog_F-thol-fitted"
+    eta = eta.flatten(order="F")
+    sigma = sigma.flatten(order="F")
+    save.add_column_to_file(savename, eta, name)
+    #save.add_column_to_file(savename, sigma, name)
+    #save.add_column_to_file(savename, omega, name)
 
 main()

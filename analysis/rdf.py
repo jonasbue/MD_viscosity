@@ -82,8 +82,6 @@ def compute_all_rdfs(
             #error = std[j]
         else:
             rdf = pd.read_csv(savename, sep=", ", engine="python")
-            print("\n")
-            print(rdf)
             rdf = rdf["g"]
             g_sigma = np.amax(rdf)
             # Error can not be included in current version.

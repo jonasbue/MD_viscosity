@@ -116,6 +116,8 @@ def test_rdf_from_helmholtz(pf, T, of_temp=False):
     rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
 
     if not of_temp:
+        plt.plot(pf, theory.rdf_CS(pf), 
+                "k--", label="CS RDF")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_CS, sigma, x, rho, T, method="kolafa"), 
                 "k--", label="CS RDF, Helmholtz derived")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_BN, sigma, x, rho, T, method="kolafa"), 
@@ -143,9 +145,7 @@ def test_rdf_from_helmholtz(pf, T, of_temp=False):
                 A[i] = theory.get_rdf_from_F(F, sigma, x, rho, temp=T[i])
             plt.plot(T, A, label=F.__name__, linestyle=["-", "-", ":", "-.", "--"][j])
             j += 1
-
-
-    plt.ylim((-5.0, 5.0))
+    #plt.ylim((-5.0, 5.0))
     plt.title("Lennard-Jones RDF at contact")
     plt.legend()
     #plt.show()
@@ -210,6 +210,19 @@ def test_viscosity_from_helmholtz(pf, T):
     #plt.show()
 
 
+def test_enskog():
+    pf = np.linspace(0.025,0.5)
+    sigma = np.array([1.0])
+    x = 1.0
+    T = 1.5
+    rho = theory.pf_to_rho(sigma, x, pf)
+    def g(pf, T=1.0):
+        rho = theory.pf_to_rho(sigma, x, pf)
+        return theory.get_rdf_from_F(theory.F_thol, sigma, x, rho, T=T)
+    visc = theory.enskog(pf, sigma, T, 1.0, g)
+    plt.plot(pf, visc)
+
+
 
 #test_Z(pf, T)
 #test_eos_from_helmholtz(pf, T)
@@ -220,7 +233,9 @@ def test_viscosity_from_helmholtz(pf, T):
 #plt.show()
 #test_internal_energy_from_helmholtz(pf, T)
 #plt.show()
-test_rdf_from_helmholtz(pf, T)
-plt.show()
-test_viscosity_from_helmholtz(pf, T)
+#test_rdf_from_helmholtz(pf, T)
+#plt.show()
+#test_viscosity_from_helmholtz(pf, T)
+#plt.show()
+test_enskog()
 plt.show()
