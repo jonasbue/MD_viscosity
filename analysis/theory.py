@@ -1084,17 +1084,17 @@ def get_internal_energy(F, sigma, x, rho, T, method=""):
     return dF_dtau(F, sigma, x, rho, T)/T
 
 
-def get_rdf_from_F(F, sigma, x, rho, T, method=""):
+def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
     """
         From a Helmholts free energy, computes the RDF at contact.
     """
-    U = get_internal_energy(F, sigma, x, rho, T, method=method)
-    Z = get_Z_from_F(F, sigma, x, rho, T, method=method)
+    U = get_internal_energy(F, sigma, x, rho, T)
+    Z = get_Z_from_F(F, sigma, x, rho, T)
     sigma = sigma.flatten()
     return (Z - 1 - U) * 3/(2*np.pi*rho*sigma**3) 
 
 
-def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False):
+def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False, **kwargs):
     pf = rho_to_pf(sigma, x, rho)
     eta = 0
     if no_F:

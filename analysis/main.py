@@ -155,14 +155,14 @@ def theory_plotting(path, save_dir, savepath, resolution=20):
     )
     compute_all_theoretical_values(
             path, names.get_savename("theory_rdf_of_pf", save_dir, savepath),
-            names.get_rdf_list(), "pf", resolution=resolution,
+            names.get_helmholtz_list(), "pf", resolution=resolution,
             #method_list=get_method_list(),
-            theory_function=None,
+            theory_function=theory.get_rdf_from_F,
     )
     compute_all_theoretical_values(
             path, names.get_savename("theory_rdf_of_T", save_dir, savepath),
-            names.get_rdf_list(), "T", resolution=resolution,
-            theory_function=None,
+            names.get_helmholtz_list(), "T", resolution=resolution,
+            theory_function=theory.get_rdf_from_F,
     )
     compute_all_theoretical_values(
             path, names.get_savename("theory_visc_of_pf", save_dir, savepath),
@@ -267,11 +267,17 @@ def compute_all_theoretical_values(
             rho = theory.pf_to_rho(sigma, comp_fraction, pf)
             if theory_function:
                 if eq.__name__[:3] == "rdf":
-                    data[i] = theory_function(eq, sigma, comp_fraction, rho, T, collision_integral=coll, no_F=True)
+                    if theory_function.__name__[:14] == "get_viscosity":
+                        data[i] = theory_function(eq, sigma, comp_fraction, rho, T, collision_integral=coll, no_F=True)
+                    elif theory_function.__name__[:7] == "get_rdf":
+                        data[i] = eq(pf, T=T)
                 else:
                     data[i] = theory_function(eq, sigma, comp_fraction, rho, T, collision_integral=coll)
             else:
-                data[i] = eq(sigma, comp_fraction, rho, temp=T, collision_integral=coll)
+                if eq.__name__[:3] == "rdf":
+                    data[i] = eq(pf, T=T)
+                else:
+                    data[i] = eq(sigma, comp_fraction, rho, temp=T, collision_integral=coll)
         name = save.get_data_name([eq], viscosity_function=theory_function).replace(",", "").strip()
         save.add_column_to_file(savename, data, name)
 

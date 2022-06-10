@@ -91,8 +91,6 @@ def compute_all_rdfs(
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         #values = np.array([g_sigma, error])
         values = np.array([g_sigma, error])
-        print(values)
-        print(data)
         values = np.append(values, theoretical_values)
         save.insert_results_in_array(data, values, C, i)
     print("")

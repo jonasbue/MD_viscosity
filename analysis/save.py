@@ -39,7 +39,8 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.F_mecke      : "F-mecke",
         theory.F_hess       : "F-hess",
         theory.get_viscosity_from_F : "enskog_",
-        theory.get_Z_from_F : "EOS_",
+        theory.get_rdf_from_F       : "", # This causes a bit of trouble if named.
+        theory.get_Z_from_F         : "EOS_",
     }
     if viscosity_function:
         data_name = "".join([f", {function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])
