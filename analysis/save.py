@@ -156,7 +156,7 @@ def get_system_config(C=None, pf=None, number_of_components=None):
     return parameters
 
 
-def create_data_array(filenames, theory_functions, number_of_components):
+def create_data_array(filenames, theory_functions, number_of_components, extra_values=0):
     """
         Given a list of filenames, and a list of theoretical
         functions of interest, this returns an empty array 
@@ -165,7 +165,7 @@ def create_data_array(filenames, theory_functions, number_of_components):
     rows = len(filenames)
     columns = (
         len(get_system_config(number_of_components=number_of_components))
-        + 2 + len(theory_functions)*number_of_components
+        + 2 + len(theory_functions)*number_of_components + extra_values
     )
     data = np.zeros((rows,columns))
     return data

@@ -127,7 +127,7 @@ def compute_rdf_from_directory(
         dr=0.04,
         recompute=False
     )
-    data_name = "g_sigma, error"
+    data_name = "g_max, g_one, error"
     data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
 
@@ -305,7 +305,7 @@ def fit_parameters(save_dir, savepath, resolution=20):
     eta = eta.flatten(order="F")
     sigma = sigma.flatten(order="F")
     save.add_column_to_file(savename, eta, name)
-    #save.add_column_to_file(savename, sigma, name)
+    save.add_column_to_file(savename, sigma, name)
     #save.add_column_to_file(savename, omega, name)
 
 main()

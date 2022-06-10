@@ -45,7 +45,7 @@ def compute_all_rdfs(
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
     N = computation_params["particle_types"]
-    data = save.create_data_array(filenames, rdf_list, N)
+    data = save.create_data_array(filenames, rdf_list, N, extra_values=1)
     freq = 2
     every = 100
     repeat = 1
@@ -81,16 +81,21 @@ def compute_all_rdfs(
             j = np.where(rdf == g_sigma)[0][0]
             #error = std[j]
         else:
-            rdf = pd.read_csv(savename, sep=", ", engine="python")
-            rdf = rdf["g"]
-            g_sigma = np.amax(rdf)
+            rdf_data = pd.read_csv(savename, sep=", ", engine="python")
+            rdf = np.array(rdf_data["g"])
+            r = np.array(rdf_data["r"])
+            sigma_index = np.abs(r - 1).argmin()
+            g_max = np.amax(rdf)
+            g_one = rdf[sigma_index]
+
             # Error can not be included in current version.
-            error = np.zeros_like(g_sigma)
-            #data = np.array([g_sigma, error])
+            error = np.zeros_like(g_max)
+
+            #data = np.array([g_max, error])
         # In both cases, save everything to data.
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
-        #values = np.array([g_sigma, error])
-        values = np.array([g_sigma, error])
+        #values = np.array([g_max, error])
+        values = np.array([g_max, g_one, error])
         values = np.append(values, theoretical_values)
         save.insert_results_in_array(data, values, C, i)
     print("")

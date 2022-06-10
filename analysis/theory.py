@@ -643,13 +643,8 @@ def F_BN(sigma, x, rho, temp=1.0, **kwargs):
     return A
 
 
-def F_CS(sigma, x, rho, temp=1.0, lj=False, **kwargs):
-    if lj:
-        # This approximates PF to a soft-sphere version.
-        # Used in some EOS papers.
-        pf = rho_to_pf_LJ(sigma, x, rho, temp)
-    else:
-        pf = rho_to_pf(sigma, x, rho)
+def F_CS(sigma, x, rho, temp=1.0, **kwargs):
+    pf = rho_to_pf_LJ(sigma, x, rho, temp)
     A = ((4*pf-3*pf**2)/(1-pf)**2)
     return A
 
@@ -810,6 +805,7 @@ def F_mecke(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
         Output:
             Z:      Compressibility factor of the system.
     """
+    
     c, m, n, p, q = constants.get_EOS_parameters("mecke")
     A = F_HS(sigma, x, rho, temp=temp)
     rho_c = constants.get_rho_c()
@@ -1060,6 +1056,8 @@ def dF_dtau(f, sigma, x, rho, T, h=0.0001):
     """
     # The T**2 comes from the chain rule. 
     df = -T**2 * (f(sigma, x, rho, temp=T+h) - f(sigma, x, rho, temp=T))/h
+    #F = f(sigma, x, rho, temp=T)
+    #return -(F + T*df)
     return df
 
 
@@ -1075,8 +1073,7 @@ def get_internal_energy(F, sigma, x, rho, T, method=""):
         From a Helmholts free energy, computes the internal energy,
         which is the total potential energy of a system.
     """
-    #return F(sigma, x, rho, T) + dF_dtau(F, sigma, x, rho, T)/T
-    return dF_dtau(F, sigma, x, rho, T)/T
+    return dF_dtau(F, sigma, x, rho, T)
 
 
 def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
@@ -1086,7 +1083,7 @@ def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
     U = get_internal_energy(F, sigma, x, rho, T)
     Z = get_Z_from_F(F, sigma, x, rho, T)
     sigma = sigma.flatten()
-    return (Z - 1 - U) * 3/(2*np.pi*rho*sigma**3) 
+    return (Z - 1 - U/T) * 3/(2*np.pi*rho*sigma**3) 
 
 
 def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False, **kwargs):
