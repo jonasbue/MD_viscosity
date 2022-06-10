@@ -58,7 +58,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
         if conf.all():
             x[i] = row[x_name]
             y[i] = row[y_name]
-            err[i] = row["error"]
+            err[i] = row["error"]+0.001
             if theory_name:
                 for j in range(len(theory_name)):
                     t[i,j] = row[theory_name[j]]
@@ -76,7 +76,7 @@ def plot_result(path, filename, x_name, y_name, theory_name, system_config, *arg
     plt.xlabel(f"{x_name}")
     plt.ylabel(f"{y_name}")
     if norm:
-        nm = t[0]
+        nm = t[0,:]
         y = y/nm
         t = t/nm
         err = err/nm
@@ -181,7 +181,7 @@ if "rdf" in sys.argv:
         system_configs = search_for_configs(filename)
         for i in range(len(system_configs.index)):
             system_config = np.array(system_configs.iloc[i])
-            plot_result(path, filename, "pf", "g_sigma", ["RDF_LJ"], system_config, "cutoff", pltstr="o-", norm=False)
+            plot_result(path, filename, "pf", "g_sigma", ["RDF_LJ"], system_config, "cutoff", pltstr="o", norm=False)
             #plot_literature_results(lit_filename, system_config)
             plt.legend()
             #plt.show()
