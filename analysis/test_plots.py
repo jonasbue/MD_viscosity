@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import theory
 
 pf = np.linspace(0.01, 0.5)
-T = 2.0
+T = 2.5
 #T = np.linspace(0.7,1.5)
 #pf = 0.3
 
@@ -120,8 +120,8 @@ def test_rdf_from_helmholtz(pf, T, of_temp=False):
                 "k--", label="CS RDF")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_CS, sigma, x, rho, T, method="kolafa"), 
                 "k--", label="CS RDF, Helmholtz derived")
-        plt.plot(pf, theory.get_rdf_from_F(theory.F_BN, sigma, x, rho, T, method="kolafa"), 
-                "k--", label="BN RDF, Helmholtz derived")
+        #plt.plot(pf, theory.get_rdf_from_F(theory.F_BN, sigma, x, rho, T, method="kolafa"), 
+        #        "k--", label="BN RDF, Helmholtz derived")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_kolafa, sigma, x, rho, T, method="kolafa"), 
                 "k-", label="kolafa RDF, Helmholtz derived")
         plt.plot(pf, theory.get_rdf_from_F(theory.F_gottschalk, sigma, x, rho, T, method="thol"), 
@@ -157,6 +157,8 @@ def test_internal_energy_from_helmholtz(pf, T):
     x = np.array([1.0])
     rho = 6*pf/np.pi/np.sum(x*np.diag(sigma)**3)
 
+    plt.plot(pf, theory.get_internal_energy(theory.F_CS, sigma, x, rho, T, method="CS"), 
+            "k--", label="CS internal_energy, Helmholtz derived")
     plt.plot(pf, theory.get_internal_energy(theory.F_kolafa, sigma, x, rho, T, method="kolafa"), 
             "k-", label="kolafa internal_energy, Helmholtz derived")
     plt.plot(pf, theory.get_internal_energy(theory.F_gottschalk, sigma, x, rho, T, method="thol"), 
