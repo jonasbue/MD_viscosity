@@ -1072,7 +1072,7 @@ def get_Z_from_F(F, sigma, x, rho, T, method=""):
     return 1+rho*dF_drho(F, sigma, x, rho, T)
 
 
-def get_internal_energy(F, sigma, x, rho, T, method=""):
+def get_internal_energy(F, sigma, x, rho, T, method="", **kwargs):
     """
         From a Helmholts free energy, computes the internal energy,
         which is the total potential energy of a system.
@@ -1091,7 +1091,7 @@ def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
     U = get_internal_energy(F, sigma, x, rho, T)
     Z = get_Z_from_F(F, sigma, x, rho, T)
     sigma = sigma.flatten()
-    return g_sigma(Z, U, rho, sigma)
+    return get_g_sigma(Z, U, rho, sigma)
 
 
 def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False, **kwargs):

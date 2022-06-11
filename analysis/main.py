@@ -61,6 +61,8 @@ def main():
         if "eos" in sysargs:
             compute_eos_from_directory(
                 path, names.get_savename("eos", save_dir, savepath), names.get_eos_list(), computation_params)
+            compute_U_from_directory(
+                path, names.get_savename("U", save_dir, savepath), names.get_helmholtz_list(), computation_params)
         if "rdf" in sysargs:
             compute_rdf_from_directory(
                 path, names.get_savename("rdf", save_dir, savepath), names.get_rdf_list(), computation_params)
@@ -102,15 +104,22 @@ def compute_eos_from_directory(
         computation_params
     ):
     # Compute all the viscosities in directory
-    #data = eos.compute_all_eoss(
-    #    directory, 
-    #    theory_functions,
-    #    computation_params
-    #)
-    #data_name = "Z, error"
-    #data_name += save.get_data_name(theory_functions) 
-    #save.save_simulation_data(savename, data, data_name=data_name)
+    data = eos.compute_all_eoss(
+        directory, 
+        theory_functions,
+        computation_params
+    )
+    data_name = "Z, error"
+    data_name += save.get_data_name(theory_functions) 
+    save.save_simulation_data(savename, data, data_name=data_name)
 
+
+def compute_U_from_directory(
+        directory, 
+        savename, 
+        theory_functions, 
+        computation_params
+    ):
     # Compute the internal energy of all simulations as well.
     data = eos.compute_all_internal_energies(
         directory, 
@@ -118,10 +127,8 @@ def compute_eos_from_directory(
         computation_params
     )
     data_name = "U, error"
-    data_name += save.get_data_name(theory_functions) 
-    savename = savename.replace("eos", "U")
+    data_name += save.get_data_name(theory_functions, viscosity_function=theory.get_internal_energy) 
     save.save_simulation_data(savename, data, data_name=data_name)
-
 
 def compute_rdf_from_directory(
         directory, 
@@ -154,60 +161,49 @@ def compute_velcity_profile_from_directory(
 
 
 def theory_plotting(path, save_dir, savepath, resolution=20):
-    compute_all_theoretical_values(
-            path, names.get_savename("theory_eos_of_pf", save_dir, savepath),
-            names.get_eos_list(), "pf", resolution=resolution,
-            #theory_function=theory.get_Z_from_F,
-    )
-    compute_all_theoretical_values(
-            path, names.get_savename("theory_eos_of_T", save_dir, savepath),
-            names.get_eos_list(), "T", resolution=resolution,
-            #method_list=get_method_list(),
-    )
-    compute_all_theoretical_values(
-            path, names.get_savename("theory_rdf_of_pf", save_dir, savepath),
-            names.get_helmholtz_list(), "pf", resolution=resolution,
-            #method_list=get_method_list(),
-            theory_function=theory.get_rdf_from_F,
-    )
-    compute_all_theoretical_values(
-            path, names.get_savename("theory_rdf_of_T", save_dir, savepath),
-            names.get_helmholtz_list(), "T", resolution=resolution,
-            theory_function=theory.get_rdf_from_F,
-    )
-    compute_all_theoretical_values(
-            path, names.get_savename("theory_visc_of_pf", save_dir, savepath),
-            names.get_helmholtz_list(), "pf", resolution=resolution,
-            #method_list=get_method_list(),
-            theory_function=theory.get_viscosity_from_F,
-            #collision_integrals=names.get_fitted_collision_integrals(),
-    )
-    compute_all_theoretical_values(
-            path, names.get_savename("theory_visc_of_T", save_dir, savepath),
-            names.get_helmholtz_list(), "T", resolution=resolution,
-            #method_list=get_method_list(),
-            theory_function=theory.get_viscosity_from_F,
-            #collision_integrals=get_fitted_collision_integrals(),
-    )
+    """
+        To make nice plots, it is convenient to save a separate 
+        file of theoretical values, with denser data points than 
+        the numerical data. 
+    """
     #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_visc_of_pf_fudged", save_dir, savepath),
-    #        names.get_helmholtz_list(), "pf",
-    #        #method_list=get_method_list(),
-    #        theory_function=theory.get_viscosity_from_F,
-    #        collision_integrals=get_fitted_collision_integrals(),
+    #        path, names.get_savename("theory_eos_of_pf", save_dir, savepath),
+    #        names.get_eos_list(), "pf", resolution=resolution,
     #)
     #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_visc_of_T_fudged", save_dir, savepath),
-    #        names.get_helmholtz_list(), "T",
-    #        #method_list=get_method_list(),
-    #        theory_function=theory.get_viscosity_from_F,
-    #        collision_integrals=get_fitted_collision_integrals(),
+    #        path, names.get_savename("theory_eos_of_T", save_dir, savepath),
+    #        names.get_eos_list(), "T", resolution=resolution,
     #)
-    # To make nice plots, it is convenient to save a separate 
-    # file of theoretical values, with denser data points than 
-    # the numerical data. TODO: Clean up function calls.
-    #save_theory(path, filenames, names.get_savename("theory"))
-    #save_rdf(path, filenames, names.get_savename=("rdf"))
+    #compute_all_theoretical_values(
+    #        path, names.get_savename("theory_rdf_of_pf", save_dir, savepath),
+    #        names.get_helmholtz_list(), "pf", resolution=resolution,
+    #        theory_function=theory.get_rdf_from_F,
+    #)
+    #compute_all_theoretical_values(
+    #        path, names.get_savename("theory_rdf_of_T", save_dir, savepath),
+    #        names.get_helmholtz_list(), "T", resolution=resolution,
+    #        theory_function=theory.get_rdf_from_F,
+    #)
+    #compute_all_theoretical_values(
+    #        path, names.get_savename("theory_visc_of_pf", save_dir, savepath),
+    #        names.get_helmholtz_list(), "pf", resolution=resolution,
+    #        theory_function=theory.get_viscosity_from_F,
+    #)
+    #compute_all_theoretical_values(
+    #        path, names.get_savename("theory_visc_of_T", save_dir, savepath),
+    #        names.get_helmholtz_list(), "T", resolution=resolution,
+    #        theory_function=theory.get_viscosity_from_F,
+    #)
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_U_of_pf", save_dir, savepath),
+            names.get_helmholtz_list(), "pf",
+            theory_function=theory.get_internal_energy,
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_U_of_T", save_dir, savepath),
+            names.get_helmholtz_list(), "T",
+            theory_function=theory.get_internal_energy,
+    )
 
 
 
