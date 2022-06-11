@@ -280,6 +280,7 @@ def get_variable_indices(header, variables):
         "Press"             : "p",
         "Volume"            : "V",
         "Temp"              : "T",
+        "PotEng"            : "U",
         "Coord1"            : "z",
         "vx"                : "vx",
         "f_MULLER_PLATHE"   : "Px",

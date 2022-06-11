@@ -45,13 +45,14 @@ def compute_all_rdfs(
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
     N = computation_params["particle_types"]
-    data = save.create_data_array(filenames, rdf_list, N, extra_values=1)
+    data = save.create_data_array(filenames, rdf_list, N, extra_values=2)
     freq = 2
     every = 100
     repeat = 1
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="percent")
         log_name = f"{path}/" + f[1]
+        #fix_name = f"{path}/" + f[2]
         savename = log_name.replace("log", "rdf") + ".csv"
         log.info(f"Loading file\t{log_name}")
         C = convert.extract_constants_from_log(log_name)
@@ -63,8 +64,8 @@ def compute_all_rdfs(
             # and that fast_rdf does not.
             rdf, r, g_sigma, error = get_rdf_from_dump(dump_name, log_name, r_max)
             # fast_rdf uses the rdfpy library. It is parallellized and
-            # memory-efficient, but does not give RDFs that approach one
-            # at long distances (known issue).
+            # memory-efficient, but does not give RDFs that 
+            # approach 1 at long distances (known issue).
             #rdf, r, t = fast_rdf(dump_name, log_name, freq, every, repeat, cut, dr)
             # For fast_rdf, compute an average over all times
             #rdf, std = rdf_average(rdf)
@@ -84,22 +85,32 @@ def compute_all_rdfs(
             rdf_data = pd.read_csv(savename, sep=", ", engine="python")
             rdf = np.array(rdf_data["g"])
             r = np.array(rdf_data["r"])
-            sigma_index = np.abs(r - 1).argmin()
             g_max = np.amax(rdf)
+            sigma_index = np.abs(r - 1).argmin()
             g_one = rdf[sigma_index]
 
-            # Error can not be included in current version.
+            sigma_eff = theory.LJ_effective_sigma(C["TEMP"], 1.0)
+            sigma_eff_index = np.abs(r-sigma_eff).argmin()
+            g_eff = rdf[sigma_eff_index]
+
+            # Compute g_sigma from Z and U as well?
+            #Z = 
+            #g_F = 
+
+            # Error can not be included here in current version.
+            # To compute error, recompute must be True.
             error = np.zeros_like(g_max)
 
             #data = np.array([g_max, error])
         # In both cases, save everything to data.
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         #values = np.array([g_max, error])
-        values = np.array([g_max, g_one, error])
+        values = np.array([g_max, g_one, g_eff, error])
         values = np.append(values, theoretical_values)
         save.insert_results_in_array(data, values, C, i)
     print("")
     return data
+
 
 def get_g_sigma_from_directory(
         directory, 

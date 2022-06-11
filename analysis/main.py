@@ -102,13 +102,24 @@ def compute_eos_from_directory(
         computation_params
     ):
     # Compute all the viscosities in directory
-    data = eos.compute_all_eoss(
+    #data = eos.compute_all_eoss(
+    #    directory, 
+    #    theory_functions,
+    #    computation_params
+    #)
+    #data_name = "Z, error"
+    #data_name += save.get_data_name(theory_functions) 
+    #save.save_simulation_data(savename, data, data_name=data_name)
+
+    # Compute the internal energy of all simulations as well.
+    data = eos.compute_all_internal_energies(
         directory, 
         theory_functions,
         computation_params
     )
-    data_name = "Z, error"
+    data_name = "U, error"
     data_name += save.get_data_name(theory_functions) 
+    savename = savename.replace("eos", "U")
     save.save_simulation_data(savename, data, data_name=data_name)
 
 
@@ -127,7 +138,7 @@ def compute_rdf_from_directory(
         dr=0.04,
         recompute=False
     )
-    data_name = "g_max, g_one, error"
+    data_name = "g_max, g_one, g_eff, error"
     data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
 

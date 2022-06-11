@@ -117,6 +117,10 @@ def get_sigma(sigma_list):
     return sigma_ij
 
 
+def LJ_effective_sigma(T, DoF):
+    return (2/(1+np.sqrt(T*DoF)))**(1/6)
+
+
 def get_eta_0(N, m, T, sigma, k=1):
     eta_0 = np.zeros((N,N))
     for i in range(N):
@@ -1076,6 +1080,10 @@ def get_internal_energy(F, sigma, x, rho, T, method=""):
     return dF_dtau(F, sigma, x, rho, T)
 
 
+def get_g_sigma(Z, U, rho, sigma):
+    return (Z - 1 - U/T) * 3/(2*np.pi*rho*sigma**3) 
+
+
 def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
     """
         From a Helmholts free energy, computes the RDF at contact.
@@ -1083,7 +1091,7 @@ def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
     U = get_internal_energy(F, sigma, x, rho, T)
     Z = get_Z_from_F(F, sigma, x, rho, T)
     sigma = sigma.flatten()
-    return (Z - 1 - U/T) * 3/(2*np.pi*rho*sigma**3) 
+    return g_sigma(Z, U, rho, sigma)
 
 
 def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False, **kwargs):
