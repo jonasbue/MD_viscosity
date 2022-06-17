@@ -22,6 +22,7 @@ import utils
 import convert
 import theory
 import rdfpy
+import eos
 
 sysargs = sys.argv
 log = logging.getLogger()
@@ -45,17 +46,24 @@ def compute_all_rdfs(
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
     N = computation_params["particle_types"]
-    data = save.create_data_array(filenames, rdf_list, N, extra_values=2)
+    data = save.create_data_array(filenames, rdf_list, N, extra_values=3)
     freq = 2
     every = 100
     repeat = 1
     for (i, f) in enumerate(filenames):
         utils.status_bar(i, len(filenames), fmt="percent")
+        fix_name = f"{path}/" + f[0]
         log_name = f"{path}/" + f[1]
-        #fix_name = f"{path}/" + f[2]
         savename = log_name.replace("log", "rdf") + ".csv"
         log.info(f"Loading file\t{log_name}")
+
+        # Get Z and U
+        Z, C, error = eos.get_eos_from_file(log_name, fix_name, computation_params["cut_fraction"])
+        U, C, U_err = eos.get_internal_energy_from_file(
+            log_name, fix_name, computation_params["cut_fraction"]
+        )
         C = convert.extract_constants_from_log(log_name)
+
         if recompute:
             dump_name = f"{path}/" + f[2]
             log.info(f"Loading file\t{dump_name}")
@@ -93,9 +101,7 @@ def compute_all_rdfs(
             sigma_eff_index = np.abs(r-sigma_eff).argmin()
             g_eff = rdf[sigma_eff_index]
 
-            # Compute g_sigma from Z and U as well?
-            #Z = 
-            #g_F = 
+            g_F = theory.get_g_sigma(Z, U, C["PF"]*6/np.pi, C["SIGMA"], C["TEMP"])
 
             # Error can not be included here in current version.
             # To compute error, recompute must be True.
@@ -105,7 +111,7 @@ def compute_all_rdfs(
         # In both cases, save everything to data.
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         #values = np.array([g_max, error])
-        values = np.array([g_max, g_one, g_eff, error])
+        values = np.array([g_max, g_one, g_eff, g_F, error])
         values = np.append(values, theoretical_values)
         save.insert_results_in_array(data, values, C, i)
     print("")

@@ -422,7 +422,7 @@ def Z_BMCSL(sigma, x, rho, **kwargs):
     return Z
 
 
-def Z_kolafa(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
+def Z_kolafa(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
         using the EOS of Kolafa et al. 
         Input:
@@ -488,7 +488,7 @@ def Z_gottschalk(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
         for k in range(1,ki+1):
             #   k starts at 1, so subtract 1 in every list
             K = k-1
-            value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T)-1)**((2*k-1)/4))
+            value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T))-1)**((2*k-1)/4)
         return (T/4)**(-(i-1)/4) * value
 
     def B(i, T, n):
@@ -607,7 +607,7 @@ def Z_hess(sigma, x, rho, temp=1.0, Z_HS=Z_BN, **kwargs):
     T = temp
     # Effective volume. Slightly different from 
     # the HS volume, due to soft potential.
-    v_eff = (np.pi/6)*sigma.flatten()**3 * np.sqrt(2/np.sqrt(1 + T))
+    v_eff = (np.pi/48)*sigma.flatten()**3 * np.sqrt(2/np.sqrt(1 + T))
     if isinstance(v_eff, list): # This EOS is not defined for mixtures, 
         v_eff = v_eff[0]        # so mixing sigmas is not relevant.
     
@@ -652,7 +652,7 @@ def F_CS(sigma, x, rho, temp=1.0, **kwargs):
     A = ((4*pf-3*pf**2)/(1-pf)**2)
     return A
 
-def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_BN, **kwargs):
+def F_kolafa(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     """ Computes the EOS of a Lennard-Jones fluid, 
         using the EOS of Kolafa et al., explicit in 
         Helmholtz free energy. This can be differentiated
@@ -725,7 +725,7 @@ def F_gottschalk(sigma, x, rho, temp=1.0, **kwargs):
         for k in range(1,ki+1):
             #   k starts at 1, so subtract 1 in every list
             K = k-1
-            value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T)-1)**((2*k-1)/4))
+            value += A_i[K,I] * (np.exp(ai[I]/np.sqrt(T))-1)**((2*k-1)/4)
         return (T/4)**(-(i-1)/4) * value
 
     def B(i, T, n):
@@ -825,7 +825,7 @@ def F_hess(sigma, x, rho, temp=1.0, F_HS=F_CS, **kwargs):
     T = temp
     # Effective volume. Slightly different from 
     # the HS volume, due to soft potential.
-    v_eff = (np.pi/6)*sigma.flatten()**3 * np.sqrt(2/np.sqrt(1 + T))
+    v_eff = (np.pi/48)*sigma.flatten()**3 * np.sqrt(2/np.sqrt(1 + T))
     if isinstance(v_eff, list):
         v_eff = v_eff[0]        
     # This EOS is not defined for mixtures, 
@@ -1080,7 +1080,7 @@ def get_internal_energy(F, sigma, x, rho, T, method="", **kwargs):
     return dF_dtau(F, sigma, x, rho, T)
 
 
-def get_g_sigma(Z, U, rho, sigma):
+def get_g_sigma(Z, U, rho, sigma, T, **kwargs):
     return (Z - 1 - U/T) * 3/(2*np.pi*rho*sigma**3) 
 
 
@@ -1091,7 +1091,7 @@ def get_rdf_from_F(F, sigma, x, rho, T, **kwargs):
     U = get_internal_energy(F, sigma, x, rho, T)
     Z = get_Z_from_F(F, sigma, x, rho, T)
     sigma = sigma.flatten()
-    return get_g_sigma(Z, U, rho, sigma)
+    return get_g_sigma(Z, U, rho, sigma, T)
 
 
 def get_viscosity_from_F(F, sigma, x, rho, T, N=3000, m=1.0, collision_integral=1.0, method="", no_F=False, **kwargs):

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import theory
+import curve_fit
 
 def get_data_name(theory_functions, viscosity_function=None):
     """
@@ -42,6 +43,7 @@ def get_data_name(theory_functions, viscosity_function=None):
         theory.get_rdf_from_F       : "", # This causes a bit of trouble if named.
         theory.get_Z_from_F         : "EOS_",
         theory.get_internal_energy  : "U_",
+        curve_fit.fit_viscosity     : "enskog_fit_",
     }
     if viscosity_function:
         data_name = "".join([f", {function_names[viscosity_function]}{function_names[t]}" for t in theory_functions])

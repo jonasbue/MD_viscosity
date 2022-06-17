@@ -74,7 +74,8 @@ def main():
             # different theory data files for plotting.
             theory_plotting(path, save_dir, savepath, resolution=resolution) 
         if "fit" in sysargs:
-            fit_parameters(save_dir, savepath, resolution=resolution)
+            fit_parameters(save_dir, savepath, names.get_helmholtz_list_for_fitting(), to_original_file=True, resolution=resolution)
+            fit_parameters(save_dir, savepath, names.get_helmholtz_list_for_fitting(), to_original_file=False, resolution=resolution)
 
 
 def compute_viscosity_from_directory(
@@ -145,7 +146,7 @@ def compute_rdf_from_directory(
         dr=0.04,
         recompute=False
     )
-    data_name = "g_max, g_one, g_eff, error"
+    data_name = "g_max, g_one, g_eff, g_F, error"
     data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
 
@@ -166,34 +167,34 @@ def theory_plotting(path, save_dir, savepath, resolution=20):
         file of theoretical values, with denser data points than 
         the numerical data. 
     """
-    #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_eos_of_pf", save_dir, savepath),
-    #        names.get_eos_list(), "pf", resolution=resolution,
-    #)
-    #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_eos_of_T", save_dir, savepath),
-    #        names.get_eos_list(), "T", resolution=resolution,
-    #)
-    #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_rdf_of_pf", save_dir, savepath),
-    #        names.get_helmholtz_list(), "pf", resolution=resolution,
-    #        theory_function=theory.get_rdf_from_F,
-    #)
-    #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_rdf_of_T", save_dir, savepath),
-    #        names.get_helmholtz_list(), "T", resolution=resolution,
-    #        theory_function=theory.get_rdf_from_F,
-    #)
-    #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_visc_of_pf", save_dir, savepath),
-    #        names.get_helmholtz_list(), "pf", resolution=resolution,
-    #        theory_function=theory.get_viscosity_from_F,
-    #)
-    #compute_all_theoretical_values(
-    #        path, names.get_savename("theory_visc_of_T", save_dir, savepath),
-    #        names.get_helmholtz_list(), "T", resolution=resolution,
-    #        theory_function=theory.get_viscosity_from_F,
-    #)
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_eos_of_pf", save_dir, savepath),
+            names.get_eos_list(), "pf", resolution=resolution,
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_eos_of_T", save_dir, savepath),
+            names.get_eos_list(), "T", resolution=resolution,
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_rdf_of_pf", save_dir, savepath),
+            names.get_helmholtz_list(), "pf", resolution=resolution,
+            theory_function=theory.get_rdf_from_F,
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_rdf_of_T", save_dir, savepath),
+            names.get_helmholtz_list(), "T", resolution=resolution,
+            theory_function=theory.get_rdf_from_F,
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_visc_of_pf", save_dir, savepath),
+            names.get_helmholtz_list(), "pf", resolution=resolution,
+            theory_function=theory.get_viscosity_from_F,
+    )
+    compute_all_theoretical_values(
+            path, names.get_savename("theory_visc_of_T", save_dir, savepath),
+            names.get_helmholtz_list(), "T", resolution=resolution,
+            theory_function=theory.get_viscosity_from_F,
+    )
     compute_all_theoretical_values(
             path, names.get_savename("theory_U_of_pf", save_dir, savepath),
             names.get_helmholtz_list(), "pf",
@@ -289,30 +290,37 @@ def compute_all_theoretical_values(
         save.add_column_to_file(savename, data, name)
 
 
-def fit_parameters(save_dir, savepath, resolution=20):
+def fit_parameters(save_dir, savepath, helmholtz_list, to_original_file=False, resolution=20):
     savename = names.get_savename("theory_visc_of_pf", save_dir, savepath)
     filename = names.get_savename("visc", save_dir, savepath)
-    omega, eta, sigma = curve_fit.fit_viscosity(
-        filename,
-        curve_fit.simplified_enskog, 
-        resolution,
-        fit_sigma=False
-    )
-    name = "omega"
-    omega = omega.flatten(order="F")
-    save.add_column_to_file(savename, omega, name)
+    if to_original_file:
+        savename = filename
+    for F in helmholtz_list:
+        fname = F.__name__
+        omega, eta, sigma = curve_fit.fit_viscosity(
+            filename,
+            F,
+            resolution,
+            fit_sigma=False,
+            to_original_file=to_original_file
+        )
+        omega = omega.flatten(order="F")
+        eta = eta.flatten(order="F")
+        sigma = sigma.flatten(order="F")
+        if fname == "F_thol":
+            save.add_column_to_file(savename, omega, "omega")
+        # Replace "_" in function name to make these 
+        # columns adhere to naming convention.
+        name = "enskog_fit_"+fname.replace("_", "-")
+        save.add_column_to_file(savename, eta, name)
 
-    omega, eta, sigma = curve_fit.fit_viscosity(
-        filename,
-        curve_fit.simplified_enskog,
-        resolution,
-        fit_sigma=True
-    )
-    name = "enskog_F-thol-fitted"
-    eta = eta.flatten(order="F")
-    sigma = sigma.flatten(order="F")
-    save.add_column_to_file(savename, eta, name)
-    save.add_column_to_file(savename, sigma, name)
-    #save.add_column_to_file(savename, omega, name)
-
+        # Fitting sigma didn't provide particularly useful results.
+        #omega, eta, sigma = curve_fit.fit_viscosity(
+        #    filename,
+        #    helmholtz_list[2],
+        #    resolution,
+        #    fit_sigma=True
+        #)
+        #save.add_column_to_file(savename, sigma, name)
+        #save.add_column_to_file(savename, omega, name)
 main()

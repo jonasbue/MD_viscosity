@@ -202,7 +202,7 @@ def test_viscosity_from_helmholtz(pf, T):
             label="CS RDF, Helmholtz derived", linestyle="-.")
     def g(pf, T=1.0):
         rho = 6*pf/np.pi
-        return theory.rdf_LJ(sigma, x, rho)
+        return theory.rdf_LJ(sigma, x, rho, T=T)
     plt.plot(pf, theory.enskog(pf, sigma, T, m, g).flatten()/t, 
             label="Morsali RDF", linestyle="--")
 
@@ -235,9 +235,9 @@ def test_enskog():
 #plt.show()
 #test_internal_energy_from_helmholtz(pf, T)
 #plt.show()
-test_rdf_from_helmholtz(pf, T)
-plt.show()
-#test_viscosity_from_helmholtz(pf, T)
+#test_rdf_from_helmholtz(pf, T)
 #plt.show()
+test_viscosity_from_helmholtz(pf, T)
+plt.show()
 #test_enskog()
 #plt.show()
