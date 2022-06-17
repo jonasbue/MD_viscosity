@@ -578,7 +578,7 @@ def Z_mecke(sigma, x, rho, temp=1.0, Z_HS=Z_CS, **kwargs):
     rho_c = constants.get_rho_c()
     T_c = constants.get_T_c()
     rho = rho/rho_c     # This EOS uses rho and T normalized by
-    T = temp/T_c        # the critical temperature and density.
+    T = T_c/temp        # the critical temperature and density.
     b = 0
     for i in range(len(c)):
         b += rho * c[i]*T**m[i] * np.exp(p[i]*rho**q[i]) * (
