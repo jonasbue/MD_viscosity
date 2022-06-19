@@ -257,11 +257,11 @@ if "rdf-of-r" in sys.argv:
         plt.close()
 if "vel" in sys.argv:
     path = f"data/{data_name}/"
-    print(files.get_all_filenames(path))
-    filenames = files.get_all_filenames(path)[:,2]
+    filenames = files.get_all_filenames(path)[:,3]
     for f in filenames:
         system_info = files.read_filename(path+f)
         data = pd.read_csv(path+f, delimiter=", ", engine="python")
+        print(data.columns)
         vx = np.array(data["vx"])
         z = np.array(data["z"])
         reg_l = np.array(data["reg_lower"])

@@ -226,9 +226,9 @@ def test_enskog():
 
 
 
-#test_Z(pf, T)
-#test_eos_from_helmholtz(pf, T)
-#plt.show()
+test_Z(pf, T)
+test_eos_from_helmholtz(pf, T)
+plt.show()
 #test_helmholtz(pf, T)
 #plt.show()
 #test_helmholtz(pf, T, temp=True)
@@ -237,7 +237,7 @@ def test_enskog():
 #plt.show()
 #test_rdf_from_helmholtz(pf, T)
 #plt.show()
-test_viscosity_from_helmholtz(pf, T)
-plt.show()
+#test_viscosity_from_helmholtz(pf, T)
+#plt.show()
 #test_enskog()
 #plt.show()

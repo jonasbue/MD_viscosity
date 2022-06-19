@@ -74,7 +74,7 @@ def sort_files(filenames, packing_fractions, ignore_rdf=True, ignore_dump=False)
                         rdf.append(f)
                     elif filetype == "vel":
                         vel.append(f)
-    files = np.array([fix, log, rdf], dtype=str)
+    files = np.array([fix, log, rdf, vel], dtype=str)
     files = np.sort(files)
     return files.transpose()
     ## This is a mess. Needs fixing.

@@ -98,7 +98,16 @@ def isolate_slabs(vx, z):
         # This method does not work for 1D-arrays.
         z_max = np.nanmax(z)
         z_mid = z_max/2
+        # We wish to cut out the bottom and middle chunk,
+        # to reduce error connected to momentum swapping.
+        z_bot_chunk = np.amin(z)
+        z_mid_chunk = z_mid + 3*z_bot_chunk/2
+        vx = np.where(~np.isclose(z, z_bot_chunk), vx, np.nan)
+        z = np.where(~np.isclose(z, z_bot_chunk), z, np.nan)
+        vx = np.where(~np.isclose(z, z_mid_chunk), vx, np.nan)
+        z = np.where(~np.isclose(z, z_mid_chunk), z, np.nan)
 
+        # This divides everything into two chunks
         lower_half = np.where(z<=z_mid, vx, np.nan).reshape(vx.shape)
         upper_half = np.where(z>=z_mid, vx, np.nan).reshape(vx.shape)
         z_lower = np.where(z<=z_mid, z, np.nan).reshape(z.shape)
@@ -222,12 +231,22 @@ def compute_all_velocity_profiles(directory, computation_params):
 
         # Save regression lines
         z = np.unique(z)
-        line_l = reg_l.slope*np.where(z <= np.amax(z/2), z, np.nan) + reg_l.intercept
-        line_u = reg_u.slope*np.where(z >= np.amax(z/2), z, np.nan) + reg_u.intercept
+        # Copy-pasted code to cut out the bottom and middle chunk.
+        z_max = np.nanmax(z)
+        z_mid = z_max/2
+        z_bot_chunk = np.amin(z)
+        z_mid_chunk = z_mid + 3*z_bot_chunk/2
+        z = np.where(~np.isclose(z, z_bot_chunk), z, np.nan)
+        z = np.where(~np.isclose(z, z_mid_chunk), z, np.nan)
+
+        line_l = reg_l.slope*np.where(z <= z_max/2, z, np.nan) + reg_l.intercept
+        line_u = reg_u.slope*np.where(z >= z_max/2, z, np.nan) + reg_u.intercept
         dv = utils.get_avg(reg_l.slope, reg_u.slope)
 
         # Create a small set of velocity points, one for each chunk.
         t, vx = utils.make_time_dependent(vx, t, number_of_chunks)
+        vx = np.where(~np.isclose(z, z_bot_chunk), vx, np.nan)
+        vx = np.where(~np.isclose(z, z_mid_chunk), vx, np.nan)
         t = utils.cut_time(cut_fraction, t)
         vx = utils.cut_time(cut_fraction, vx)
         vx = np.mean(vx, axis=0)
