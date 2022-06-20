@@ -118,7 +118,7 @@ def get_sigma(sigma_list):
 
 
 def LJ_effective_sigma(T, DoF):
-    return (2/(1+np.sqrt(T*DoF)))**(1/6)
+    return (2/(1 + np.sqrt(T*DoF/2)))**(1/6)
 
 
 def get_eta_0(N, m, T, sigma, k=1):
@@ -926,7 +926,7 @@ def rdf_BMCSL(sigma, x, rho, i, j, **kwargs):
     return g_ij
 
 
-def rdf_LJ(pf, *args, T=1.0, **kwargs):
+def rdf_LJ(pf, *args, r=1.0, T=1.0, **kwargs):
     """ 
         Gives the RDF (at contact) for a one-component Lennard-Jones fluid,
         as given by Morsali et al. r = 1 gives the RDF at contact.
@@ -937,7 +937,7 @@ def rdf_LJ(pf, *args, T=1.0, **kwargs):
     #   q1, q2, q3, q4, q5, q6, q7, q8, q9, rmsd,
     # and the second index (vertical) is the parameter
     #   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-    #   a, b, c, d, g, h, k, l, m, n, s
+    #   a, b, c, d, g, h, k, l, s, m, n
     q = np.array([
         [9.24792, -2.64281, 0.133386, -1.35932, 1.25338, 0.45602, -0.326422, 0.045708, -0.0287681, 0.02],   # a
         [-8.33289, 2.1714, 1.00063, 0, 0, 0, 0, 0, 0, 0.002],                                               # b
@@ -951,18 +951,65 @@ def rdf_LJ(pf, *args, T=1.0, **kwargs):
         [-5.668, -3.62671, 0.680654, 0.294481, 0.186395, -0.286954, 0, 0, 0, 0.0096],                       # m
         [6.01325, 3.84098, 0.60793, 0, 0, 0, 0, 0, 0, 0.002],                                               # n
     ])
+
     # There is one unique(ish) equation P_ji for every coefficient a, b, c ...
     # While the paper gives an expression for g(r), only the equations
     # that give g(sigma) are included here.
-    # a
-    #P = ( q[1,i] 
-    #    + q[2,i]*exp(-q[3,i]*T) 
-    #    + q[4,i]*np.exp(-q[5,i]) 
-    #    + q[6,i]/rho 
-    #    + q[7,i]/rho**2 
-    #    + q[8,i*T]/rho**3
-    #)
-    s = ( 
+    a = ( # Index 0
+          q[0,0] 
+        + q[0,1]*np.exp(-q[0,2]*T) 
+        + q[0,3]*np.exp(-q[0,4]*T) 
+        + q[0,5]/rho         
+        + q[0,6]/rho**2      
+        + q[0,7]*np.exp(-q[0,2]*T)/rho**3
+        + q[0,8]*np.exp(-q[0,4]*T)/rho**4
+    )
+    b = ( # Index 1
+          q[1,0] 
+        + q[1,1]*np.exp(-q[1,2]*rho)
+    )
+    c = ( # Index 2
+          q[2,0] 
+        + q[2,1]*np.exp(-q[2,2]*T) 
+        + q[2,3]*rho
+        + q[2,4]*rho**2
+        + q[2,5]*rho**3
+        + q[2,6]*rho**4
+        + q[2,7]*rho**5
+    )
+    d = ( # Index 3
+          q[3,0] 
+        + q[3,1]*np.exp(-q[3,2]*rho) 
+        + q[3,3]*rho
+    )
+    g = ( # Index 4
+          q[4,0] 
+        + q[4,1]*np.exp(-q[4,2]*T) 
+        + q[4,3]*np.exp(-q[4,4]*T) 
+        + q[4,5]/rho         
+        + q[4,6]/rho**2      
+        + q[4,7]*np.exp(-q[4,2]*T)/rho**3
+        + q[4,8]*np.exp(-q[4,4]*T)/rho**4
+    )
+    h = ( # Index 5
+          q[5,0] 
+        + q[5,1]*np.exp(-q[5,2]*rho) 
+    )
+    k = ( # Index 6
+          q[6,0] 
+        + q[6,1]*np.exp(-q[6,2]*T) 
+        + q[6,3]*rho
+        + q[6,4]*rho**2
+        + q[6,5]*rho**3
+        + q[6,6]*rho**4
+        + q[6,7]*rho**5
+    )
+    l = ( # Index 7
+          q[7,0] 
+        + q[7,1]*np.exp(-q[7,2]*rho) 
+        + q[7,3]*rho
+    )
+    s = ( # Idex 8 (for some reason)
             ( q[8,0] 
             + q[8,1]*rho
             + q[8,2]/T
@@ -974,20 +1021,24 @@ def rdf_LJ(pf, *args, T=1.0, **kwargs):
             + q[8,7]*rho**2
         )
     )
-    m = ( q[9,0] 
-        + q[9,1]*np.exp(-q[9,3]*T) 
+    m = ( # Index 9
+        q[9,0] 
+        + q[9,1]*np.exp(-q[9,2]*T) 
         + q[9,2]/T
         + q[9,4]*rho 
         + q[9,5]*rho**2 
     )
-    n = ( q[10,0] 
+    n = ( # Index 10
+        q[10,0] 
         + q[10,1]*np.exp(-q[10,2]*T) 
     )
-    g = s*np.exp(-(m+n)**4) # r == 1 == sigma
-    #g = ( 1 
-    #    + r**(-2) * np.exp(-(a*r+b)) * sin(c*r+d)
-    #    + r**(-2) * np.exp(-(g*r+h)) * cos(k*r+l)
-    #)
+    if r > 1: # r > sigma
+        g = (1 
+            + r**(-2) * np.exp(-(a*r+b))*np.sin(c*r+d)
+            + r**(-2) * np.exp(-(g*r+h))*np.cos(k*r+l)
+        )
+    else: # r == 1 == sigma
+        g = s*np.exp(-(m*r+n)**4) 
     return g
 
 # Often denoted I_alpha(x) in literature

@@ -225,10 +225,21 @@ def test_enskog():
     plt.plot(pf, visc)
 
 
+def test_morsali():
+    pf = 0.3
+    R = np.linspace(0.01,4,200)
+    sigma = 1
+    T = 3.5
+    #rho = pf*6/np.pi
+    def g(r):
+        return theory.rdf_LJ(pf, r=r, T=T)
+    rdf = [g(r) for r in R]
+    plt.plot(R, rdf)
 
-test_Z(pf, T)
-test_eos_from_helmholtz(pf, T)
-plt.show()
+
+#test_Z(pf, T)
+#test_eos_from_helmholtz(pf, T)
+#plt.show()
 #test_helmholtz(pf, T)
 #plt.show()
 #test_helmholtz(pf, T, temp=True)
@@ -241,3 +252,7 @@ plt.show()
 #plt.show()
 #test_enskog()
 #plt.show()
+
+
+test_morsali()
+plt.show()
