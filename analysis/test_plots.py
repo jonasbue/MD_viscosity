@@ -226,7 +226,7 @@ def test_enskog():
 
 
 def test_morsali():
-    pf = 0.3
+    pf = 0.15
     R = np.linspace(0.01,4,200)
     sigma = 1
     T = 3.5

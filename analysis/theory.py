@@ -117,7 +117,10 @@ def get_sigma(sigma_list):
     return sigma_ij
 
 
-def LJ_effective_sigma(T, DoF):
+def LJ_effective_sigma(T, DoF, bound="lower"):
+    # Upper bound:
+    return (2/(1 + np.sqrt(1 + T*DoF/2)))**(1/6)
+    # Lower bound:
     return (2/(1 + np.sqrt(T*DoF/2)))**(1/6)
 
 
@@ -859,7 +862,7 @@ def get_rdf_from_C(C, g, i=1, j=1):
     x = N_list/np.sum(N_list)
     rdf = np.zeros(C["ATOM_TYPES"])
     for k in range(len(rdf)):
-        rdf[k] = g(pf, sigma_list[k], T, mass_list[k], i, j)
+        rdf[k] = g(pf, sigma_list[k], mass_list[k], i, j, r=1.0, T=T)
     return rdf
 
 
@@ -992,7 +995,7 @@ def rdf_LJ(pf, *args, r=1.0, T=1.0, **kwargs):
         + q[4,8]*np.exp(-q[4,4]*T)/rho**4
     )
     h = ( # Index 5
-          q[5,0] 
+          q[5,0]
         + q[5,1]*np.exp(-q[5,2]*rho) 
     )
     k = ( # Index 6
@@ -1024,7 +1027,7 @@ def rdf_LJ(pf, *args, r=1.0, T=1.0, **kwargs):
     m = ( # Index 9
         q[9,0] 
         + q[9,1]*np.exp(-q[9,2]*T) 
-        + q[9,2]/T
+        + q[9,3]/T
         + q[9,4]*rho 
         + q[9,5]*rho**2 
     )

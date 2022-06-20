@@ -19,7 +19,7 @@ def get_rdf_list():
 
 def get_helmholtz_list():
     #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]
-    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_CS, theory.rdf_LJ]
+    return [theory.F_CS, theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.F_hess, theory.rdf_CS, theory.rdf_LJ]
 
 def get_helmholtz_list_for_fitting():
     #return [theory.F_kolafa, theory.F_thol, theory.F_mecke, theory.F_gottschalk, theory.F_hess, theory.rdf_LJ]

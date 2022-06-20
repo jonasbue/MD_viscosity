@@ -46,7 +46,7 @@ def compute_all_rdfs(
     filenames = files.get_all_filenames(directory)
     rdf_list = theory_functions
     N = computation_params["particle_types"]
-    data = save.create_data_array(filenames, rdf_list, N, extra_values=3)
+    data = save.create_data_array(filenames, rdf_list, N, extra_values=4)
     freq = 2
     every = 100
     repeat = 1
@@ -90,16 +90,19 @@ def compute_all_rdfs(
             j = np.where(rdf == g_sigma)[0][0]
             #error = std[j]
         else:
-            rdf_data = pd.read_csv(savename, sep=", ", engine="python")
-            rdf = np.array(rdf_data["g"])
+            rdf_data = pd.read_csv(savename, sep=",", engine="python")
+            rdf = np.array(rdf_data[" g"])
             r = np.array(rdf_data["r"])
             g_max = np.amax(rdf)
             sigma_index = np.abs(r - 1).argmin()
             g_one = rdf[sigma_index]
 
-            sigma_eff = theory.LJ_effective_sigma(C["TEMP"], 1.0)
-            sigma_eff_index = np.abs(r-sigma_eff).argmin()
-            g_eff = rdf[sigma_eff_index]
+            sigma_eff_upper = theory.LJ_effective_sigma(C["TEMP"], 1.0, bound="upper")
+            sigma_eff_lower = theory.LJ_effective_sigma(C["TEMP"], 1.0, bound="lower")
+            sigma_eff_upper_index = np.abs(r-sigma_eff_upper).argmin()
+            sigma_eff_lower_index = np.abs(r-sigma_eff_lower).argmin()
+            g_eff_u = rdf[sigma_eff_upper_index]
+            g_eff_l = rdf[sigma_eff_lower_index]
 
             g_F = theory.get_g_sigma(Z, U, C["PF"]*6/np.pi, C["SIGMA"], C["TEMP"])
 
@@ -111,11 +114,29 @@ def compute_all_rdfs(
         # In both cases, save everything to data.
         theoretical_values = [theory.get_rdf_from_C(C, g) for g in theory_functions]
         #values = np.array([g_max, error])
-        values = np.array([g_max, g_one, g_eff, g_F, error])
+        values = np.array([g_max, g_one, g_eff_u, g_eff_l, g_F, error])
         values = np.append(values, theoretical_values)
         save.insert_results_in_array(data, values, C, i)
     print("")
     return data
+
+
+def get_theoretical_rdf(
+        directory,
+    ):
+    path = directory+"/"
+    filenames = files.get_all_filenames(path)[:,2]
+    for f in filenames:
+        data = pd.read_csv(path+f, delimiter=", ", engine="python")
+        C = files.read_filename(f)
+        pf = C["pf"]
+        r = data["r"]
+        g = data["g"]
+        g_morsali = np.zeros_like(g)
+        for i in range(len(r)):
+            g_morsali[i] = theory.rdf_LJ(pf, r=r[i], T=C["temp"])
+        save.add_column_to_file(path+f, g_morsali, "g_morsali")
+        
 
 
 def get_g_sigma_from_directory(

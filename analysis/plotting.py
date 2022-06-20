@@ -302,3 +302,15 @@ if "theory" in sys.argv:
         plt.plot(x, theory/theory, "x")
         plt.ylim((0.5,1.5))
         plt.show()
+if "morsali" in sys.argv:
+    path = "data/rdf_for_plotting/"
+    filenames = files.get_all_filenames(path)
+    for f in filenames:
+        data = pd.read_csv(path+f, delimiter=",", engine="python")
+        x = data["pf"]
+        y = data["EOS_kolafa"]
+        theory = data["EOS_thol"]
+        plt.plot(x, y/theory, "o")
+        plt.plot(x, theory/theory, "x")
+        plt.ylim((0.5,1.5))
+        plt.show()

@@ -29,6 +29,8 @@ if "debug" in sysargs:
 
 data_path_list = ["./data/lj"]
 save_path_list = ["lj"]
+#data_path_list = ["./data/rdf"]
+#save_path_list = ["rdf"]
 resolution = 25
 
 computation_params = {
@@ -76,6 +78,8 @@ def main():
         if "fit" in sysargs:
             fit_parameters(save_dir, savepath, names.get_helmholtz_list_for_fitting(), to_original_file=True, resolution=resolution)
             fit_parameters(save_dir, savepath, names.get_helmholtz_list_for_fitting(), to_original_file=False, resolution=resolution)
+        if "morsali" in sysargs:
+            rdf.get_theoretical_rdf(path)
 
 
 def compute_viscosity_from_directory(
@@ -146,7 +150,7 @@ def compute_rdf_from_directory(
         dr=0.04,
         recompute=False
     )
-    data_name = "g_max, g_one, g_eff, g_F, error"
+    data_name = "g_max, g_one, g_eff_u, g_eff_l, g_F, error"
     data_name += save.get_data_name(theory_functions) 
     save.save_simulation_data(savename, data, data_name=data_name)
 
@@ -275,7 +279,7 @@ def compute_all_theoretical_values(
             rho = theory.pf_to_rho(sigma, comp_fraction, pf)
             if theory_function:
                 if eq.__name__[:3] == "rdf":
-                    if theory_function.__name__[:14] == "get_viscosity":
+                    if theory_function.__name__[:13] == "get_viscosity":
                         data[i] = theory_function(eq, sigma, comp_fraction, rho, T, collision_integral=coll, no_F=True)
                     elif theory_function.__name__[:7] == "get_rdf":
                         data[i] = eq(pf, T=T)
